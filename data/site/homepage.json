@@ -84,7 +84,11 @@
       "features": [
         { "icon": "factory", "label": "No middlemen", "detail": "Better value" },
         { "icon": "timber", "label": "Real materials", "detail": "Solid wood. No shortcuts" },
-        { "icon": "rupee", "label": "Transparent pricing", "detail": "What you see is what you get" }
+        {
+          "icon": "rupee",
+          "label": "Transparent pricing",
+          "detail": "What you see is what you get"
+        }
       ],
       "awaitingCopy": false
     },

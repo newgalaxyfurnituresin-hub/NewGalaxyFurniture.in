@@ -24,12 +24,7 @@ interface Props {
   explore?: { href: string; label: string };
 }
 
-const {
-  products,
-  categoryNames = {},
-  heading = 'You might also like',
-  explore,
-} = Astro.props;
+const { products, categoryNames = {}, heading = 'You might also like', explore } = Astro.props;
 ---
 
 {
@@ -40,7 +35,15 @@ const {
         {explore !== undefined && (
           <a class="ngf-related-explore" href={explore.href}>
             {explore.label}
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <svg
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
               <path d="M2 8h11M9 4l4 4-4 4" />
             </svg>
           </a>

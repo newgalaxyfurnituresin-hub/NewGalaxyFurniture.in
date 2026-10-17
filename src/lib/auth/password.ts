@@ -1,9 +1,9 @@
 /**
  * Password derivation and verification.
  *
- * PBKDF2-HMAC-SHA-256 via WebCrypto, because it is the only KDF available in both
- * the Workers runtime and Node without a native dependency, and because it is the
- * one the design specifies. 600,000 iterations is the OWASP 2023 floor for
+ * PBKDF2-HMAC-SHA-256 via WebCrypto, with the identical calculation in
+ * @noble/hashes when hosted Workers rejects its native API's iteration cap.
+ * The stored format and work factor stay identical. 600,000 iterations is the floor for
  * PBKDF2-SHA-256; it costs a few hundred milliseconds per login, which is
  * acceptable for a handful of daily admin logins and is the same cost an attacker
  * pays per guess.
@@ -88,12 +88,31 @@ async function derive(plain: string, salt: Uint8Array, iterations: number): Prom
     false, // not extractable: the plaintext-derived key cannot be read back out
     ['deriveBits'],
   );
-  const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', hash: 'SHA-256', salt: salt as unknown as ArrayBuffer, iterations },
-    material,
-    KEY_BYTES * 8,
-  );
-  return new Uint8Array(bits);
+  try {
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: salt as unknown as ArrayBuffer, iterations },
+      material,
+      KEY_BYTES * 8,
+    );
+    return new Uint8Array(bits);
+  } catch (error) {
+    // Hosted Workers has a native-call cap that local workerd does not enforce.
+    // Keep every stored round; never lower the work factor or change an owner's hash.
+    if (
+      !(error instanceof Error) ||
+      error.name !== 'NotSupportedError' ||
+      !/Pbkdf2 failed: iteration counts above \d+ are not supported/.test(error.message)
+    )
+      throw error;
+    const [{ pbkdf2Async }, { sha256 }] = await Promise.all([
+      import('@noble/hashes/pbkdf2.js'),
+      import('@noble/hashes/sha2.js'),
+    ]);
+    return await pbkdf2Async(sha256, encoder.encode(plain), salt, {
+      c: iterations,
+      dkLen: KEY_BYTES,
+    });
+  }
 }
 
 /**

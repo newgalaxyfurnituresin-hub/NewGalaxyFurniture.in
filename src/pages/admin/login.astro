@@ -20,6 +20,7 @@
  * Requirements: 10.2, 10.5, 24.8, 26.3.
  */
 import '@/styles/global.css';
+import { getAccessConfig, safeAdminNext } from '@/lib/auth/access';
 
 export const prerender = false;
 
@@ -29,10 +30,8 @@ export const prerender = false;
  * into a credential-phishing hop.
  */
 const requestedNext = Astro.url.searchParams.get('next') ?? '';
-const safeNext =
-  requestedNext.startsWith('/admin') && !requestedNext.startsWith('/admin/login')
-    ? requestedNext
-    : '/admin';
+const safeNext = safeAdminNext(requestedNext);
+const emailSignIn = getAccessConfig(Astro) !== null;
 ---
 
 <!doctype html>
@@ -48,81 +47,97 @@ const safeNext =
       <p class="text-small tracking-[0.18em] text-walnut uppercase">New Galaxy Furniture</p>
       <h1 class="mt-2 font-display text-h2 leading-tight text-espresso">Admin sign in</h1>
 
-      <form
-        id="login-form"
-        method="post"
-        action="/api/admin/login"
-        class="mt-8 flex flex-col gap-5"
-        novalidate
-      >
-        <input type="hidden" name="next" value={safeNext} />
+      {
+        emailSignIn && (
+          <a
+            href={`/api/admin/access?next=${encodeURIComponent(safeNext)}`}
+            class="mt-8 flex min-h-[44px] items-center justify-center bg-espresso px-4 py-2 text-ivory"
+          >
+            Sign in with Cloudflare
+          </a>
+        )
+      }
 
-        <div
-          id="login-error"
-          role="alert"
-          aria-live="polite"
-          hidden
-          class="border-l-2 border-walnut bg-cream px-4 py-3 text-small text-espresso"
-        >
-        </div>
+      {
+        !emailSignIn && (
+          <form
+            id="login-form"
+            method="post"
+            action="/api/admin/login"
+            class="mt-8 flex flex-col gap-5"
+            novalidate
+          >
+            <input type="hidden" name="next" value={safeNext} />
 
-        <div class="flex flex-col gap-2">
-          <label for="email" class="text-small font-medium text-espresso">Email address</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autocomplete="username"
-            inputmode="email"
-            required
-            aria-describedby="login-error"
-            class="min-h-[44px] border border-taupe bg-white px-3 py-2 text-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
-          />
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <label for="password" class="text-small font-medium text-espresso">Password</label>
-          <div class="relative flex items-center">
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              aria-describedby="login-error"
-              class="min-h-[44px] w-full border border-taupe bg-white py-2 pr-[4.5rem] pl-3 text-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
+            <div
+              id="login-error"
+              role="alert"
+              aria-live="polite"
+              hidden
+              class="border-l-2 border-walnut bg-cream px-4 py-3 text-small text-espresso"
             />
-            {
-              /*
+
+            <div class="flex flex-col gap-2">
+              <label for="email" class="text-small font-medium text-espresso">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="username"
+                inputmode="email"
+                required
+                aria-describedby="login-error"
+                class="min-h-[44px] border border-taupe bg-white px-3 py-2 text-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
+              />
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="password" class="text-small font-medium text-espresso">
+                Password
+              </label>
+              <div class="relative flex items-center">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                  aria-describedby="login-error"
+                  class="min-h-[44px] w-full border border-taupe bg-white py-2 pr-[4.5rem] pl-3 text-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
+                />
+                {/*
               The toggle only appears once the client script enables it: without JavaScript there is
               nothing to switch the input type, so a dead button would be a lie. It is a real
               <button type="button"> — never a submit — carries aria-pressed for its on/off state and
               aria-controls to name the field it governs, and is keyboard-operable with a visible
               focus ring like every other control on the form.
-            */
-            }
-            <button
-              id="password-toggle"
-              type="button"
-              hidden
-              aria-pressed="false"
-              aria-controls="password"
-              aria-label="Show password"
-              class="absolute right-1 flex min-h-[38px] items-center px-3 py-1 text-small font-medium text-espresso underline underline-offset-2 hover:text-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
-            >
-              Show
-            </button>
-          </div>
-        </div>
+            */}
+                <button
+                  id="password-toggle"
+                  type="button"
+                  hidden
+                  aria-pressed="false"
+                  aria-controls="password"
+                  aria-label="Show password"
+                  class="absolute right-1 flex min-h-[38px] items-center px-3 py-1 text-small font-medium text-espresso underline underline-offset-2 hover:text-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
+                >
+                  Show
+                </button>
+              </div>
+            </div>
 
-        <button
-          id="login-submit"
-          type="submit"
-          class="min-h-[44px] bg-espresso px-4 py-2 text-ivory hover:bg-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:opacity-60"
-        >
-          Sign in
-        </button>
-      </form>
+            <button
+              id="login-submit"
+              type="submit"
+              class="min-h-[44px] bg-espresso px-4 py-2 text-ivory hover:bg-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:opacity-60"
+            >
+              Sign in
+            </button>
+          </form>
+        )
+      }
     </main>
 
     <script>

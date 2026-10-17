@@ -100,7 +100,10 @@ describe('createCloudflareObjectBucket', () => {
   it('round-trips bytes, http metadata and custom metadata', async () => {
     const bytes = new TextEncoder().encode('image-bytes');
     await bucket.put('products/p1/i1/original.jpg', bytes, {
-      httpMetadata: { contentType: 'image/jpeg', cacheControl: 'public, max-age=31536000, immutable' },
+      httpMetadata: {
+        contentType: 'image/jpeg',
+        cacheControl: 'public, max-age=31536000, immutable',
+      },
       customMetadata: { productId: 'p1' },
     });
 

@@ -172,7 +172,18 @@ export default defineConfig({
            * stable glob (`dist/client/_astro/ngf-motion*.js`) to hold to the 14 KB motion budget.
            */
           manualChunks(id) {
-            return id.includes('/src/lib/motion/') ? 'ngf-motion' : undefined;
+            if (id.includes('/src/lib/motion/')) return 'ngf-motion';
+            // These controls share every public page. Compress their shared code together
+            // rather than paying a separate small-chunk overhead for each control/helper.
+            if (
+              /\/src\/components\/ui\/(SearchBox|MobileNav|MobileActionBar|Skeleton)\.tsx$/.test(
+                id,
+              ) ||
+              id.includes('/src/lib/ui/') ||
+              id.endsWith('/src/lib/analytics/client.ts')
+            )
+              return 'ngf-shell';
+            return undefined;
           },
         },
       },

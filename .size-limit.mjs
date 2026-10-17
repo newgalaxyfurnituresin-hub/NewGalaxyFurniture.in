@@ -57,6 +57,7 @@
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { buildOutputDirectory } from './scripts/build-output-directory.ts';
 
 import {
   filesNamed,
@@ -65,7 +66,7 @@ import {
   writeInlineScriptBundle,
 } from './scripts/route-assets.ts';
 
-const DIST = join('dist');
+const DIST = buildOutputDirectory();
 const ASTRO = join(DIST, '_astro');
 
 if (!existsSync(DIST)) {

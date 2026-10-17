@@ -29,12 +29,7 @@
 
 import type { R2Bucket, R2Object, R2ObjectBody } from '@cloudflare/workers-types';
 
-import type {
-  ObjectBucket,
-  ObjectListResult,
-  ObjectPutOptions,
-  StoredObjectBody,
-} from './types';
+import type { ObjectBucket, ObjectListResult, ObjectPutOptions, StoredObjectBody } from './types';
 
 function toArrayBuffer(value: Uint8Array | ArrayBuffer): ArrayBuffer {
   if (value instanceof Uint8Array) {

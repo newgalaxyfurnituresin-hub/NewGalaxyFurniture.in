@@ -89,7 +89,9 @@ async function main(): Promise<void> {
  * GitHub-free, the index can be pre-seeded from the same fixtures with `seedLocalIndex` below, which
  * the Playwright global-setup may call against the local KV through the running Worker. It is
  * exported rather than invoked here because KV lives in the Worker process, not this one. */
-export async function seedLocalIndexInto(kv: Parameters<typeof writeProductIndex>[0]): Promise<void> {
+export async function seedLocalIndexInto(
+  kv: Parameters<typeof writeProductIndex>[0],
+): Promise<void> {
   const index = await readProductIndex(kv);
   for (const product of demoProducts) index[product.id] = summarize(product);
   await writeProductIndex(kv, index);

@@ -26,7 +26,7 @@
 
 import type { KeyValueStore } from '@/lib/runtime/types';
 
-import { AppError, ERROR_CODES } from '../errors';
+import { AppError, ERROR_CODES, logServerError } from '../errors';
 import { applyFieldPatch, parseContentJson, serializeContentJson } from './serialize';
 import { buildCommitMessage, type CommitScope } from './commit-message';
 import { productContentPath } from './paths';
@@ -438,7 +438,7 @@ export async function listProductSummariesWithRepositoryFallback(deps: {
   } catch (error) {
     // Best-effort only. The index is a working list; a transient repository error must not
     // turn it into a false empty or an error page.
-    console.error('[drafts] reconciliation against the repository was skipped', error);
+    logServerError('[drafts] reconciliation against the repository was skipped', error);
     return existing;
   }
 }

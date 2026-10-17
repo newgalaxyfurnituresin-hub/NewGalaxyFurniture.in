@@ -104,7 +104,7 @@ jobs:
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: '202e4307d4836b9170f546dbea1783d4'
           wranglerVersion: ${{ env.WRANGLER_VERSION }}
           environment: preview
           command: deploy --env preview
@@ -120,7 +120,7 @@ jobs:
     # reviewer approves this job. The URL is informational.
     environment:
       name: production
-      url: https://newgalaxyfurniture.in
+      url: https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -135,14 +135,14 @@ jobs:
         run: npm ci
 
       - name: Build (Cloudflare target, production vars)
-        run: npm run build
+        run: npm run build:cloudflare
         env:
-          PUBLIC_SITE_URL: https://newgalaxyfurniture.in
+          PUBLIC_SITE_URL: https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev
 
       - name: Deploy to production
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: '202e4307d4836b9170f546dbea1783d4'
           wranglerVersion: ${{ env.WRANGLER_VERSION }}
-          command: deploy
+          command: deploy --config dist/server/wrangler.json --keep-vars

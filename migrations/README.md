@@ -12,11 +12,11 @@ exact schema, kept in sync for the Netlify deployment.
 
 ## Files (applied in filename order by `wrangler d1 migrations apply`)
 
-| File | Tables | Notes |
-|------|--------|-------|
-| `0001_admin.sql` | `admin_users`, `login_attempts` | Credentials + login-abuse state. `LOWER(email)` unique index; `login_attempts.key` is a hash, never a raw email/IP. |
-| `0002_leads.sql` | `leads` | Enquiry personal data; `status, created_at DESC` and `created_at DESC` indexes. |
-| `0003_events.sql` | `event_daily`, `search_queries` | Daily analytics aggregates only (no per-visitor rows); composite PKs are the upsert targets. |
+| File              | Tables                          | Notes                                                                                                               |
+| ----------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `0001_admin.sql`  | `admin_users`, `login_attempts` | Credentials + login-abuse state. `LOWER(email)` unique index; `login_attempts.key` is a hash, never a raw email/IP. |
+| `0002_leads.sql`  | `leads`                         | Enquiry personal data; `status, created_at DESC` and `created_at DESC` indexes.                                     |
+| `0003_events.sql` | `event_daily`, `search_queries` | Daily analytics aggregates only (no per-visitor rows); composite PKs are the upsert targets.                        |
 
 Every statement is `CREATE TABLE/INDEX IF NOT EXISTS`, so the set is idempotent and safe to re-run.
 
@@ -44,14 +44,14 @@ Identical logical schema; only the dialect differs. Verified structurally (same 
 indexes, constraints) and exercised by the unit suite, which loads the application SQL against an
 in-memory SQLite database (`tests/fixtures/runtime.ts`).
 
-| Concern | Postgres (`db/schema.sql`) | SQLite/D1 (here) | Behaviour-preserving because |
-|---|---|---|---|
-| Text / integer columns | `TEXT` / `INTEGER` | identical | both unbounded `TEXT`, whole-number `INTEGER` |
-| Timestamps | `TEXT` ISO-8601 | identical | lexicographic range compares (`created_at >= '...'`) are correct for zero-padded ISO on both |
-| Case-insensitive email | `CREATE UNIQUE INDEX ... (LOWER(email))` | identical | both support expression indexes |
-| Descending index | `(status, created_at DESC)` / `(created_at DESC)` | identical | both honour per-column `DESC` |
-| Upsert | `ON CONFLICT (...) DO UPDATE SET x = excluded.x` | identical | same syntax + `excluded.` pseudo-table on both |
-| Nullable integer default | `spam_score INTEGER DEFAULT 0` | identical | read path tolerates NULL (`spam_score ?? 0`) |
+| Concern                  | Postgres (`db/schema.sql`)                        | SQLite/D1 (here) | Behaviour-preserving because                                                                 |
+| ------------------------ | ------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
+| Text / integer columns   | `TEXT` / `INTEGER`                                | identical        | both unbounded `TEXT`, whole-number `INTEGER`                                                |
+| Timestamps               | `TEXT` ISO-8601                                   | identical        | lexicographic range compares (`created_at >= '...'`) are correct for zero-padded ISO on both |
+| Case-insensitive email   | `CREATE UNIQUE INDEX ... (LOWER(email))`          | identical        | both support expression indexes                                                              |
+| Descending index         | `(status, created_at DESC)` / `(created_at DESC)` | identical        | both honour per-column `DESC`                                                                |
+| Upsert                   | `ON CONFLICT (...) DO UPDATE SET x = excluded.x`  | identical        | same syntax + `excluded.` pseudo-table on both                                               |
+| Nullable integer default | `spam_score INTEGER DEFAULT 0`                    | identical        | read path tolerates NULL (`spam_score ?? 0`)                                                 |
 
 No Postgres-only types (`SERIAL`, `JSONB`, `TIMESTAMPTZ`, `UUID`, `BOOLEAN`) are used, which is why
 the two dialects stay this close.

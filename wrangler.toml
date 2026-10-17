@@ -2,35 +2,18 @@
 #
 # Cloudflare Workers configuration for New Galaxy Furniture.
 #
-# Production bindings are LIVE-WIRED: the D1 database (migrated), the three KV namespaces, and the
-# R2 bucket below all reference real resource ids. The Cloudflare target is selected at build time
-# with `DEPLOY_TARGET=cloudflare` (see astro.config.mjs). What is NOT yet done, and is deliberately
-# left for an explicit decision: attaching the production custom domain (needs DNS/zone + a deploy),
-# setting the secrets listed below via `wrangler secret put`, and creating the preview-only D1/R2
-# resources. No `wrangler deploy` has been run from this configuration.
+# Production targets the verified company account. Build with DEPLOY_TARGET=cloudflare.
+# D1 and KV identifiers below belong to that account. Verify R2 activation and bucket
+# creation, private secret setup, and deployment before declaring the application live.
+# The workers.dev hostname is temporary until the custom domain is owned and connected.
 #
-# NO SECRET VALUE APPEARS IN THIS FILE, and none ever may. Every secret is set out of band, per
-# environment, with `wrangler secret put <NAME>`:
-#
-#     wrangler secret put GITHUB_TOKEN         # fine-grained PAT, contents:write on the content repo
-#     wrangler secret put GITHUB_REPO          # "owner/repo" the write pipeline commits to
-#     wrangler secret put GITHUB_BRANCH        # branch content commits land on (e.g. main)
-#     wrangler secret put AI_PROVIDER          # provider id for the product assistant
-#     wrangler secret put AI_API_KEY           # provider key — server-side only, never public
-#     wrangler secret put AI_MODEL             # model id for the assistant
-#     wrangler secret put SESSION_SECRET       # 32+ random bytes, admin session signing
-#     wrangler secret put CF_DEPLOY_HOOK_URL   # optional: deploy hook used to start a build
-#     wrangler secret put CF_ACCOUNT_ID        # optional: read side of /api/admin/deploy-status
-#     wrangler secret put CF_API_TOKEN         # optional: Workers Scripts:Read token for the above
-#     wrangler secret put CF_WORKER_NAME       # optional: script name to poll, defaults to `name`
-#
-# The `id` / `database_id` fields below are PLACEHOLDERS. They are resource identifiers (not
-# credentials) and must be replaced with the real values printed by:
-#     wrangler kv namespace create <NAME>
-#     wrangler d1 create <DB_NAME>
-#     wrangler r2 bucket create <BUCKET_NAME>
-# No real id is invented here. A placeholder is deliberately not a valid id so a copy-paste deploy
-# fails loudly rather than binding to the wrong resource.
+# GITHUB_REPO/GITHUB_BRANCH are non-secret vars. Supply GITHUB_TOKEN and SESSION_SECRET
+# privately; never put credential values in this file. Upload them with the application:
+#   wrangler deploy --config dist/server/wrangler.json --secrets-file .wrangler/company-repository-secrets.json
+# Routine deployment uses `npm run deploy:cloudflare` and preserves installed secrets.
+# Ordinary `secret put` deploys immediately; do not use it for staging.
+# AI and deployment-status integrations remain unset without valid credentials.
+# Preview IDs are deliberately invalid until company preview resources are provisioned.
 #
 # NOTE ON RATE LIMITING: unlike the original Cloudflare design, the current application collapses the
 # per-minute ceilings into KV counters (`consumeBindingLimit` in src/lib/auth/rate-limit.ts), so
@@ -38,6 +21,7 @@
 # window.
 
 name = "newgalaxyfurniture"
+account_id = "202e4307d4836b9170f546dbea1783d4"
 # `main` points at the project's Worker entry (the fetch handler + the scheduled analytics handler).
 # Under @astrojs/cloudflare v14 the adapter injects its own entrypoint when `main` is unset; naming a
 # real source file is the supported override for adding the `scheduled` export.
@@ -45,7 +29,7 @@ main = "./src/worker.ts"
 compatibility_date = "2026-09-02"
 # The Worker runs Node built-ins (WebCrypto helpers, Buffer in the image path).
 compatibility_flags = ["nodejs_compat"]
-workers_dev = false
+workers_dev = true
 preview_urls = true
 
 # Prerendered HTML, hashed assets and fonts are served from the static asset store; the Worker only
@@ -62,8 +46,8 @@ directory = "./dist/client"
 html_handling = "drop-trailing-slash"
 
 # --- Scheduled work ---------------------------------------------------------
-# The nightly analytics snapshot: src/worker.ts exports the `scheduled` handler. 19:30 UTC is 01:00
-# IST — after the day it summarises has closed in UTC. (Requirements 3.14, 3.15, 20.11.)
+# The scheduled handler exists in source, but production scheduling is disabled.
+# Keep crons empty; do not enable analytics scheduling.
 [triggers]
 crons = []
 
@@ -76,8 +60,12 @@ mode = "smart"
 # --- Public (non-secret) variables ------------------------------------------
 # These are printed on the site itself, so they are configuration, not secrets.
 [vars]
-PUBLIC_SITE_URL = "https://newgalaxyfurniture.in"
+PUBLIC_SITE_URL = "https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev"
+GITHUB_REPO = "newgalaxyfurnituresin-hub/NewGalaxyFurniture.in"
+GITHUB_BRANCH = "main"
 CF_WORKER_NAME = "newgalaxyfurniture"
+CF_ACCESS_TEAM_DOMAIN = "https://winter-firefly-d5dd.cloudflareaccess.com"
+CF_ACCESS_AUD = "5490a1a64c3f09635f1442a0a2dbec2f3f4791470971bd8ff414eccda031278b"
 PUBLIC_WHATSAPP_NUMBERS = "+919513443606,+918147083703"
 PUBLIC_PHONE_NUMBERS = "+919513443606,+918147083703"
 
@@ -88,15 +76,15 @@ PUBLIC_PHONE_NUMBERS = "+919513443606,+918147083703"
 #            10-minute upload caps, and the per-minute admin-API / events ceilings).
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "e29ebea10b9b44429a6d3f637a7fbede"
+id = "5faf6b288c98463cb21fb4609df2c61a"
 
 [[kv_namespaces]]
 binding = "DRAFTS"
-id = "48904df38d704a31ac4ab87284ff292e"
+id = "abe3026fdaa049d3b7a8a1973405c897"
 
 [[kv_namespaces]]
 binding = "RATELIMIT"
-id = "e74f6a528e57458f8d940ef21ec9f68d"
+id = "d8b27da909f442189d7dd63f4c922706"
 
 # --- D1 ---------------------------------------------------------------------
 # Leads, analytics events and daily rollups, admin users, login attempts.
@@ -104,7 +92,7 @@ id = "e74f6a528e57458f8d940ef21ec9f68d"
 [[d1_databases]]
 binding = "DB"
 database_name = "ngf-content"
-database_id = "deff371f-d6e6-4172-ba16-4b4f9f52d5fa"
+database_id = "0727a2b8-4791-4708-a84b-4b8eff033342"
 migrations_dir = "migrations"
 
 # --- R2 ---------------------------------------------------------------------
@@ -147,15 +135,15 @@ html_handling = "drop-trailing-slash"
 
 [[env.preview.kv_namespaces]]
 binding = "SESSIONS"
-id = "2105e4f3615646e6acf6efd113ed11c3"
+id = "REPLACE_WITH_COMPANY_PREVIEW_SESSIONS_ID"
 
 [[env.preview.kv_namespaces]]
 binding = "DRAFTS"
-id = "2b10852006184df7b6ac6e43f50e342e"
+id = "REPLACE_WITH_COMPANY_PREVIEW_DRAFTS_ID"
 
 [[env.preview.kv_namespaces]]
 binding = "RATELIMIT"
-id = "0632cf995e634a8abb4bea4d7d01be73"
+id = "REPLACE_WITH_COMPANY_PREVIEW_RATELIMIT_ID"
 
 [[env.preview.d1_databases]]
 binding = "DB"

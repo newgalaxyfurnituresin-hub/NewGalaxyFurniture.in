@@ -54,11 +54,7 @@ interface ExecutionContextLike {
   waitUntil: (promise: Promise<unknown>) => void;
 }
 
-function scheduled(
-  event: ScheduledEvent,
-  _env: unknown,
-  context: ExecutionContextLike,
-): void {
+function scheduled(event: ScheduledEvent, _env: unknown, context: ExecutionContextLike): void {
   /*
    * `waitUntil` rather than awaiting inline: the platform gives a scheduled invocation its own
    * lifetime, and registering the work is what keeps the runtime waiting for the commit instead of

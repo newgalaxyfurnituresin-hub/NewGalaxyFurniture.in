@@ -46,7 +46,17 @@ export interface HomeGalleryCarouselProps {
 
 function ChevronLeft(): React.JSX.Element {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M15 5l-7 7 7 7" />
     </svg>
   );
@@ -54,7 +64,17 @@ function ChevronLeft(): React.JSX.Element {
 
 function ChevronRight(): React.JSX.Element {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M9 5l7 7-7 7" />
     </svg>
   );
@@ -174,8 +194,12 @@ export default function HomeGalleryCarousel({
               key={image.id}
               className="ngf-hg-img"
               src={image.src}
-              srcSet={image.srcSet !== undefined && image.srcSet !== image.src ? image.srcSet : undefined}
-              sizes={image.srcSet !== undefined && image.srcSet !== image.src ? image.sizes : undefined}
+              srcSet={
+                image.srcSet !== undefined && image.srcSet !== image.src ? image.srcSet : undefined
+              }
+              sizes={
+                image.srcSet !== undefined && image.srcSet !== image.src ? image.sizes : undefined
+              }
               width={image.width}
               height={image.height}
               alt={image.alt}
@@ -183,7 +207,9 @@ export default function HomeGalleryCarousel({
               decoding="async"
               data-active={index === active ? 'true' : 'false'}
               aria-hidden={index === active ? undefined : 'true'}
-              style={image.lqip === undefined ? undefined : { backgroundImage: `url(${image.lqip})` }}
+              style={
+                image.lqip === undefined ? undefined : { backgroundImage: `url(${image.lqip})` }
+              }
             />
           ))}
         </a>

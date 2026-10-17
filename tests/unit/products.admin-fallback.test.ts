@@ -227,8 +227,7 @@ describe('admin product list reflects the committed/public catalogue', () => {
       repo: stub.repo,
       branch: stub.branch,
       apiBase: 'https://api.github.com',
-      fetchImpl: async () =>
-        new Response(JSON.stringify({ message: 'boom' }), { status: 500 }),
+      fetchImpl: async () => new Response(JSON.stringify({ message: 'boom' }), { status: 500 }),
     });
 
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);

@@ -146,12 +146,13 @@ describe('Property 30: Every admin route declares a permission', () => {
     }
   });
 
-  it('keeps the unauthenticated allowlist to exactly the login endpoint', () => {
+  it('keeps the pre-session allowlist to exactly the password and signed-identity exchanges', () => {
     // The escape hatch has to stay narrow, or "every route declares a permission"
     // becomes true while meaning nothing. Widening it is a visible edit to this test.
-    expect(UNAUTHENTICATED_ROUTES).toEqual(['POST /api/admin/login']);
+    const exchanges = ['POST /api/admin/login', 'GET /api/admin/access', 'POST /api/admin/access'];
+    expect(UNAUTHENTICATED_ROUTES).toEqual(exchanges);
     const publicRoutes = ADMIN_ROUTES.filter((route) => route.auth.kind === 'public');
-    expect(publicRoutes.map(routeKey)).toEqual(['POST /api/admin/login']);
+    expect(publicRoutes.map(routeKey)).toEqual(exchanges);
   });
 
   it('keeps the session-only allowlist to operations on the caller’s own session', () => {

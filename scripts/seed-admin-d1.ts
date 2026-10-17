@@ -13,7 +13,8 @@
  *
  * - **No secret via CLI args or environment.** The admin password AND the Cloudflare API token are
  *   both read from the TTY in raw mode with no echo. There is no `--password`/`--token` flag and no
- *   environment-variable fallback for either; without an interactive TTY the script exits non-zero.
+ *   environment-variable fallback for either. `--company-login` can reuse the privately stored
+ *   Wrangler company OAuth credential instead of prompting for another API token.
  * - **The runtime hash function is the only hash function.** It imports `hashPassword` from
  *   `src/lib/auth/password.ts` unchanged (PBKDF2-HMAC-SHA-256, 600k iterations, `pbkdf2$sha256$...`),
  *   so a seeded credential verifies under the exact parameters the login path accepts.
@@ -33,13 +34,15 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 
 import { hashPassword } from '../src/lib/auth/password';
 import { ROLES } from '../src/lib/auth/permissions';
 
 /** The exact remote D1 database the first admin must be created in (binding `DB` → `ngf-content`). */
-const EXPECTED_DATABASE_ID = 'deff371f-d6e6-4172-ba16-4b4f9f52d5fa';
+const EXPECTED_DATABASE_ID = '0727a2b8-4791-4708-a84b-4b8eff033342';
+const EXPECTED_ACCOUNT_ID = '202e4307d4836b9170f546dbea1783d4';
 /** Cloudflare account ids are 32 lowercase hex characters. */
 const ACCOUNT_ID_PATTERN = /^[0-9a-f]{32}$/;
 const MIN_PASSWORD_LENGTH = 12;
@@ -224,7 +227,7 @@ function insertedExactlyOneRow(body: D1QueryResponse): boolean {
 async function main(): Promise<void> {
   process.stdout.write(
     'Create the first admin account in the REMOTE Cloudflare D1 database `ngf-content`.\n' +
-      'The password and API token are read without echo and are never logged or stored.\n\n',
+      'The password is read without echo and is never logged or stored.\n\n',
   );
 
   // --- Target database -------------------------------------------------------
@@ -233,6 +236,7 @@ async function main(): Promise<void> {
   if (!ACCOUNT_ID_PATTERN.test(accountId)) {
     fail('that is not a valid Cloudflare account id (expected 32 hexadecimal characters)');
   }
+  if (accountId !== EXPECTED_ACCOUNT_ID) fail('only the verified company account is allowed');
 
   // The database id is pinned, not prompted: this script provisions exactly one known database.
   const databaseId = EXPECTED_DATABASE_ID;
@@ -251,10 +255,48 @@ async function main(): Promise<void> {
   }
 
   // --- Credentials (no echo) -------------------------------------------------
-  const token = await promptSecret('Cloudflare API token (Account → D1 → Edit, not echoed): ');
+  const useCompanyLogin = process.argv.includes('--company-login');
+  let token: string;
+  if (useCompanyLogin) {
+    const saved = await readFile(
+      new URL('../.wrangler/company-auth/.wrangler/config/default.toml', import.meta.url),
+      'utf8',
+    );
+    token = saved.match(/^oauth_token\s*=\s*"([^"]+)"/m)?.[1] ?? '';
+  } else {
+    token = await promptSecret('Cloudflare API token (Account → D1 → Edit, not echoed): ');
+  }
   if (token.trim() === '') fail('an API token is required');
 
-  const password = await promptSecret(`Password (min ${String(MIN_PASSWORD_LENGTH)}, not echoed): `);
+  const target = await fetch(`${CF_API_BASE}/accounts/${accountId}/d1/database/${databaseId}`, {
+    headers: { authorization: `Bearer ${token.trim()}` },
+  });
+  if (!target.ok) fail('could not verify the destination database; nothing was written');
+  const metadata = (await target.json()) as {
+    success?: boolean;
+    result?: { uuid?: string; name?: string };
+  };
+  if (
+    metadata.success !== true ||
+    metadata.result?.uuid !== EXPECTED_DATABASE_ID ||
+    metadata.result.name !== 'ngf-content'
+  )
+    fail('destination database identity mismatch; nothing was written');
+
+  const owners = await d1Query(
+    accountId,
+    databaseId,
+    token.trim(),
+    'SELECT id FROM admin_users WHERE role = ? LIMIT 1',
+    ['owner'],
+  );
+  if ((owners.result?.[0]?.results?.length ?? 0) > 0) {
+    fail('an owner already exists; inspect it before provisioning another administrator');
+  }
+
+  const password = await promptSecret(
+    `Password (min ${String(MIN_PASSWORD_LENGTH)}, not echoed): `,
+  );
   if (password.length < MIN_PASSWORD_LENGTH) {
     fail(`password must be at least ${String(MIN_PASSWORD_LENGTH)} characters`);
   }
@@ -279,7 +321,9 @@ async function main(): Promise<void> {
 
   // --- Confirmation step (shows only normalized email and role) --------------
   const proceed = (
-    await prompt(`\nAbout to create admin account:\n  email: ${email}\n  role:  ${role}\nType "yes" to proceed: `)
+    await prompt(
+      `\nAbout to create admin account:\n  email: ${email}\n  role:  ${role}\nType "yes" to proceed: `,
+    )
   )
     .trim()
     .toLowerCase();
@@ -297,7 +341,8 @@ async function main(): Promise<void> {
     databaseId,
     token.trim(),
     'INSERT INTO admin_users (id, email, password_hash, role, status, created_at) ' +
-      "VALUES (?, ?, ?, ?, 'ACTIVE', ?)",
+      "SELECT ?, ?, ?, ?, 'ACTIVE', ? WHERE NOT EXISTS " +
+      "(SELECT 1 FROM admin_users WHERE role = 'owner')",
     [id, email, passwordHash, role, createdAt],
   );
 

@@ -33,6 +33,8 @@ import { normalise as normaliseSiteUrl } from '@/lib/seo/site-url';
 /** Logical KV namespaces, each a separate Netlify Blobs store. */
 export type BindingName = 'SESSIONS' | 'DRAFTS' | 'RATELIMIT' | 'DB' | 'MEDIA';
 export type SecretName =
+  | 'CF_ACCESS_TEAM_DOMAIN'
+  | 'CF_ACCESS_AUD'
   | 'GITHUB_TOKEN'
   | 'GITHUB_REPO'
   | 'GITHUB_BRANCH'

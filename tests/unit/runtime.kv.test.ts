@@ -27,9 +27,7 @@ class FakeKV {
   readonly puts: PutCall[] = [];
   listArg: { prefix?: string; cursor?: string } | undefined;
   /** When set, `list` returns this instead of deriving from the store (to test cursor passthrough). */
-  listResult:
-    | { keys: { name: string }[]; list_complete: boolean; cursor?: string }
-    | undefined;
+  listResult: { keys: { name: string }[]; list_complete: boolean; cursor?: string } | undefined;
 
   async get(key: string, type: 'text' | 'json' = 'text'): Promise<unknown> {
     const raw = this.store.get(key);
@@ -61,7 +59,9 @@ class FakeKV {
     this.listArg = options;
     if (this.listResult !== undefined) return this.listResult;
     const prefix = options?.prefix ?? '';
-    const keys = [...this.store.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name }));
+    const keys = [...this.store.keys()]
+      .filter((k) => k.startsWith(prefix))
+      .map((name) => ({ name }));
     return { keys, list_complete: true };
   }
 }

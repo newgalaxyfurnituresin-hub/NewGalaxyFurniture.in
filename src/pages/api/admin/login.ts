@@ -25,6 +25,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { getAccessConfig } from '@/lib/auth/access';
 import { z } from 'zod';
 
 import { ERROR_CODES, errorResponse, logServerError, minutesPhrase } from '@/lib/errors';
@@ -86,6 +87,13 @@ function rateLimited(minutes: number): Response {
 }
 
 export async function POST(context: APIContext): Promise<Response> {
+  // Access replaces password execution only when its trusted configuration is complete.
+  // Keep the existing owner hash intact, and avoid the incompatible hosted derivation.
+  if (getAccessConfig(context))
+    return new Response('Use Cloudflare sign-in.', {
+      status: 409,
+      headers: { 'cache-control': 'no-store' },
+    });
   const startedAt = Date.now();
   const { request } = context;
 

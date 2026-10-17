@@ -37,11 +37,7 @@
 
 import { env as cloudflareEnv } from 'cloudflare:workers';
 
-import type {
-  D1Database,
-  KVNamespace,
-  R2Bucket,
-} from '@cloudflare/workers-types';
+import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-types';
 
 import { createD1Database } from '@/lib/runtime/d1';
 import { createCloudflareKeyValueStore } from '@/lib/runtime/kv';
@@ -59,6 +55,8 @@ export type BindingName = 'SESSIONS' | 'DRAFTS' | 'RATELIMIT' | 'DB' | 'MEDIA';
  * type-checks during the migration; they resolve to `undefined` under a Cloudflare env.
  */
 export type SecretName =
+  | 'CF_ACCESS_TEAM_DOMAIN'
+  | 'CF_ACCESS_AUD'
   | 'GITHUB_TOKEN'
   | 'GITHUB_REPO'
   | 'GITHUB_BRANCH'

@@ -391,11 +391,7 @@ describe('the domain appears only in PUBLIC_SITE_URL', () => {
       .map((file) => relative(SRC, file).split(sep).join('/'))
       .sort();
 
-    expect(readers).toEqual([
-      'lib/env.cloudflare.ts',
-      'lib/env.ts',
-      'lib/seo/site-url.ts',
-    ]);
+    expect(readers).toEqual(['lib/env.cloudflare.ts', 'lib/env.ts', 'lib/seo/site-url.ts']);
   });
 
   it('normalises the site URL through the one shared helper in both env resolvers', () => {

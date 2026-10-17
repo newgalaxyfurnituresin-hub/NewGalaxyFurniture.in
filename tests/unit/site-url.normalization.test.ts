@@ -109,7 +109,10 @@ describe('env.cloudflare.ts getPublicConfig site URL', () => {
   beforeEach(() => {
     for (const key of Object.keys(workerEnv)) delete workerEnv[key];
     vi.resetModules();
-    vi.doMock('cloudflare:workers', () => ({ env: workerEnv, ctx: { waitUntil() {}, passThroughOnException() {} } }));
+    vi.doMock('cloudflare:workers', () => ({
+      env: workerEnv,
+      ctx: { waitUntil() {}, passThroughOnException() {} },
+    }));
   });
   afterEach(() => {
     vi.doUnmock('cloudflare:workers');

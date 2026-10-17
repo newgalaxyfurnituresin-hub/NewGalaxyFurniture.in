@@ -230,10 +230,7 @@ function Chevron(): React.JSX.Element {
   );
 }
 
-export default function MobileNav({
-  categories,
-  pages,
-}: MobileNavProps): React.JSX.Element {
+export default function MobileNav({ categories, pages }: MobileNavProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const panelId = useScopedId('ngf-mobilenav-panel');
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -342,11 +339,7 @@ export default function MobileNav({
                 <li key={link.href}>
                   <a href={link.href} onClick={close}>
                     <span className="ngf-mobilenav-icon">
-                      {slug ? (
-                        <CategoryThumb slug={slug} />
-                      ) : (
-                        <RowIcon href={link.href} />
-                      )}
+                      {slug ? <CategoryThumb slug={slug} /> : <RowIcon href={link.href} />}
                     </span>
                     <span className="ngf-mobilenav-label">{link.label}</span>
                     <Chevron />

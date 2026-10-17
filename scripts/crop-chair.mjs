@@ -16,7 +16,5 @@ const width = Math.round(meta.width * fw);
 const height = Math.round(meta.height * fh);
 console.log('crop', { left, top, width, height });
 
-await sharp(src)
-  .extract({ left, top, width, height })
-  .toFile('reviews-chair-crop.png');
+await sharp(src).extract({ left, top, width, height }).toFile('reviews-chair-crop.png');
 console.log('wrote reviews-chair-crop.png');

@@ -1,20 +1,37 @@
 # New Galaxy Furniture
 
-A premium furniture catalogue site with a GitHub-backed admin platform, built on Astro and
-deployed to **Netlify** (Netlify Functions, Neon Postgres, and Netlify Blobs).
+A furniture catalogue site with a GitHub-backed admin platform, built on Astro and deployed to
+the company **Cloudflare Workers** account (D1, KV, R2 and static client assets).
 
 Enquiries convert on WhatsApp and by phone — there is no cart, no checkout and no payment
 processing. The catalogue is content, the content is JSON in this repository, and the
 repository is the source of truth.
 
-> **Platform: Netlify only.** This project was migrated off Cloudflare. There is no Worker, no
-> `wrangler.toml`, and no R2/D1/KV/Rate-Limiting binding in the runtime. The server layer runs as
-> Netlify Functions; relational data (leads, analytics, admin users) is Neon Postgres; product
-> images, admin sessions, product drafts and rate-limit counters are Netlify Blobs; product/content
-> JSON is still committed to the GitHub content repository by the admin write-back pipeline. Any
-> Cloudflare wording that remains below is historical and does not describe the runtime.
+## Company production deployment
 
-## Deploying to Netlify (quickstart)
+- Repository: [newgalaxyfurnituresin-hub/NewGalaxyFurniture.in](https://github.com/newgalaxyfurnituresin-hub/NewGalaxyFurniture.in), branch `main`.
+- Website: <https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev>.
+- Admin: `/admin/login`, using the existing owner's **Sign in with Cloudflare** button.
+- Workers Builds build command: `npm run build:cloudflare`.
+- Workers Builds deploy command: `npm run deploy:cloudflare`.
+- Root directory: `/`. Production branch: `main`. Preview builds remain disabled until isolated
+  preview storage is provisioned.
+
+The build command selects the Cloudflare adapter and runs content validation, types, lint, all tests,
+the production build, size budgets and secret scanning before deployment. Both commands refuse a
+different company account, Worker, content repository, storage identifiers, exposed server assets,
+missing owner sign-in configuration or non-empty cron schedules. A failed build keeps the existing
+deployment active. Commits from the admin's GitHub content operations use the same repository.
+
+Runtime `GITHUB_TOKEN` is fine-grained, restricted to this repository with Contents read/write.
+`SESSION_SECRET` and all credentials stay in Cloudflare secret bindings. The deploy command preserves
+existing runtime secrets; they are not needed in the build environment or repository. See
+[migration verification and current connection status](CLOUDFLARE-MIGRATION.md).
+
+The Netlify adapter remains available for an explicitly chosen alternative deployment. The plain
+`npm run build` command still defaults to Netlify; company production uses the commands above.
+
+## Alternative Netlify deployment (quickstart)
 
 1. **Create the Netlify site** from this GitHub repo (Netlify → Add new site → Import). Netlify
    auto-detects Astro; the build command is `npm run build` and the publish directory is `dist`
@@ -148,12 +165,12 @@ wrangler r2 bucket lifecycle add ngf-media \
 
 Without that rule nothing breaks and nothing is lost; deleted objects simply accumulate.
 
-**Cloudflare Workers Paid is assumed** ($5/month), for R2, for the Rate Limiting binding, and
-for the CPU headroom the image pipeline needs. The pipeline carries roughly 2.1 MB gzipped of
-WebAssembly (Photon for decode/resize/WebP/JPEG, jSquash for AVIF encode and decode), which
-fits the paid plan's 10 MB Worker ceiling comfortably and leaves very little room under the
-free plan's 3 MB. On the free plan, derivative generation would have to move to a Queue
-consumer or to Cloudflare Images, and R2 needs enabling separately.
+**Company production does not require a Workers Paid upgrade for its current sign-in flow.**
+Cloudflare Access verifies the owner identity, and KV-backed counters provide application rate limits.
+Production cron schedules stay empty. R2 was separately enabled by the account owner.
+The deployed storefront serves existing, pre-generated media derivatives. New image processing is a
+heavier optional workload and has not been verified within the current runtime limits. No paid plan,
+Cloudflare Images subscription or Queue consumer has been enabled as part of this deployment.
 
 ---
 
@@ -344,66 +361,41 @@ unavailable" rather than reporting a false success or failure. Nothing else depe
 
 ## Cloudflare setup
 
-The `id` fields in `wrangler.toml` are placeholders. They are resource identifiers, not
-credentials — replace them with the real values printed by the create commands.
+The company production resources are already provisioned. Production identifiers in
+`wrangler.toml` are real company resource IDs; preview identifiers remain placeholders.
+Do not recreate resources, reseed the existing owner or add lifecycle deletion rules during a
+routine deployment. [The migration report](CLOUDFLARE-MIGRATION.md) records the verified resources.
+
+For a normal company production release, use:
 
 ```bash
-# 1. KV namespaces (repeat with --env preview for the preview environment)
-wrangler kv namespace create SESSIONS
-wrangler kv namespace create DRAFTS
-wrangler kv namespace create RATELIMIT
-
-# 2. D1
-wrangler d1 create ngf-content
-
-# 3. R2
-wrangler r2 bucket create ngf-media
-wrangler r2 bucket lifecycle add ngf-media \
-  --name expire-deleted --prefix deleted/ --expire-days 30
-
-# 4. Paste every printed id into wrangler.toml, replacing the REPLACE_WITH_* placeholders.
-
-# 5. Migrations — required before first use
-npm run db:migrate           # applies both --local and --remote
-
-# 6. Secrets, per environment
-wrangler secret put GITHUB_TOKEN
-wrangler secret put GITHUB_REPO
-wrangler secret put GITHUB_BRANCH
-wrangler secret put SESSION_SECRET
-wrangler secret put AI_PROVIDER
-wrangler secret put AI_API_KEY
-wrangler secret put AI_MODEL
-# optional
-wrangler secret put CF_DEPLOY_HOOK_URL
-wrangler secret put CF_ACCOUNT_ID
-wrangler secret put CF_API_TOKEN
-wrangler secret put CF_WORKER_NAME
-
-# 7. The admin account (see Admin setup)
-npx tsx scripts/seed-admin.ts --remote
+npm ci
+npm run build:cloudflare
+npm run deploy:cloudflare
 ```
 
-Bindings declared in `wrangler.toml`: `SESSIONS`, `DRAFTS`, `RATELIMIT` (KV), `DB` (D1),
-`MEDIA` (R2), `ASSETS` (static assets), `RL_ADMIN_API` and `RL_EVENTS` (Rate Limiting).
+Authenticate to the company Cloudflare account first. The deployment guard pins the company
+account and resources, and ordinary deployment preserves the installed secret bindings.
+Never place secret values in Git or command-line arguments. A required credential rotation must
+use a private supported secret-entry mechanism; ordinary `wrangler secret put` activates a version.
 
-A nightly cron at `30 19 * * *` (19:30 UTC = 01:00 IST) runs the analytics snapshot. The
-preview environment declares an empty `crons` list deliberately: `triggers` is inheritable, and
-without that override the preview Worker would commit its own snapshot — computed from the
-_preview_ database — into the same content repository production builds from.
+Bindings declared in `wrangler.toml`: `SESSIONS`, `DRAFTS`, `RATELIMIT` (KV), `DB` (D1),
+`MEDIA` (R2) and `ASSETS` (static assets). Application rate limits use KV counters.
+
+Production and preview both keep `crons = []`. The analytics snapshot handler exists in source,
+but no nightly schedule is enabled. Do not enable one as part of a routine deployment.
 
 ---
 
 ## Admin setup
 
-**Migrations and seeding must both run before first use.** There is no bootstrap UI: an
-unseeded environment has no account to log in with.
+Company production already has one active owner. Sign in at `/admin/login` using Cloudflare.
+Do not run seeding again against the existing production database.
 
-```bash
-npm run db:migrate                        # tables must exist first
-npx tsx scripts/seed-admin.ts --local     # local development
-npx tsx scripts/seed-admin.ts --remote    # deployed environment
-```
+For an explicitly provisioned replacement company database, apply the D1 migrations first and use
+`npx tsx scripts/seed-admin-d1.ts --company-login` privately. The script verifies the pinned company
+account/database and refuses a second owner. Netlify's separate `scripts/seed-admin.ts` is for the
+alternative Netlify environment, not company D1.
 
 The script creates the single `owner` account. It is deliberately austere:
 

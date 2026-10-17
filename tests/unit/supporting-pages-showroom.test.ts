@@ -115,7 +115,7 @@ describe('workshop — a two-column how-it-works story beside a real workbench p
     expect(WORKSHOP).toContain('ngf-workshop-main');
     expect(WORKSHOP).toContain('ngf-workshop-aside');
     // The four furniture studies are one data-reveal + data-motion-group list — one animating element.
-    expect(WORKSHOP).toMatch(/ngf-workshop-studies[^>]*data-reveal data-motion-group/);
+    expect(WORKSHOP).toMatch(/ngf-workshop-studies[^>]*data-reveal\s+data-motion-group/);
   });
 
   it('carries the real workbench photograph as a titled, dimensioned, prioritised image', () => {
@@ -181,7 +181,7 @@ describe('workshop — a two-column how-it-works story beside a real workbench p
     // visible-by-default: the from-state lives only inside prefers-reduced-motion: no-preference and
     // is gated on :not([data-revealed]), so a broken script can never hide the content. The page
     // relies on the shared mechanism rather than a page-local connector-line animation.
-    expect(WORKSHOP).toMatch(/data-reveal data-motion-group/);
+    expect(WORKSHOP).toMatch(/data-reveal\s+data-motion-group/);
   });
 });
 

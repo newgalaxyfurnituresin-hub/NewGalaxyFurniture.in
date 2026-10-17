@@ -104,9 +104,7 @@ describe('createD1Database', () => {
 
   it('run() reports success and first() returns the inserted row or null', async () => {
     const insert = await d1
-      .prepare(
-        'INSERT INTO login_attempts (key, fails, locked_until) VALUES (?, ?, ?)',
-      )
+      .prepare('INSERT INTO login_attempts (key, fails, locked_until) VALUES (?, ?, ?)')
       .bind('email:abc', 3, null)
       .run();
     expect(insert).toEqual({ success: true });
@@ -125,7 +123,10 @@ describe('createD1Database', () => {
   });
 
   it('all() narrows D1 result to { results } only', async () => {
-    await d1.prepare('INSERT INTO leads (id, created_at, type, name, phone, message) VALUES (?, ?, ?, ?, ?, ?)')
+    await d1
+      .prepare(
+        'INSERT INTO leads (id, created_at, type, name, phone, message) VALUES (?, ?, ?, ?, ?, ?)',
+      )
       .bind('lead_1', '2026-03-14T00:00:00.000Z', 'CONTACT', 'Asha', '+910000000000', 'hi')
       .run();
     const result = await d1.prepare('SELECT id FROM leads').all<{ id: string }>();
@@ -157,11 +158,31 @@ describe('createD1Database', () => {
     // The real leads search reuses ?1 five times with every other placeholder numbered. If the
     // adapter rewrote placeholders, ?1 would bind to the wrong argument and this would throw or
     // return the wrong rows. Verifying it runs AND filters correctly proves the passthrough.
-    await d1.prepare('INSERT INTO leads (id, created_at, type, name, phone, message) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind('lead_a', '2026-03-14T00:00:00.000Z', 'CONTACT', 'Teak Table buyer', '+911111111111', 'want a teak table')
+    await d1
+      .prepare(
+        'INSERT INTO leads (id, created_at, type, name, phone, message) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+      .bind(
+        'lead_a',
+        '2026-03-14T00:00:00.000Z',
+        'CONTACT',
+        'Teak Table buyer',
+        '+911111111111',
+        'want a teak table',
+      )
       .run();
-    await d1.prepare('INSERT INTO leads (id, created_at, type, name, phone, message) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind('lead_b', '2026-03-14T00:00:00.000Z', 'CONTACT', 'Someone else', '+912222222222', 'a sofa')
+    await d1
+      .prepare(
+        'INSERT INTO leads (id, created_at, type, name, phone, message) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+      .bind(
+        'lead_b',
+        '2026-03-14T00:00:00.000Z',
+        'CONTACT',
+        'Someone else',
+        '+912222222222',
+        'a sofa',
+      )
       .run();
 
     const pattern = '%teak%';

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "New Galaxy Furniture — catalogue site on Astro 7 + Preact islands, deployed to Netlify (Functions, Neon Postgres, Netlify Blobs).",
+  "description": "New Galaxy Furniture — Astro catalogue and admin platform on company Cloudflare Workers, D1, KV and R2.",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -11,6 +11,8 @@
     "dev": "astro dev",
     "prebuild": "npm run validate:content",
     "build": "astro build",
+    "build:cloudflare": "tsx scripts/cloudflare-production.ts build",
+    "deploy:cloudflare": "tsx scripts/cloudflare-production.ts deploy",
     "postbuild": "tsx scripts/check-motion-budget.ts && tsx scripts/emit-redirects.ts && tsx scripts/audit-seo.ts && tsx scripts/audit-csp.ts && tsx scripts/audit-page-budget.ts && tsx scripts/audit-image-loading.ts && tsx scripts/lint-keyword-density.ts",
     "preview": "netlify dev",
     "check": "astro check && tsc --noEmit",
@@ -37,7 +39,9 @@
     "@netlify/blobs": "10.7.13",
     "@netlify/database": "^2.0.1",
     "@netlify/neon": "0.1.2",
+    "@noble/hashes": "2.4.0",
     "astro": "7.2.10",
+    "jose": "6.2.12",
     "minisearch": "7.2.0",
     "preact": "^10.29.8",
     "preact-render-to-string": "^6.7.0",

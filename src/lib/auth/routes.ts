@@ -28,7 +28,7 @@ import type { Permission } from './permissions';
 export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 export type AdminRouteAuth =
-  /** No session required. Exactly one endpoint qualifies: the login handler itself. */
+  /** No app session required: credential handlers must verify password or signed Access identity. */
   | { kind: 'public' }
   /**
    * A valid session and a matching CSRF token, but no particular permission —
@@ -97,6 +97,8 @@ const READ = permission('product.read');
 export const ADMIN_ROUTES: readonly AdminRoute[] = [
   // --- Auth -----------------------------------------------------------------
   route('POST', '/api/admin/login', publicRoute),
+  route('GET', '/api/admin/access', publicRoute),
+  route('POST', '/api/admin/access', publicRoute, 'none'),
   route('POST', '/api/admin/logout', sessionOnly),
   route('GET', '/api/admin/session', sessionOnly),
 
@@ -164,11 +166,14 @@ export const ADMIN_ROUTES: readonly AdminRoute[] = [
 ];
 
 /**
- * The closed allowlist of endpoints that may run without a session. It has exactly
- * one member and there is no second candidate: everything else in `/api/admin/**`
- * is reachable only after `POST /api/admin/login` has succeeded.
+ * Credential exchange endpoints verify passwords or signed Access identities themselves.
+ * All remaining admin APIs require an established app session.
  */
-export const UNAUTHENTICATED_ROUTES: readonly string[] = ['POST /api/admin/login'];
+export const UNAUTHENTICATED_ROUTES: readonly string[] = [
+  'POST /api/admin/login',
+  'GET /api/admin/access',
+  'POST /api/admin/access',
+];
 
 /**
  * The closed allowlist of endpoints that require a session but no permission.
