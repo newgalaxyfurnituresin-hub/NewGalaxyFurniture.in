@@ -1,4 +1,4 @@
-# New Galaxy Furniture
+# NewGalaxyFurniture.in — New Galaxy Furniture
 
 A furniture catalogue site with a GitHub-backed admin platform, built on Astro and deployed to
 the company **Cloudflare Workers** account (D1, KV, R2 and static client assets).
