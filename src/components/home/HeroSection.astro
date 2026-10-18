@@ -138,7 +138,7 @@ const assurances: { icon: 'ruler' | 'truck' | 'hammer'; label: string; sub: stri
         {
           icon: 'truck' as const,
           label: `Delivered across ${settings.serviceArea.join(', ')}`,
-          sub: 'Safe and reliable delivery',
+          sub: 'Delivery charges apply',
         },
       ]
     : []),
@@ -398,7 +398,14 @@ const headingLines =
                   </span>
                   <span class="ngf-hero-assurance-label">
                     {item.label}
-                    <span class="ngf-hero-assurance-sub">{item.sub}</span>
+                    <span
+                      class:list={[
+                        'ngf-hero-assurance-sub',
+                        { 'ngf-hero-assurance-charge': item.icon === 'truck' },
+                      ]}
+                    >
+                      {item.sub}
+                    </span>
                   </span>
                 </li>
               ))}
@@ -1137,6 +1144,11 @@ const headingLines =
      assurance row is exactly as it was. */
   .ngf-hero-assurance-sub {
     display: none;
+  }
+  /* Delivery charges must stay visible beside the delivery area on every screen size. */
+  .ngf-hero-assurance-sub.ngf-hero-assurance-charge {
+    display: block;
+    font-weight: 600;
   }
 
   @media (max-width: 767px) {
