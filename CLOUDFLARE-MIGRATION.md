@@ -9,7 +9,7 @@ Live URL: <https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev>
 - Identity: `newgalaxyfurnitures.in@gmail.com`.
 - Account: `202e4307d4836b9170f546dbea1783d4`.
 - Worker: `newgalaxyfurniture`.
-- Active deployed version: `44a55ab1-373e-4083-a25a-ca52e15231ef`.
+- Active deployed version: `f238a31a-82f9-41e5-b013-663433456376`.
 - Application and runtime secrets uploaded together; deployment succeeded.
 - Assets come from `dist/client`; server code is separate.
 - Cloudflare API verified the installed bindings and secret names.
@@ -36,10 +36,12 @@ terms were accepted by the assistant.
 - No administrator email, password, hash, API token, or session cookie is recorded in this report.
 - `GITHUB_TOKEN` and a fresh `SESSION_SECRET` are installed as Cloudflare `secret_text` bindings.
   Values were supplied from the Git-ignored private preparation file, never from source control.
-- GitHub repository, main ref, and content-directory read calls returned 200. Minimum intended PAT
-  permissions are Contents read/write on `Website-Deploys/NewGalaxyFurniture` only, with Metadata read.
-  Read success does not prove write scope; no test repository commits were made.
-- `GITHUB_REPO=Website-Deploys/NewGalaxyFurniture`, `GITHUB_BRANCH=main` are non-secret variables.
+- The company website token was privately entered and its identity/repository access verified.
+  Minimum intended PAT permissions are Contents read/write on
+  `newgalaxyfurnituresin-hub/NewGalaxyFurniture.in` only, with Metadata read.
+  The original repository credential passed the earlier isolated write test; that result does
+  not by itself prove write access for the replacement company credential.
+- `GITHUB_REPO=newgalaxyfurnituresin-hub/NewGalaxyFurniture.in`, `GITHUB_BRANCH=main` are non-secret variables.
 - Optional AI and deployment-status credentials remain unset rather than using unverified values.
 - **48 media objects, 13,461,103 bytes** restored from the existing local backup to company R2.
   Every object was downloaded again and verified byte for byte. Different existing destination
@@ -63,7 +65,7 @@ No source Worker, database, namespace, bucket, backup, credential, or untracked 
 
 ## Validation completed
 
-- **70 unit/property suites, 1,050 tests passed**.
+- **71 unit/property suites, 1,056 tests passed**.
 - Astro/TypeScript check: zero errors and zero warnings; 21 informational hints.
 - Full lint and formatting passed. Screenshot helper browser globals/catches were fixed; 25 existing
   tracked files were formatted. Two source-layout assertions now tolerate formatting whitespace
@@ -135,9 +137,12 @@ No source Worker, database, namespace, bucket, backup, credential, or untracked 
 
 The user selected `newgalaxyfurnituresin-hub/NewGalaxyFurniture.in` and authorized pushing all
 migration changes and enabling automatic updates. This is a separate new public repository,
-ID `1423101174`, whose initial commit `952b1532aba077c000b23d06ac9785fa23d55a6b` contains only a README.
+ID `1423101174`, whose initial commit `952b1532aba077c000b23d06ac9785fa23d55a6b` contained only a README.
 The original public repository remains `Website-Deploys/NewGalaxyFurniture`, ID `1354912514`.
-Both histories will be preserved; the original repository and all local user artifacts remain intact.
+Both histories are preserved in company main `3a3b63186fb941868d3ca3b870f1650350c49f58`, including
+the user's latest draft commit `f5eb8a38c6f5af2b0efe9de417b190f23d94ec32`. All ten original development
+branches were also copied without force. The original repository and all local user artifacts remain intact.
+The company repository is now local `origin`; the original remains available as `personal`.
 
 The user completed private company Git authentication and entered a company-owned fine-grained
 website token for Contents read/write on the new repository. Its identity and repository role were
@@ -153,8 +158,10 @@ Routine deployment preserves installed Worker secrets with `--keep-vars`.
 
 Cloudflare's repository connection form is prepared for the company repository, branch `main`,
 root `/`, those checked commands, and no preview builds. The form has not been submitted; it would
-create a Cloudflare automatic-build API token. Repository push, runtime credential switch, connection
-approval and real automatic-build verification are still pending at this checkpoint.
+create a Cloudflare automatic-build API token. Repository push and the atomic runtime credential
+switch have succeeded. The deployed version above uses the company repository and company token,
+preserving the session secret. A fresh live check passed all 37 page/security checks, 59 assets and
+48 restored media objects. Connection approval and real automatic-build verification remain pending.
 
 1. **GitHub writes verified:** after the user explicitly approved the prepared isolated test,
    the private production credential created a new disposable codex branch and wrote/read back a
@@ -174,10 +181,10 @@ approval and real automatic-build verification are still pending at this checkpo
    lifecycle deletion rule because persistent deletion was not explicitly authorized. The rule was
    not added or retried. Media remains recoverable without automatic expiration; active media and
    source resources are preserved. The bucket's default incomplete-multipart-abort rule is unchanged.
-5. **Git:** one explicitly approved harmless test commit was made on a new temporary remote branch,
-   which was subsequently removed and verified absent. No main commit/push, history rewrite, reset,
-   clean, or stash was performed. Migration source changes remain local pending diff review and
-   publishing approval; all originally untracked artifacts remain present. Never commit `.wrangler`,
+5. **Git:** reviewed migration changes and both repository histories were committed and pushed to
+   company main with the user's authorization. All ten original development branches are preserved
+   in the company repository. No history rewrite, reset, clean, or stash was performed; the original
+   personal repository was not pushed. All originally untracked artifacts remain present. Never commit `.wrangler`,
    `.dev.vars`, local credentials, database exports, or generated private data.
 
 Deployment and test evidence are under the Git-ignored `.wrangler` directory: `company-deploy.log`,
