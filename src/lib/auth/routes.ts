@@ -95,6 +95,8 @@ const publicRoute: AdminRouteAuth = { kind: 'public' };
 const READ = permission('product.read');
 
 export const ADMIN_ROUTES: readonly AdminRoute[] = [
+  route('GET', '/api/admin/experiences', READ),
+  route('PATCH', '/api/admin/experiences', permission('settings.write')),
   // --- Auth -----------------------------------------------------------------
   route('POST', '/api/admin/login', publicRoute),
   route('GET', '/api/admin/access', publicRoute),

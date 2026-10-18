@@ -34,13 +34,15 @@ import { buildTelUrl, buildWhatsAppUrl } from '@/lib/whatsapp';
  */
 
 describe('navigation (Requirements 9.1, 9.2, 9.7)', () => {
-  it('presents the six named top-level destinations, in order', () => {
+  it('preserves the existing destinations and adds repair and mattresses within the header limit', () => {
     // Six, because the header's job is to answer "what do you sell / can you make it for me / who
     // are you / how do I reach you" at a glance. Nine competing category labels answered none of
     // them faster, so the categories moved into one Shop dropdown.
     expect(HEADER_NAV.map((entry) => entry.label)).toEqual([
       'Shop',
       'Custom Furniture',
+      'Sofa Repair',
+      'Mattresses',
       'About',
       'Workshop',
       'Gallery',

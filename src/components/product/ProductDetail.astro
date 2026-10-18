@@ -34,6 +34,8 @@ import PriceBlock from '@/components/product/PriceBlock.astro';
 import SpecList from '@/components/product/SpecList.astro';
 import StockBadge from '@/components/product/StockBadge.astro';
 import VariantList from '@/components/product/VariantList.astro';
+import MattressOptions from '@/components/product/MattressOptions';
+import '@/styles/experiences.css';
 import CallLink from '@/components/ui/CallLink.astro';
 import ResponsiveImage from '@/components/ui/ResponsiveImage.astro';
 import WhatsAppLink from '@/components/ui/WhatsAppLink.astro';
@@ -323,83 +325,85 @@ const quickEnquireHref = (() => {
       costs no extra fetches and inherits the panel's colour.
     */
     }
-    <ul class="ngf-pdp-trust" aria-label="What to expect">
-      {
-        trustPoints.map((point) => (
-          <li class="ngf-pdp-trust-item">
-            <span class="ngf-pdp-trust-icon" aria-hidden="true">
-              {point.icon === 'quality' && (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 3l7 3v5c0 4.2-2.8 7.6-7 8.9C7.8 18.6 5 15.2 5 11V6l7-3z" />
-                  <path d="M9 11.5l2 2 4-4.5" />
-                </svg>
-              )}
-              {point.icon === 'customise' && (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M4 7h11" />
-                  <path d="M19 7h1" />
-                  <circle cx="17" cy="7" r="2" />
-                  <path d="M4 17h5" />
-                  <path d="M13 17h7" />
-                  <circle cx="11" cy="17" r="2" />
-                </svg>
-              )}
-              {point.icon === 'made' && (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M4 20h16" />
-                  <path d="M6 20v-8l6-4 6 4v8" />
-                  <path d="M10 20v-4h4v4" />
-                </svg>
-              )}
-              {point.icon === 'support' && (
-                <svg
-                  viewBox="0 0 24 24"
-                  width="22"
-                  height="22"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="8" r="3.2" />
-                  <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
-                </svg>
-              )}
-            </span>
-            <span class="ngf-pdp-trust-title">{point.title}</span>
-            <span class="ngf-pdp-trust-detail">{point.detail}</span>
-          </li>
-        ))
-      }
-    </ul>
+    {
+      product.category !== 'mattresses' && (
+        <ul class="ngf-pdp-trust" aria-label="What to expect">
+          {trustPoints.map((point) => (
+            <li class="ngf-pdp-trust-item">
+              <span class="ngf-pdp-trust-icon" aria-hidden="true">
+                {point.icon === 'quality' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 3l7 3v5c0 4.2-2.8 7.6-7 8.9C7.8 18.6 5 15.2 5 11V6l7-3z" />
+                    <path d="M9 11.5l2 2 4-4.5" />
+                  </svg>
+                )}
+                {point.icon === 'customise' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M4 7h11" />
+                    <path d="M19 7h1" />
+                    <circle cx="17" cy="7" r="2" />
+                    <path d="M4 17h5" />
+                    <path d="M13 17h7" />
+                    <circle cx="11" cy="17" r="2" />
+                  </svg>
+                )}
+                {point.icon === 'made' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M4 20h16" />
+                    <path d="M6 20v-8l6-4 6 4v8" />
+                    <path d="M10 20v-4h4v4" />
+                  </svg>
+                )}
+                {point.icon === 'support' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="8" r="3.2" />
+                    <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+                  </svg>
+                )}
+              </span>
+              <span class="ngf-pdp-trust-title">{point.title}</span>
+              <span class="ngf-pdp-trust-detail">{point.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
 
     {
       description.trim() !== '' && (
@@ -427,7 +431,25 @@ const quickEnquireHref = (() => {
       )
     }
 
-    <VariantList variants={product.variants} class="ngf-pdp-variants" />
+    {
+      product.category === 'mattresses' && product.variants.length > 0 && settings.whatsapp[0] ? (
+        <MattressOptions
+          client:visible
+          product={{
+            name,
+            sku,
+            price: product.price,
+            priceOnEnquiry: product.priceOnEnquiry,
+            stockStatus: product.stockStatus,
+            variants: product.variants,
+          }}
+          number={settings.whatsapp[0].e164}
+          productUrl={productUrl ?? ''}
+        />
+      ) : (
+        <VariantList variants={product.variants} class="ngf-pdp-variants" />
+      )
+    }
 
     {
       product.madeToOrder && (

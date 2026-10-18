@@ -102,6 +102,12 @@ const envAlias = isCloudflare
         find: /^@\/lib\/env$/,
         replacement: fileURLToPath(new URL('./src/lib/env.cloudflare.ts', import.meta.url)),
       },
+      {
+        find: /^@\/lib\/images\/codec-photon$/,
+        replacement: fileURLToPath(
+          new URL('./src/lib/images/codec-cloudflare.ts', import.meta.url),
+        ),
+      },
     ]
   : [];
 

@@ -68,4 +68,5 @@ export const SEEDED_CATEGORY_SLUGS = [
   'outdoor',
   'shoe-stands',
   'temples',
+  'mattresses',
 ] as const;

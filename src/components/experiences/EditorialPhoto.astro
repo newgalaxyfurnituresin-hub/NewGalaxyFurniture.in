@@ -1,0 +1,36 @@
+---
+import type { EditorialPhoto } from '@/schemas/experiences';
+interface Props {
+  photo: EditorialPhoto;
+  priority?: boolean;
+  sizes?: string;
+  caption?: boolean;
+  class?: string;
+}
+const {
+  photo,
+  priority = false,
+  sizes = '(min-width: 900px) 50vw, 100vw',
+  caption = true,
+  class: className,
+} = Astro.props;
+const base = photo.src.match(/^\/brand\/(about-showroom|mattress-inspiration)-\d+\.webp$/)?.[1];
+const srcset = base
+  ? [480, 768, 1040, 1440].map((w) => `/brand/${base}-${w}.webp ${w}w`).join(', ')
+  : undefined;
+---
+
+<figure class:list={['ngf-editorial-photo', className]}>
+  <img
+    src={photo.src}
+    srcset={srcset}
+    sizes={srcset ? sizes : undefined}
+    width={photo.width}
+    height={photo.height}
+    alt={photo.alt}
+    loading={priority ? 'eager' : 'lazy'}
+    decoding="async"
+    fetchpriority={priority ? 'high' : undefined}
+  />
+  {caption && <figcaption>{photo.caption}</figcaption>}
+</figure>

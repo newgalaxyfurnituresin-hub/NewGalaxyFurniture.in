@@ -1,0 +1,55 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import ExperiencesEditor from '@/components/admin/ExperiencesEditor';
+import { can } from '@/lib/auth/permissions';
+import { createGitHubClient } from '@/lib/github/factory';
+import { readContentRecord } from '@/lib/github/content-writer';
+import { siteContentPath } from '@/lib/github/paths';
+import { logServerError } from '@/lib/errors';
+import { ExperiencesSchema } from '@/schemas/experiences';
+
+export const prerender = false;
+let record = null;
+try {
+  const path = siteContentPath('experiences');
+  if (path !== null)
+    record = await readContentRecord(createGitHubClient(Astro), path, ExperiencesSchema);
+} catch (error) {
+  logServerError('experiences: editor read failed', error);
+}
+const canWrite = can(Astro.locals.adminSession?.role ?? 'viewer', 'settings.write');
+---
+
+<AdminLayout title="Repair & Mattresses">
+  <p class="mb-6 max-w-[75ch] text-walnut">
+    Manage the two landing experiences here. Add repair topics, confirm services you actually offer,
+    and supply genuine project photos. Mattresses use the existing product catalogue, images,
+    variants and publication controls.
+  </p>
+  <div class="mb-8 flex flex-wrap gap-4">
+    <a class="underline" href="/admin/products/new">Add a mattress product</a>
+    <a class="underline" href="/admin/categories">Manage categories</a>
+    <a class="underline" href="/sofa-repair">View repair page</a>
+    <a class="underline" href="/collection/mattresses">View mattresses</a>
+  </div>
+  <p class="mb-8 max-w-[75ch] text-small text-walnut">
+    Choose “Mattresses” in Add Product. Enter only real prices, sizes and materials; use Variants
+    for size-specific price differences and availability. Add genuine images, save a draft, then
+    publish through the existing approval controls.
+  </p>
+  {
+    record?.sha ? (
+      <ExperiencesEditor
+        client:load
+        initial={record.value}
+        initialSha={record.sha}
+        canWrite={canWrite}
+      />
+    ) : (
+      <p role="alert">
+        These sections could not be loaded from the repository. Your stored content is unchanged.
+        Check the connection and reload.
+      </p>
+    )
+  }
+</AdminLayout>

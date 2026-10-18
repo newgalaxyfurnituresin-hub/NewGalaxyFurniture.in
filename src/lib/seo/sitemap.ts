@@ -33,6 +33,7 @@ export const STATIC_SITEMAP_PATHS: readonly string[] = [
   '/',
   '/collection',
   '/custom-furniture',
+  '/sofa-repair',
   '/about',
   '/workshop',
   '/gallery',

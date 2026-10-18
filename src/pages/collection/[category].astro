@@ -42,14 +42,16 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const categories = await getPublishedCategories();
   const products = await getCatalogue();
   const names = Object.fromEntries(categories.map((entry) => [entry.slug, entry.name]));
-  return categories.map((category) => ({
-    params: { category: category.slug },
-    props: {
-      category,
-      products: products.filter((product) => product.category === category.slug),
-      categoryNames: names,
-    },
-  }));
+  return categories
+    .filter((category) => category.slug !== 'mattresses')
+    .map((category) => ({
+      params: { category: category.slug },
+      props: {
+        category,
+        products: products.filter((product) => product.category === category.slug),
+        categoryNames: names,
+      },
+    }));
 };
 
 // Astro types `Astro.props` from a frontmatter-local `Props` interface, so the props
@@ -150,6 +152,20 @@ const meta = pageMeta(Astro, {
             label={`Ask about ${category.name} on WhatsApp`}
           />
         </div>
+        {
+          category.slug === 'sofas' && (
+            <p class="ngf-catalogue-intro">
+              <a href="/sofa-repair">Keeping a sofa you love? Explore repair and restoration.</a>
+            </p>
+          )
+        }
+        {
+          category.slug === 'beds' && (
+            <p class="ngf-catalogue-intro">
+              <a href="/collection/mattresses">Complete your bedroom: explore mattresses.</a>
+            </p>
+          )
+        }
       </div>
 
       {

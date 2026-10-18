@@ -902,6 +902,24 @@ function VariantEditor({ variants, disabled, onChange }: VariantEditorProps): Re
                 Remove
               </button>
             )}
+            <SelectField
+              id={`variant-${variant.id}-stock`}
+              label="Option availability"
+              value={variant.stockStatus ?? ''}
+              placeholder="Use product availability"
+              disabled={disabled}
+              options={['IN_STOCK', 'LIMITED_STOCK', 'OUT_OF_STOCK', 'MADE_TO_ORDER'].map(
+                (value) => ({ value, label: value.replaceAll('_', ' ').toLowerCase() }),
+              )}
+              onChange={(value) => {
+                const next = [...variants];
+                next[index] = {
+                  ...variant,
+                  stockStatus: value === '' ? undefined : (value as StockStatusValue),
+                };
+                onChange(next);
+              }}
+            />
           </li>
         ))}
       </ul>

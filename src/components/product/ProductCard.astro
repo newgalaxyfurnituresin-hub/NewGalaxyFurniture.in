@@ -165,6 +165,20 @@ const hoverSrc =
   <div class="ngf-card-body">
     <span class="ngf-card-tag">{classification}</span>
     <h3 class="ngf-card-name">{name}</h3>
+    {
+      product.category === 'mattresses' && (
+        <>
+          {product.shortDescription && (
+            <p class="text-small text-walnut">{safeText(product.shortDescription)}</p>
+          )}
+          {product.variants.length > 0 && (
+            <p class="text-small text-walnut">
+              Options: {product.variants.map((variant) => safeText(variant.label)).join(' · ')}
+            </p>
+          )}
+        </>
+      )
+    }
     <div class="ngf-card-meta">
       <p class="ngf-card-price">{price}</p>
       <span class="ngf-card-stock" data-stock={product.stockStatus}>

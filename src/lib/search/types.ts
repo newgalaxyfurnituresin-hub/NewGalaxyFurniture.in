@@ -57,6 +57,8 @@ export interface SearchDoc {
   lq: string;
   /** Size label. See the deviation note above. */
   sz?: string;
+  /** Mattress option labels, when sizes live on canonical product variants. */
+  vs?: string[];
 }
 
 /**

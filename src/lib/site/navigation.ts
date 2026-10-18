@@ -66,6 +66,7 @@ export const HEADER_NAV: readonly NavEntry[] = [
     items: [
       categoryLink('sofas', 'Sofas'),
       categoryLink('beds', 'Beds'),
+      categoryLink('mattresses', 'Mattresses'),
       categoryLink('dining-tables', 'Dining Tables'),
       categoryLink('dining-chairs', 'Dining Chairs'),
       categoryLink('accent-chairs', 'Accent Chairs'),
@@ -79,6 +80,8 @@ export const HEADER_NAV: readonly NavEntry[] = [
     note: 'Every piece we make, by room and by purpose. Browse the full collection.',
   },
   { kind: 'link', label: 'Custom Furniture', href: '/custom-furniture' },
+  { kind: 'link', label: 'Sofa Repair', href: '/sofa-repair' },
+  { kind: 'link', label: 'Mattresses', href: '/collection/mattresses' },
   { kind: 'link', label: 'About', href: '/about' },
   { kind: 'link', label: 'Workshop', href: '/workshop' },
   { kind: 'link', label: 'Gallery', href: '/gallery' },
@@ -102,10 +105,12 @@ export const CATEGORY_NAV: readonly NavLink[] = [
   categoryLink('outdoor', 'Outdoor'),
   categoryLink('shoe-stands', 'Shoe Stands'),
   categoryLink('temples', 'Temples'),
+  categoryLink('mattresses', 'Mattresses'),
 ];
 
 /** The supporting pages the footer carries alongside the categories. */
 export const SUPPORT_NAV: readonly NavLink[] = [
+  { kind: 'link', label: 'Sofa Repair', href: '/sofa-repair' },
   { kind: 'link', label: 'About', href: '/about' },
   { kind: 'link', label: 'Workshop', href: '/workshop' },
   { kind: 'link', label: 'Gallery', href: '/gallery' },

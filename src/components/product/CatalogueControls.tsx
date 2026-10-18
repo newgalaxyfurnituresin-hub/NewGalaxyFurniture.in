@@ -225,6 +225,7 @@ export default function CatalogueControls({
           onAvailability={onAvailability}
           onClear={onClear}
           hasFilters={!isNeutral(state)}
+          compact={scopeCategory === 'mattresses'}
         />
         <SortControl value={state.sort} onChange={onSort} docs={docs} ranking={ranking} />
       </div>

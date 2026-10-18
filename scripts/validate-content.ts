@@ -27,6 +27,7 @@ import { join, relative, resolve, sep } from 'node:path';
 
 import { CategorySchema } from '../src/schemas/category.ts';
 import { HomepageSchema } from '../src/schemas/homepage.ts';
+import { ExperiencesSchema } from '../src/schemas/experiences.ts';
 import { ProductSchema } from '../src/schemas/product.ts';
 import { RankingsSchema } from '../src/schemas/rankings.ts';
 import { ReviewSchema } from '../src/schemas/review.ts';
@@ -98,6 +99,8 @@ function routeFor(relativePath: string): Route | null {
       return { kind: 'snapshot', schema: SnapshotSchema, filenameIsSlug: false };
     case 'site':
       switch (file) {
+        case 'experiences.json':
+          return { kind: 'site', schema: ExperiencesSchema, filenameIsSlug: false };
         case 'settings.json':
           return { kind: 'site', schema: SiteSettingsSchema, filenameIsSlug: false };
         case 'homepage.json':

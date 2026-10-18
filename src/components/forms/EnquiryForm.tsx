@@ -40,6 +40,7 @@ import type { ChangeEvent, FormEvent, ReactElement } from 'react';
 import { LEAD_LIMITS } from '@/schemas/lead-limits';
 import { current as currentBatcher } from '@/lib/analytics/client';
 import { submitEnquiry, type EnquiryFailure, type FieldErrors } from '@/lib/leads/submit';
+import { repairRequirement } from '@/lib/leads/repair';
 import type { LeadTypeValue } from '@/schemas/lead';
 
 /** The fields any form may ask for. Order here is the order they render in. */
@@ -63,6 +64,9 @@ export interface FallbackNumber {
 }
 
 export interface EnquiryFormProps {
+  repairServices?: readonly string[];
+  confirmationMessage?: string;
+  fieldLabels?: Partial<Record<FieldKey, { label?: string; hint?: string; placeholder?: string }>>;
   type: LeadTypeValue;
   /** Which fields this form asks for. `name`, `phone` and `message` are always required. */
   fields: readonly FieldKey[];
@@ -192,6 +196,10 @@ function Alternatives({ numbers }: { numbers: readonly FallbackNumber[] }): Reac
 }
 
 export default function EnquiryForm(props: EnquiryFormProps): ReactElement {
+  const inFlight = useRef(false);
+  const [repairService, setRepairService] = useState('');
+  const [seating, setSeating] = useState('');
+  const [contact, setContact] = useState('Phone call');
   // Scoped by lead `type`, because two enquiry forms share a page: `/contact` mounts the contact
   // form and the callback form, and unscoped `useId()` gave both the same field ids — so every
   // label on the second form pointed at the first form's input. See `@/lib/ui/ids`.
@@ -276,7 +284,8 @@ export default function EnquiryForm(props: EnquiryFormProps): ReactElement {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (phase.kind === 'sending') return;
+    if (inFlight.current || phase.kind === 'sending') return;
+    inFlight.current = true;
     setPhase({ kind: 'sending' });
     setErrors({});
 
@@ -295,14 +304,21 @@ export default function EnquiryForm(props: EnquiryFormProps): ReactElement {
         : {}),
       honeypot,
       renderedAt: renderedAt.current,
+      ...(props.repairServices === undefined
+        ? {}
+        : { requirement: repairRequirement(repairService, seating, contact) }),
     };
 
-    const result = await submitEnquiry(payload, asked.includes('image') ? image : null);
+    const result = await submitEnquiry(payload, asked.includes('image') ? image : null).finally(
+      () => {
+        inFlight.current = false;
+      },
+    );
     if (result.ok) {
       // Counted only on a stored enquiry, so the event count and the lead count can be compared
       // and the difference between them means something (see `AnalyticsSummary`).
       currentBatcher()?.track('enquiry_submit', props.productSlug ?? '');
-      setPhase({ kind: 'sent', message: result.message });
+      setPhase({ kind: 'sent', message: props.confirmationMessage ?? result.message });
       props.onSuccess?.();
       return;
     }
@@ -341,6 +357,56 @@ export default function EnquiryForm(props: EnquiryFormProps): ReactElement {
     >
       {props.heading !== undefined && <h2 className="ngf-form-heading">{props.heading}</h2>}
       {props.intro !== undefined && <p className="ngf-form-intro">{props.intro}</p>}
+      {props.repairServices !== undefined && (
+        <fieldset className="ngf-repair-fields">
+          <legend>A little about your sofa</legend>
+          <div className="ngf-field">
+            <label className="ngf-field-label" htmlFor={`${idPrefix}-service`}>
+              What would you like to discuss?
+            </label>
+            <select
+              id={`${idPrefix}-service`}
+              value={repairService}
+              disabled={sending}
+              onChange={(event) => setRepairService(event.target.value)}
+            >
+              <option value="">Help me decide</option>
+              {props.repairServices.map((service) => (
+                <option key={service} value={service}>
+                  {service}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="ngf-field">
+            <label className="ngf-field-label" htmlFor={`${idPrefix}-seating`}>
+              Sofa type or seating (optional)
+            </label>
+            <input
+              id={`${idPrefix}-seating`}
+              value={seating}
+              maxLength={80}
+              placeholder="For example, a three-seater or an L-shaped sofa"
+              disabled={sending}
+              onChange={(event) => setSeating(event.target.value)}
+            />
+          </div>
+          <div className="ngf-field">
+            <label className="ngf-field-label" htmlFor={`${idPrefix}-contact`}>
+              Preferred way to reach you
+            </label>
+            <select
+              id={`${idPrefix}-contact`}
+              value={contact}
+              disabled={sending}
+              onChange={(event) => setContact(event.target.value)}
+            >
+              <option>Phone call</option>
+              <option>WhatsApp</option>
+            </select>
+          </div>
+        </fieldset>
+      )}
       {props.productName !== undefined && (
         <p className="ngf-form-product">
           About: <strong>{props.productName}</strong>
@@ -371,7 +437,7 @@ export default function EnquiryForm(props: EnquiryFormProps): ReactElement {
       )}
 
       {asked.map((key) => {
-        const spec = FIELDS[key];
+        const spec = { ...FIELDS[key], ...props.fieldLabels?.[key] };
         const id = `${idPrefix}-${key}`;
         const messages = errors[key] ?? [];
         const invalid = messages.length > 0;

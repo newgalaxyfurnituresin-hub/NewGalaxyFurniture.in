@@ -159,7 +159,7 @@ export function matches(doc: SearchDoc, state: FilterState): boolean {
     matchesAvailability(doc, state.availability) &&
     anyMatch(state.material, doc.m === undefined ? [] : [doc.m]) &&
     anyMatch(state.colour, doc.o) &&
-    anyMatch(state.size, doc.sz === undefined ? [] : [doc.sz]) &&
+    anyMatch(state.size, [...(doc.sz === undefined ? [] : [doc.sz]), ...(doc.vs ?? [])]) &&
     anyMatch(state.style, doc.t)
   );
 }
@@ -211,7 +211,7 @@ function valuesOf(doc: SearchDoc, dimension: MultiDimension): string[] {
     case 'colour':
       return doc.o;
     case 'size':
-      return doc.sz === undefined ? [] : [doc.sz];
+      return [...(doc.sz === undefined ? [] : [doc.sz]), ...(doc.vs ?? [])];
     case 'style':
       return doc.t;
   }

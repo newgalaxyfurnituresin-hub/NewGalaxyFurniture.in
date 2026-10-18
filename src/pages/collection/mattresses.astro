@@ -1,0 +1,243 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import EditorialPhoto from '@/components/experiences/EditorialPhoto.astro';
+import ProductCard from '@/components/product/ProductCard.astro';
+import CatalogueControls from '@/components/product/CatalogueControls';
+import QuickEnquireHost from '@/components/forms/QuickEnquireHost.astro';
+import ImagePreload from '@/components/ui/ImagePreload.astro';
+import { experiences } from '@/lib/content/experiences';
+import { getCatalogue, getPublishedCategories } from '@/lib/content/catalogue';
+import { getRankings, getSiteSettings } from '@/lib/content/site';
+import { getSearchIndexUrl } from '@/lib/search/index-asset';
+import { pageMeta, siteOrigin } from '@/lib/seo/page';
+import { breadcrumbJsonLd, itemListJsonLd } from '@/lib/seo/jsonld';
+import { buildEnquiryMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
+import '@/styles/experiences.css';
+
+const category = (await getPublishedCategories()).find((entry) => entry.slug === 'mattresses');
+// Hiding the category in the existing admin also hides this dedicated public route.
+if (!category) return Astro.redirect('/collection');
+const products = (await getCatalogue()).filter((product) => product.category === 'mattresses');
+const content = experiences.mattresses;
+const rankings = getRankings();
+const indexUrl = await getSearchIndexUrl();
+const settings = getSiteSettings();
+const whatsapp = settings.whatsapp[0];
+const whatsappHref = whatsapp
+  ? buildWhatsAppUrl(
+      whatsapp.e164,
+      buildEnquiryMessage({ kind: 'category', categoryName: 'Mattresses' }, settings),
+    )
+  : null;
+const origin = siteOrigin(Astro);
+const meta = pageMeta(Astro, {
+  title: category.seoTitle ?? 'Mattresses | Find Your Kind of Comfort',
+  description: category.seoDescription ?? category.shortDescription,
+  jsonLd: [
+    breadcrumbJsonLd(
+      [{ label: 'Collection', href: '/collection' }, { label: 'Mattresses' }],
+      origin,
+    ),
+    itemListJsonLd(
+      products.map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
+      origin,
+      { name: 'Mattresses' },
+    ),
+  ],
+});
+const heroBase = content.hero.src.match(
+  /^\/brand\/(about-showroom|mattress-inspiration)-\d+\.webp$/,
+)?.[1];
+const heroSet = heroBase
+  ? [480, 768, 1040, 1440].map((w) => `/brand/${heroBase}-${w}.webp ${w}w`).join(', ')
+  : undefined;
+const guidance = [
+  {
+    title: 'Start with the fit.',
+    text: 'Measure the inside of your bed frame. Length and width are more useful than a size name alone.',
+  },
+  {
+    title: 'Look at the details.',
+    text: 'Compare the materials, dimensions and options each published product actually lists.',
+  },
+  {
+    title: 'Make it personal.',
+    text: 'Share your preferred feel, your bed measurements and your budget before deciding.',
+  },
+];
+---
+
+<BaseLayout
+  meta={meta}
+  mainClass="ngf-experience ngf-mattresses"
+  analytics={{ event: { type: 'category_view', entity: 'mattresses' } }}
+>
+  <ImagePreload
+    slot="head"
+    hint={{ href: content.hero.src, srcset: heroSet, sizes: '(min-width: 900px) 50vw, 100vw' }}
+  />
+  <section class="ngf-exp-hero ngf-exp-wrap" aria-labelledby="mattress-heading">
+    <div class="ngf-exp-hero-copy" data-reveal data-motion-group>
+      <nav class="ngf-exp-crumb" aria-label="Breadcrumb">
+        <a href="/collection">Collection</a><span aria-hidden="true">/</span><span
+          aria-current="page">Mattresses</span
+        >
+      </nav><p class="ngf-exp-eyebrow">A little more comfort. Every day.</p><h1
+        id="mattress-heading"
+      >
+        {content.heading}
+      </h1><p class="ngf-exp-lede">{content.description}</p><div class="ngf-exp-actions">
+        <a class="ngf-exp-button" href="#mattress-collection"
+          >Explore mattresses <span aria-hidden="true">↓</span></a
+        >{
+          whatsappHref && (
+            <a class="ngf-exp-text-link" href={whatsappHref} target="_blank" rel="noopener">
+              Help me choose <span aria-hidden="true">↗</span>
+            </a>
+          )
+        }
+      </div><p class="ngf-exp-note">Thoughtful choices for the room you retreat to.</p>
+    </div>
+    <div class="ngf-exp-hero-media" data-reveal>
+      <EditorialPhoto photo={content.hero} priority /><span
+        class="ngf-exp-image-label"
+        aria-hidden="true">The art of slowing down</span
+      >
+    </div>
+  </section>
+  <div class="ngf-exp-manifesto">
+    <p>At the end of the day,<br /><em>come back to comfort.</em></p><span
+      >Your room. Your routine. Your kind of rest.</span
+    >
+  </div>
+  <section
+    id="mattress-collection"
+    class="ngf-exp-wrap ngf-exp-section ngf-mattress-listing"
+    aria-labelledby="collection-heading"
+  >
+    <div class="ngf-exp-section-head" data-reveal>
+      <div>
+        <p class="ngf-exp-eyebrow">The mattress collection</p><h2 id="collection-heading">
+          Find your kind of comfortable.
+        </h2>
+      </div><p>
+        {
+          products.length > 0
+            ? `${products.length} published ${products.length === 1 ? 'mattress' : 'mattresses'}. Compare the listed options and enquire about the one you have in mind.`
+            : 'The next good choice starts with a conversation. Ask us about current mattress options while the online collection is being prepared.'
+        }
+      </p>
+    </div>
+    {
+      products.length > 0 ? (
+        <>
+          <CatalogueControls
+            client:visible
+            indexUrl={indexUrl}
+            categoryNames={{ mattresses: 'Mattresses' }}
+            manualRankings={{
+              trending: rankings.trending,
+              bestSeller: rankings.bestSeller,
+              mostViewed: rankings.mostViewed,
+            }}
+            scopeCategory="mattresses"
+            gridId="ngf-mattress-grid"
+            noMatchId="ngf-mattress-nomatch"
+          />
+          <ul class="ngf-grid ngf-mattress-grid" id="ngf-mattress-grid">
+            {products.map((product) => (
+              <li>
+                <ProductCard product={product} categoryName="Mattresses" />
+              </li>
+            ))}
+          </ul>
+          <div id="ngf-mattress-nomatch" class="ngf-exp-empty" hidden>
+            <>
+              <h3>A different combination might be the one.</h3>
+              <p>
+                No mattresses match your current filters. Use Clear all filters to start again, or
+                ask us for help choosing.
+              </p>
+            </>
+          </div>
+        </>
+      ) : (
+        <div class="ngf-exp-empty ngf-mattress-awaiting" data-reveal>
+          <span class="ngf-exp-tiny-label">A considered collection, coming into view</span>
+          <h3>
+            Your next mattress starts
+            <br />
+            with the right questions.
+          </h3>
+          <p>
+            No mattress products are published online yet. Share your bed measurements and
+            preferences with the team for current options and prices.
+          </p>
+          {whatsappHref && (
+            <a class="ngf-exp-button" href={whatsappHref} target="_blank" rel="noopener">
+              Ask about mattresses <span aria-hidden="true">↗</span>
+            </a>
+          )}
+          <a class="ngf-exp-text-link" href="/contact">
+            Other ways to reach us <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      )
+    }
+  </section>
+  <section class="ngf-exp-guidance" aria-labelledby="guidance-heading">
+    <div class="ngf-exp-wrap ngf-exp-section">
+      <div class="ngf-exp-section-head">
+        <div>
+          <p class="ngf-exp-eyebrow">A considered choice</p><h2 id="guidance-heading">
+            A better starting point<br />than guesswork.
+          </h2>
+        </div><p>
+          Size names and comfort preferences vary. A few simple details make your enquiry more
+          useful.
+        </p>
+      </div><div class="ngf-exp-guidance-grid">
+        {
+          guidance.map((item, i) => (
+            <article data-reveal>
+              <>
+                <span class="ngf-exp-step-number">0{i + 1}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+  <section class="ngf-exp-wrap ngf-exp-section ngf-exp-bed-note">
+    <p class="ngf-exp-eyebrow">Complete the room, thoughtfully</p><h2>
+      A good fit goes both ways.
+    </h2><p>
+      Choosing a frame too? Explore our beds, then check the actual internal dimensions against the
+      mattress you are considering.
+    </p><a href="/collection/beds" class="ngf-exp-text-link"
+      >Explore beds <span aria-hidden="true">↗</span></a
+    >
+  </section>
+  <section class="ngf-exp-finale">
+    <div class="ngf-exp-wrap">
+      <p class="ngf-exp-eyebrow">There is no one-size-fits-all comfort</p><h2>
+        Let’s find what<br />feels right for you.
+      </h2>{
+        whatsappHref && (
+          <a
+            class="ngf-exp-button ngf-exp-button-light"
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener"
+          >
+            Talk mattresses with us <span aria-hidden="true">↗</span>
+          </a>
+        )
+      }<p>Share your bed measurements and what you have in mind.</p>
+    </div>
+  </section>
+  <QuickEnquireHost />
+</BaseLayout>

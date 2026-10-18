@@ -35,7 +35,7 @@ export const ALLOWED_PATTERNS: readonly RegExp[] = [
   /^data\/products\/[a-z0-9]+(?:-[a-z0-9]+)*\.json$/,
   /^data\/categories\/[a-z0-9]+(?:-[a-z0-9]+)*\.json$/,
   /^data\/reviews\/rev_[a-z0-9]{10}\.json$/,
-  /^data\/site\/(settings|homepage|rankings|redirects)\.json$/,
+  /^data\/site\/(settings|homepage|rankings|redirects|experiences)\.json$/,
   /*
    * The nightly analytics snapshot (task 18.5).
    *
@@ -167,7 +167,7 @@ export function reviewContentPath(id: string): string | null {
   return resolveContentPath(`data/reviews/${id}.json`);
 }
 
-export type SiteConfigFile = 'settings' | 'homepage' | 'rankings' | 'redirects';
+export type SiteConfigFile = 'settings' | 'homepage' | 'rankings' | 'redirects' | 'experiences';
 
 export function siteContentPath(file: SiteConfigFile): string | null {
   return resolveContentPath(`data/site/${file}.json`);

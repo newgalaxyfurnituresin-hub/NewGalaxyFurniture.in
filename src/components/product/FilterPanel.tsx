@@ -34,6 +34,7 @@ const DIMENSION_LABELS: Readonly<Record<MultiDimension, string>> = {
 };
 
 export interface FilterPanelProps {
+  compact?: boolean;
   /**
    * Every option's `selected` and `count` already come from `facetCounts`, which is computed from
    * the state — so the panel is a pure rendering of `facets` and does not read the state itself.
@@ -55,6 +56,7 @@ export default function FilterPanel({
   onAvailability,
   onClear,
   hasFilters,
+  compact = false,
 }: FilterPanelProps): React.JSX.Element {
   const [sheetOpen, setSheetOpen] = useState(false);
   const shellId = useScopedId('ngf-filter-shell');
@@ -207,7 +209,9 @@ export default function FilterPanel({
           </fieldset>
 
           {/* The five multi-select dimensions, values derived from the data at runtime. */}
-          {MULTI_DIMENSIONS.map((dimension) => (
+          {MULTI_DIMENSIONS.filter(
+            (dimension) => !compact || (dimension !== 'category' && facets[dimension].length > 0),
+          ).map((dimension) => (
             <fieldset className="ngf-filter-group" key={dimension}>
               <legend>{DIMENSION_LABELS[dimension]}</legend>
               {facets[dimension].length === 0 ? (

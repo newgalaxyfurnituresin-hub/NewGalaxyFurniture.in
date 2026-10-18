@@ -85,6 +85,9 @@ export function toSearchDoc(product: Product): SearchDoc {
     th: primary === null ? '' : derivativeUrl(product.id, primary.id, THUMB_WIDTH, 'webp'),
     lq: primary?.lqip ?? '',
     ...optional('sz', product.size),
+    ...(product.category === 'mattresses' && product.variants.length > 0
+      ? { vs: [...new Set(product.variants.map((variant) => variant.label).filter(Boolean))] }
+      : {}),
   };
 }
 

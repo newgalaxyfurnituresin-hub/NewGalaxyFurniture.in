@@ -30,6 +30,7 @@
 import QuickEnquireHost from '@/components/forms/QuickEnquireHost.astro';
 import BestSellers from '@/components/home/BestSellers.astro';
 import ContactLocation from '@/components/home/ContactLocation.astro';
+import ComfortStories from '@/components/home/ComfortStories.astro';
 import CustomerReviews from '@/components/home/CustomerReviews.astro';
 import FeaturedProducts from '@/components/home/FeaturedProducts.astro';
 import GallerySection from '@/components/home/GallerySection.astro';
@@ -211,7 +212,14 @@ const meta = pageMeta(Astro, {
               />
             );
           case 'shopByCategory':
-            return <ShopByCategory section={section} categories={categoryTiles} />;
+            return (
+              <>
+                <>
+                  <ShopByCategory section={section} categories={categoryTiles} />
+                  <ComfortStories />
+                </>
+              </>
+            );
           case 'featuredProducts':
             return (
               <FeaturedProducts

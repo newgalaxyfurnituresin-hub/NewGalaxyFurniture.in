@@ -1,0 +1,274 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import EditorialPhoto from '@/components/experiences/EditorialPhoto.astro';
+import RepairQuoteForm from '@/components/forms/RepairQuoteForm';
+import ImagePreload from '@/components/ui/ImagePreload.astro';
+import { experiences } from '@/lib/content/experiences';
+import { getSiteSettings } from '@/lib/content/site';
+import { fallbackNumbers } from '@/lib/leads/fallback';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { pageMeta, siteOrigin } from '@/lib/seo/page';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonld';
+import '@/styles/forms.css';
+import '@/styles/experiences.css';
+
+const repair = experiences.repair;
+const services = repair.services.filter((service) => service.enabled);
+const projects = repair.projects.filter((project) => project.confirmed);
+const settings = getSiteSettings();
+const numbers = fallbackNumbers(settings);
+const whatsapp = settings.whatsapp[0];
+const whatsappHref = whatsapp
+  ? buildWhatsAppUrl(
+      whatsapp.e164,
+      `Hi ${settings.businessName}, I would like to discuss sofa repair. I can share photographs and the work I have in mind. Please confirm suitable options and availability.`,
+    )
+  : null;
+const origin = siteOrigin(Astro);
+const meta = pageMeta(Astro, {
+  title: 'Sofa Repair & Restoration | Request an Assessment',
+  description:
+    'Give a much-loved sofa a fresh start. Share your repair requirements and photos with New Galaxy Furniture to discuss upholstery, cushions and suitable options.',
+  jsonLd: [breadcrumbJsonLd([{ label: 'Home', href: '/' }, { label: 'Sofa Repair' }], origin)],
+});
+const steps = [
+  {
+    title: 'Start with your sofa',
+    text: 'Tell us its shape, size and what you would like to change.',
+  },
+  { title: 'Bring the details', text: 'Attach a photograph, or share more views over WhatsApp.' },
+  {
+    title: 'Explore the possibilities',
+    text: 'Ask the team to confirm suitability, materials and the scope of work.',
+  },
+  { title: 'Decide with clarity', text: 'Agree the quote and any arrangements before proceeding.' },
+];
+---
+
+<BaseLayout meta={meta} mainClass="ngf-experience ngf-repair">
+  <ImagePreload
+    slot="head"
+    hint={{
+      href: repair.hero.src,
+      srcset: repair.hero.src.includes('/brand/about-showroom-')
+        ? [480, 768, 1040, 1440].map((w) => `/brand/about-showroom-${w}.webp ${w}w`).join(', ')
+        : undefined,
+      sizes: '(min-width: 900px) 50vw, 100vw',
+    }}
+  />
+  <section class="ngf-exp-hero ngf-exp-wrap" aria-labelledby="repair-heading">
+    <div class="ngf-exp-hero-copy" data-reveal data-motion-group>
+      <nav class="ngf-exp-crumb" aria-label="Breadcrumb">
+        <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page"
+          >Sofa repair</span
+        >
+      </nav>
+      <p class="ngf-exp-eyebrow">Care for the pieces you love</p>
+      <h1 id="repair-heading">{repair.heading}</h1>
+      <p class="ngf-exp-lede">{repair.description}</p>
+      <div class="ngf-exp-actions">
+        <a class="ngf-exp-button" href="#repair-quote"
+          >Request a repair quote <span aria-hidden="true">↗</span></a
+        ><a class="ngf-exp-text-link" href="#repair-services"
+          >Explore our services <span aria-hidden="true">↓</span></a
+        >
+      </div>
+      <p class="ngf-exp-note">A conversation first. A considered decision next.</p>
+    </div>
+    <div class="ngf-exp-hero-media" data-reveal>
+      <EditorialPhoto photo={repair.hero} priority /><span
+        class="ngf-exp-image-label"
+        aria-hidden="true">Renew / Reimagine / Relove</span
+      >
+    </div>
+  </section>
+  <div class="ngf-exp-manifesto">
+    <p>Keep the memories.<br /><em>Reconsider the rest.</em></p><span
+      >A thoughtful starting point for furniture worth keeping.</span
+    >
+  </div>
+  <section
+    id="repair-services"
+    class="ngf-exp-wrap ngf-exp-section"
+    aria-labelledby="services-heading"
+  >
+    <div class="ngf-exp-section-head" data-reveal>
+      <div>
+        <p class="ngf-exp-eyebrow">The details make the difference</p><h2 id="services-heading">
+          What needs a little attention?
+        </h2>
+      </div><p>
+        Start with the part that matters to you. Each topic is a conversation; the team will confirm
+        which work is suitable and available.
+      </p>
+    </div>
+    <div class="ngf-exp-service-grid">
+      {
+        services.map((service, i) => (
+          <article class="ngf-exp-service" data-reveal>
+            <>
+              <div class="ngf-exp-service-image">
+                <>
+                  <EditorialPhoto
+                    photo={service.photo}
+                    sizes="(min-width: 900px) 31vw, (min-width: 600px) 47vw, 100vw"
+                    caption={false}
+                  />
+                  <span class="ngf-exp-service-number">0{i + 1}</span>
+                </>
+              </div>
+              <p class="ngf-exp-status">
+                {service.confirmed ? 'Service confirmed' : 'Discuss suitability'}
+              </p>
+              <h3>{service.title}</h3>
+              <p>{service.description}</p>
+              <a class="ngf-exp-text-link" href="#repair-quote">
+                Ask about this option{' '}
+                <>
+                  <span class="sr-only">— {service.title}</span>
+                  <span aria-hidden="true">↗</span>
+                </>
+              </a>
+            </>
+          </article>
+        ))
+      }
+    </div>
+    {
+      services.length === 0 && (
+        <p class="ngf-exp-empty">
+          Tell us what needs attention using the enquiry form. The team can confirm what is
+          possible.
+        </p>
+      )
+    }
+  </section>
+  <section class="ngf-exp-process" aria-labelledby="process-heading">
+    <div class="ngf-exp-wrap ngf-exp-section">
+      <div class="ngf-exp-section-head" data-reveal>
+        <div>
+          <p class="ngf-exp-eyebrow">From a first thought to a clear next step</p><h2
+            id="process-heading"
+          >
+            Good work starts<br />with a conversation.
+          </h2>
+        </div><p>
+          No assumed timelines, no commitments made for you. Begin with a few details and take it
+          from there.
+        </p>
+      </div><ol class="ngf-exp-steps">
+        {
+          steps.map((step, i) => (
+            <li data-reveal>
+              <>
+                <span class="ngf-exp-step-number">0{i + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+  {
+    projects.length > 0 && (
+      <section class="ngf-exp-wrap ngf-exp-section" aria-labelledby="projects-heading">
+        <>
+          <p class="ngf-exp-eyebrow">Real pieces. Real changes.</p>
+          <h2 id="projects-heading">Before. And beautifully after.</h2>
+          <div class="ngf-exp-projects">
+            {projects.map((project) => (
+              <article>
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <div class="ngf-exp-project-pair">
+                  <div>
+                    <span>Before</span>
+                    <EditorialPhoto photo={project.before} />
+                  </div>
+                  <div>
+                    <span>After</span>
+                    <EditorialPhoto photo={project.after} />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      </section>
+    )
+  }
+  <section
+    id="repair-quote"
+    class="ngf-exp-wrap ngf-exp-section ngf-exp-quote"
+    aria-labelledby="quote-heading"
+  >
+    <div class="ngf-exp-quote-copy" data-reveal>
+      <p class="ngf-exp-eyebrow">Your sofa. Your next chapter.</p><h2 id="quote-heading">
+        Let’s see what<br />we can do.
+      </h2><p>
+        Share a little about your sofa and the work you have in mind. Your enquiry goes to the same
+        team you can reach by phone or WhatsApp.
+      </p><div class="ngf-exp-quote-aside">
+        <span class="ngf-exp-tiny-label">Prefer a conversation?</span>{
+          whatsappHref && (
+            <a class="ngf-exp-text-link" href={whatsappHref} target="_blank" rel="noopener">
+              Start on WhatsApp <span aria-hidden="true">↗</span>
+            </a>
+          )
+        }<p>A full view of the sofa and a close-up of the problem are useful starting points.</p>
+      </div><a class="ngf-exp-privacy" href="/privacy">How we use your enquiry details</a>
+    </div><div class="ngf-exp-form-panel">
+      <RepairQuoteForm
+        client:visible
+        numbers={numbers}
+        services={services.map(
+          (service) => `${service.title}${service.confirmed ? '' : ' (subject to assessment)'}`,
+        )}
+      /><noscript
+        ><p>
+          The form needs JavaScript. {
+            whatsappHref && <a href={whatsappHref}>Send a repair enquiry on WhatsApp instead.</a>
+          }
+        </p></noscript
+      >
+    </div>
+  </section>
+  {
+    repair.faqs.length > 0 && (
+      <section class="ngf-exp-wrap ngf-exp-section ngf-exp-faq" aria-labelledby="faq-heading">
+        <>
+          <div>
+            <>
+              <p class="ngf-exp-eyebrow">A little clarity</p>
+              <h2 id="faq-heading">Before you begin.</h2>
+            </>
+          </div>
+          <div>
+            {repair.faqs.map((faq) => (
+              <details>
+                <summary>
+                  {faq.question}
+                  <span aria-hidden="true">+</span>
+                </summary>
+                <p>{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </>
+      </section>
+    )
+  }
+  <section class="ngf-exp-finale">
+    <div class="ngf-exp-wrap">
+      <p class="ngf-exp-eyebrow">Something familiar. Something new.</p><h2>
+        A favourite seat deserves<br />a thoughtful next chapter.
+      </h2><a class="ngf-exp-button ngf-exp-button-light" href="#repair-quote"
+        >Tell us about your sofa <span aria-hidden="true">↗</span></a
+      ><a class="ngf-exp-finale-link" href="/collection/sofas"
+        >Considering a new sofa? Explore the collection.</a
+      >
+    </div>
+  </section>
+</BaseLayout>

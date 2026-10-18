@@ -1,0 +1,92 @@
+---
+import { experiences } from '@/lib/content/experiences';
+import EditorialPhoto from '@/components/experiences/EditorialPhoto.astro';
+import { getCatalogue } from '@/lib/content/catalogue';
+import ProductCard from '@/components/product/ProductCard.astro';
+import '@/styles/experiences.css';
+const repair = experiences.repair;
+const mattresses = experiences.mattresses;
+const published = (await getCatalogue())
+  .filter((product) => product.category === 'mattresses')
+  .slice(0, 3);
+---
+
+{
+  (repair.homeEnabled || mattresses.homeEnabled) && (
+    <section class="ngf-comfort-stories ngf-exp-wrap" aria-labelledby="comfort-stories-heading">
+      <div class="ngf-exp-section-head" data-reveal>
+        <>
+          <div>
+            <>
+              <p class="ngf-exp-eyebrow">Comfort, in every chapter</p>
+              <h2 id="comfort-stories-heading">
+                For the pieces you keep.
+                <br />
+                And the comfort you choose.
+              </h2>
+            </>
+          </div>
+          <p>Thoughtful beginnings for a favourite sofa and a place to unwind.</p>
+        </>
+      </div>
+      <div class="ngf-comfort-grid">
+        {repair.homeEnabled && (
+          <article class="ngf-comfort-card" data-reveal>
+            <EditorialPhoto
+              photo={repair.hero}
+              sizes="(min-width: 700px) 46vw, 100vw"
+              caption={false}
+            />
+            <div>
+              <p class="ngf-exp-eyebrow">Sofa repair & restoration</p>
+              <h3>
+                A new chapter
+                <br />
+                for an old favourite.
+              </h3>
+              <p>Tell us what needs attention. Explore the possibilities before you decide.</p>
+              <a class="ngf-exp-text-link" href="/sofa-repair">
+                Give your sofa a second look <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </article>
+        )}
+        {mattresses.homeEnabled && (
+          <article class="ngf-comfort-card" data-reveal>
+            <EditorialPhoto
+              photo={mattresses.hero}
+              sizes="(min-width: 700px) 46vw, 100vw"
+              caption={false}
+            />
+            <div>
+              <p class="ngf-exp-eyebrow">Mattresses</p>
+              <h3>
+                A softer landing.
+                <br />A considered choice.
+              </h3>
+              <p>
+                Explore comfort, compare the details, and ask about the right fit for your space.
+              </p>
+              <a class="ngf-exp-text-link" href="/collection/mattresses">
+                Discover mattresses <span aria-hidden="true">↗</span>
+              </a>
+              <span class="ngf-comfort-caption">Bedroom inspiration · illustrative image</span>
+            </div>
+          </article>
+        )}
+      </div>
+      {mattresses.homeEnabled && published.length > 0 && (
+        <div class="ngf-comfort-products">
+          <h3>From the mattress collection</h3>
+          <ul class="ngf-grid">
+            {published.map((product) => (
+              <li>
+                <ProductCard product={product} categoryName="Mattresses" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  )
+}

@@ -43,6 +43,7 @@ export const ADMIN_AREAS: readonly AdminArea[] = [
   { label: 'Reviews', href: '/admin/reviews', permission: 'product.read' },
   { label: 'Leads', href: '/admin/leads', permission: 'lead.read' },
   { label: 'Homepage', href: '/admin/homepage', permission: 'product.read' },
+  { label: 'Repair & Mattresses', href: '/admin/experiences', permission: 'product.read' },
   { label: 'Content', href: '/admin/content', permission: 'product.read' },
   { label: 'Analytics', href: '/admin/analytics', permission: 'analytics.read' },
   { label: 'Settings', href: '/admin/settings', permission: 'product.read' },

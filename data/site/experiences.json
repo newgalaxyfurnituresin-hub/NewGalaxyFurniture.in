@@ -1,0 +1,89 @@
+{
+  "repair": {
+    "homeEnabled": true,
+    "heading": "A second life for your favourite seat.",
+    "description": "The shape you love. The comfort you miss. Tell us what needs attention, and let’s explore what is possible for your sofa.",
+    "hero": {
+      "src": "/brand/about-showroom-1440.webp",
+      "alt": "An upholstered ivory sofa with loose cushions in a warmly lit furniture interior",
+      "width": 1440,
+      "height": 960,
+      "caption": "Upholstery inspiration from our existing image collection. Not a before-and-after repair project."
+    },
+    "services": [
+      {
+        "id": "upholstery",
+        "title": "A fresh perspective",
+        "description": "Considering a different fabric or a new look? Share the upholstery you have and the finish you have in mind.",
+        "enabled": true,
+        "confirmed": false,
+        "photo": {
+          "src": "/brand/about-showroom-768.webp",
+          "alt": "Soft ivory upholstery and warm timber furniture in a styled interior",
+          "width": 768,
+          "height": 512,
+          "caption": "Upholstery inspiration"
+        }
+      },
+      {
+        "id": "cushions",
+        "title": "Comfort, reconsidered",
+        "description": "Tell us about cushions that have softened, lost their shape or no longer feel right. Ask about foam and cushion options.",
+        "enabled": true,
+        "confirmed": false,
+        "photo": {
+          "src": "/brand/home-custom-detail-768.webp",
+          "alt": "Close-up of textured neutral upholstery on a curved timber chair",
+          "width": 768,
+          "height": 960,
+          "caption": "Fabric detail inspiration"
+        }
+      },
+      {
+        "id": "structure",
+        "title": "Look a little deeper",
+        "description": "A loose joint, a damaged frame or an uneven seat? Describe the issue so the team can discuss whether a repair is suitable.",
+        "enabled": true,
+        "confirmed": false,
+        "photo": {
+          "src": "/brand/home-craft-768.webp",
+          "alt": "A craftsperson working a timber surface with a hand plane",
+          "width": 768,
+          "height": 512,
+          "caption": "Timber craftsmanship inspiration"
+        }
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Where should I start?",
+        "answer": "Tell us the type of sofa, what needs attention and the result you have in mind. The enquiry form below sends those details to the team. Availability and suitability need to be confirmed before any service is agreed."
+      },
+      {
+        "question": "Can I share photographs?",
+        "answer": "Yes. You can attach one photograph to this enquiry, or start a WhatsApp conversation and share more images there. Include a full view and, if possible, a close-up of the problem."
+      },
+      {
+        "question": "Can I ask about a different fabric or cushion filling?",
+        "answer": "Include the fabric, colour or feel you are looking for in your message. Ask the team which options are available for your particular sofa before choosing a specification."
+      },
+      {
+        "question": "How is the quote decided?",
+        "answer": "A useful starting point is your sofa’s size, its condition and the work you would like considered. Request an assessment first; the scope, materials, price and any arrangements must be agreed with the team."
+      }
+    ],
+    "projects": []
+  },
+  "mattresses": {
+    "homeEnabled": true,
+    "heading": "Make room for a softer landing.",
+    "description": "Begin with your space. Find your kind of comfort. Explore published mattresses, compare the details that matter, and ask us about the right fit.",
+    "hero": {
+      "src": "/brand/mattress-inspiration-1440.webp",
+      "alt": "An illustrative warm bedroom with an ivory upholstered bed, linen bedding and walnut bedside furniture",
+      "width": 1440,
+      "height": 960,
+      "caption": "Bedroom inspiration · illustrative image, not a mattress product photograph."
+    }
+  }
+}

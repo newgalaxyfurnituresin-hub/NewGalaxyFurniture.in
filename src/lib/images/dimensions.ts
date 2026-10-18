@@ -105,9 +105,12 @@ function webpDimensions(bytes: Uint8Array): HeaderDimensions | null {
   if (chunk === 'VP8 ') {
     // 3-byte frame tag, then the 3-byte start code 0x9d012a, then two little-endian
     // 16-bit fields whose top two bits are a scale factor, not part of the dimension.
-    if (bytes.length < 31) return null;
-    const width = (((bytes[27] ?? 0) | ((bytes[28] ?? 0) << 8)) & 0x3fff) >>> 0;
-    const height = (((bytes[29] ?? 0) | ((bytes[30] ?? 0) << 8)) & 0x3fff) >>> 0;
+    // RIFF (12) + chunk header (8) + frame tag (3) + start code (3) = offset 26.
+    // See the WebP RIFF container specification, simple lossy file format.
+    if (bytes.length < 30 || bytes[23] !== 0x9d || bytes[24] !== 0x01 || bytes[25] !== 0x2a)
+      return null;
+    const width = (((bytes[26] ?? 0) | ((bytes[27] ?? 0) << 8)) & 0x3fff) >>> 0;
+    const height = (((bytes[28] ?? 0) | ((bytes[29] ?? 0) << 8)) & 0x3fff) >>> 0;
     if (width === 0 || height === 0) return null;
     return { width, height };
   }
