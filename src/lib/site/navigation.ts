@@ -67,6 +67,7 @@ export const HEADER_NAV: readonly NavEntry[] = [
       categoryLink('sofas', 'Sofas'),
       categoryLink('beds', 'Beds'),
       categoryLink('mattresses', 'Mattresses'),
+      { kind: 'link', label: 'Sofa Repair', href: '/sofa-repair' },
       categoryLink('dining-tables', 'Dining Tables'),
       categoryLink('dining-chairs', 'Dining Chairs'),
       categoryLink('accent-chairs', 'Accent Chairs'),
@@ -80,8 +81,6 @@ export const HEADER_NAV: readonly NavEntry[] = [
     note: 'Every piece we make, by room and by purpose. Browse the full collection.',
   },
   { kind: 'link', label: 'Custom Furniture', href: '/custom-furniture' },
-  { kind: 'link', label: 'Sofa Repair', href: '/sofa-repair' },
-  { kind: 'link', label: 'Mattresses', href: '/collection/mattresses' },
   { kind: 'link', label: 'About', href: '/about' },
   { kind: 'link', label: 'Workshop', href: '/workshop' },
   { kind: 'link', label: 'Gallery', href: '/gallery' },
@@ -106,11 +105,11 @@ export const CATEGORY_NAV: readonly NavLink[] = [
   categoryLink('shoe-stands', 'Shoe Stands'),
   categoryLink('temples', 'Temples'),
   categoryLink('mattresses', 'Mattresses'),
+  { kind: 'link', label: 'Sofa Repair', href: '/sofa-repair' },
 ];
 
 /** The supporting pages the footer carries alongside the categories. */
 export const SUPPORT_NAV: readonly NavLink[] = [
-  { kind: 'link', label: 'Sofa Repair', href: '/sofa-repair' },
   { kind: 'link', label: 'About', href: '/about' },
   { kind: 'link', label: 'Workshop', href: '/workshop' },
   { kind: 'link', label: 'Gallery', href: '/gallery' },
@@ -146,6 +145,7 @@ function assertNavigation(): void {
   }
 
   const known = new Set<string>(SEEDED_CATEGORY_SLUGS.map((slug) => `/collection/${slug}`));
+  known.add('/sofa-repair');
   const categoryHrefs = [
     ...CATEGORY_NAV.map((link) => link.href),
     ...HEADER_NAV.flatMap((entry) =>
@@ -158,7 +158,10 @@ function assertNavigation(): void {
     }
   }
 
-  if (CATEGORY_NAV.length !== SEEDED_CATEGORY_SLUGS.length) {
+  if (
+    CATEGORY_NAV.filter((link) => link.href.startsWith('/collection/')).length !==
+    SEEDED_CATEGORY_SLUGS.length
+  ) {
     throw new Error(
       `NAV_INVALID: footer lists ${CATEGORY_NAV.length} categories, expected ${SEEDED_CATEGORY_SLUGS.length} (requirement 9.7)`,
     );

@@ -147,10 +147,16 @@ for (const route of ['/sofa-repair', '/collection/mattresses']) {
 test('homepage and mobile navigation discover both experiences', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
-  await page.getByRole('link', { name: /Give your sofa a second look/ }).click();
+  await page
+    .locator('.ngf-category-grid')
+    .getByRole('link', { name: /Sofa Repair/ })
+    .click();
   await expect(page).toHaveURL(/\/sofa-repair$/);
   await page.goto('/');
-  await page.getByRole('link', { name: /Discover mattresses/ }).click();
+  await page
+    .locator('.ngf-category-grid')
+    .getByRole('link', { name: /Mattresses/ })
+    .click();
   await expect(page).toHaveURL(/\/collection\/mattresses$/);
   const menu = page.getByRole('button', { name: /open menu|open navigation|menu/i }).first();
   await menu.click();

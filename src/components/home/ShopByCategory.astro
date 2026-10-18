@@ -63,6 +63,23 @@ const tiles = REFERENCE_TILES.filter((tile) => published.has(tile.slug)).map((ti
   img480: `/categories/${tile.slug}/card-480.webp`,
   img768: `/categories/${tile.slug}/card-768.webp`,
 }));
+if (published.has('mattresses'))
+  tiles.push({
+    slug: 'mattresses',
+    name: 'Mattresses',
+    subtitle: 'Find your kind of comfort',
+    href: '/collection/mattresses',
+    img480: '/brand/mattress-inspiration-480.webp',
+    img768: '/brand/mattress-inspiration-768.webp',
+  });
+tiles.push({
+  slug: 'sofa-repair',
+  name: 'Sofa Repair',
+  subtitle: 'Give a favourite a fresh start',
+  href: '/sofa-repair',
+  img480: '/brand/about-showroom-480.webp',
+  img768: '/brand/about-showroom-768.webp',
+});
 ---
 
 {
@@ -109,10 +126,16 @@ const tiles = REFERENCE_TILES.filter((tile) => published.has(tile.slug)).map((ti
                   class="ngf-category-photo"
                   src={tile.img480}
                   srcset={`${tile.img480} 480w, ${tile.img768} 768w`}
-                  sizes="(min-width: 1024px) 16vw, (min-width: 480px) 45vw, 90vw"
+                  sizes="(min-width: 1024px) 24vw, (min-width: 640px) 31vw, 45vw"
                   width={768}
                   height={512}
-                  alt={tile.name}
+                  alt={
+                    tile.slug === 'mattresses'
+                      ? 'Illustrative bedroom inspiration for mattress enquiries'
+                      : tile.slug === 'sofa-repair'
+                        ? 'Sofa upholstery inspiration, not a before-and-after project'
+                        : tile.name
+                  }
                   loading="lazy"
                   decoding="async"
                 />
@@ -207,13 +230,13 @@ const tiles = REFERENCE_TILES.filter((tile) => published.has(tile.slug)).map((ti
 
   @media (min-width: 640px) {
     .ngf-category-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (min-width: 1024px) {
     .ngf-category-grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 

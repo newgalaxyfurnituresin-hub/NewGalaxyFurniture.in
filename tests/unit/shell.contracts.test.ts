@@ -41,8 +41,6 @@ describe('navigation (Requirements 9.1, 9.2, 9.7)', () => {
     expect(HEADER_NAV.map((entry) => entry.label)).toEqual([
       'Shop',
       'Custom Furniture',
-      'Sofa Repair',
-      'Mattresses',
       'About',
       'Workshop',
       'Gallery',
@@ -77,9 +75,10 @@ describe('navigation (Requirements 9.1, 9.2, 9.7)', () => {
   });
 
   it('lists every category, the supporting pages, and the policy pages in the footer', () => {
-    expect(CATEGORY_NAV.map((link) => link.href)).toEqual(
-      SEEDED_CATEGORY_SLUGS.map((slug) => `/collection/${slug}`),
-    );
+    expect(CATEGORY_NAV.map((link) => link.href)).toEqual([
+      ...SEEDED_CATEGORY_SLUGS.map((slug) => `/collection/${slug}`),
+      '/sofa-repair',
+    ]);
     expect(SUPPORT_NAV.map((link) => link.href)).toContain('/contact');
     expect(POLICY_NAV.map((link) => link.href)).toEqual([
       '/privacy',
