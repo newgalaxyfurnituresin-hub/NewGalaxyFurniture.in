@@ -1,6 +1,6 @@
 # Company Cloudflare launch — updated 17 October 2026
 
-**The public website and owner administrator login are live in the company account. Public and authenticated browser checks pass. The company repository credential passed an isolated read/write test. Cloudflare automatic builds are connected to company main; the first push-triggered deployment is being verified.**
+**The public website and owner administrator login are live in the company account. Public and authenticated browser checks pass. The company repository credential passed an isolated read/write test. A real push to company main automatically built and deployed successfully through Cloudflare Workers Builds. The separate GitHub Lighthouse audit still reports performance/image and contrast issues, detailed below.**
 
 Live URL: <https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev>
 
@@ -9,7 +9,8 @@ Live URL: <https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev>
 - Identity: `newgalaxyfurnitures.in@gmail.com`.
 - Account: `202e4307d4836b9170f546dbea1783d4`.
 - Worker: `newgalaxyfurniture`.
-- Active deployed version: `f238a31a-82f9-41e5-b013-663433456376`.
+- Verified automatic deployment: `525049ed-0f61-41f0-b45d-bb6607ee0b51`, serving 100% of traffic.
+- Source commit: `4f7beb6ba8d55804747a67e74967276370cc0c18` on company main.
 - Application and runtime secrets uploaded together; deployment succeeded.
 - Assets come from `dist/client`; server code is separate.
 - Cloudflare API verified the installed bindings and secret names.
@@ -133,7 +134,7 @@ No source Worker, database, namespace, bucket, backup, credential, or untracked 
 
 ## Pending checks and limitations
 
-### Company GitHub migration in progress — 17 October
+### Company GitHub migration and automatic deployment verified
 
 The user selected `newgalaxyfurnituresin-hub/NewGalaxyFurniture.in` and authorized pushing all
 migration changes and enabling automatic updates. This is a separate new public repository,
@@ -158,11 +159,21 @@ Routine deployment preserves installed Worker secrets with `--keep-vars`.
 
 Cloudflare's repository connection was saved after explicit user approval for its automatic-build
 API credential. It targets the company repository, branch `main`, root `/`, the checked commands,
-and no preview builds. The dashboard confirms builds are enabled and requests the first push.
+and no preview builds. The dashboard confirms builds are enabled.
 Repository push and the atomic runtime credential switch have succeeded. The deployed version
 above uses the company repository and company token, preserving the session secret. A fresh live
 check passed all 37 page/security checks, 59 assets and 48 restored media objects; owner sign-in
-and all three catalogue records also passed. This report commit exercises the real push trigger.
+and all three catalogue records also passed.
+
+Pushing commit `4f7beb6ba8d55804747a67e74967276370cc0c18` triggered build
+`b1749fcb-3951-451c-bb13-21d6b6462a04`, which completed successfully in 3 minutes 15 seconds.
+The clean Cloudflare build passed 71 suites (1,055 tests passed, one pre-build output check skipped),
+types (zero errors/warnings), lint, content, production build, budgets and secret scanning. The
+automatic deployment above was verified through both the dashboard and authenticated API.
+Post-deployment verification again passed all 37 page/security checks, 59 assets and 48 media
+responses. Owner session and company catalogue reads still work; both secret bindings remain
+installed and the actual production schedules remain empty. Routine main pushes now rebuild and
+deploy without a local terminal. Draft edits stay unpublished; publishing requires a successful build.
 
 GitHub CI clean installation initially failed because npm 10 required a missing nested optional
 PGlite peer entry. The eight-line lockfile repair preserves all existing dependency versions and
@@ -179,8 +190,10 @@ still reports performance/image and About-page contrast failures; no thresholds 
    production main were not exercised; repository writes and live admin reads were tested separately.
 2. **Automatic publishing:** Cloudflare Workers Builds is now connected through the company
    dashboard, using its approved deployment credential. The existing GitHub deployment workflow
-   remains an additional manual fallback. The first real push-triggered build is pending verification
-   at this checkpoint. No existing deployment or security gate was disabled.
+   remains an additional manual fallback. The real push-triggered build and production rollout
+   passed verification. No existing deployment or security gate was disabled. The independent
+   GitHub Lighthouse stage remains red for the recorded performance/image and contrast issues;
+   this report does not claim those audits pass.
 3. **Custom domain:** `newgalaxyfurniture.in` has not been purchased, connected, or verified. The
    workers.dev URL above is the actual working public URL. No domain purchase was attempted.
 4. **Deleted-media expiration:** automatic approval review rejected the proposed 30-day `deleted/`
