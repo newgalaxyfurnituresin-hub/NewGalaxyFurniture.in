@@ -1,6 +1,6 @@
 # Company Cloudflare launch — updated 17 October 2026
 
-**The public website and owner administrator login are live in the company account. Public and authenticated browser checks pass. GitHub repository write access has also passed an explicitly approved isolated test. Automatic publishing remains unconfigured; do not assume admin content edits rebuild the public site automatically.**
+**The public website and owner administrator login are live in the company account. Public and authenticated browser checks pass. The company repository credential passed an isolated read/write test. Cloudflare automatic builds are connected to company main; the first push-triggered deployment is being verified.**
 
 Live URL: <https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev>
 
@@ -39,8 +39,8 @@ terms were accepted by the assistant.
 - The company website token was privately entered and its identity/repository access verified.
   Minimum intended PAT permissions are Contents read/write on
   `newgalaxyfurnituresin-hub/NewGalaxyFurniture.in` only, with Metadata read.
-  The original repository credential passed the earlier isolated write test; that result does
-  not by itself prove write access for the replacement company credential.
+  The replacement company credential passed an isolated branch create/write/read/cleanup test;
+  company main and all existing content remained unchanged.
 - `GITHUB_REPO=newgalaxyfurnituresin-hub/NewGalaxyFurniture.in`, `GITHUB_BRANCH=main` are non-secret variables.
 - Optional AI and deployment-status credentials remain unset rather than using unverified values.
 - **48 media objects, 13,461,103 bytes** restored from the existing local backup to company R2.
@@ -156,12 +156,19 @@ media bucket, repository, canonical URL, owner authentication and empty cron sch
 their own isolated configuration; only the real production build receives the canonical URL.
 Routine deployment preserves installed Worker secrets with `--keep-vars`.
 
-Cloudflare's repository connection form is prepared for the company repository, branch `main`,
-root `/`, those checked commands, and no preview builds. The form has not been submitted; it would
-create a Cloudflare automatic-build API token. Repository push and the atomic runtime credential
-switch have succeeded. The deployed version above uses the company repository and company token,
-preserving the session secret. A fresh live check passed all 37 page/security checks, 59 assets and
-48 restored media objects. Connection approval and real automatic-build verification remain pending.
+Cloudflare's repository connection was saved after explicit user approval for its automatic-build
+API credential. It targets the company repository, branch `main`, root `/`, the checked commands,
+and no preview builds. The dashboard confirms builds are enabled and requests the first push.
+Repository push and the atomic runtime credential switch have succeeded. The deployed version
+above uses the company repository and company token, preserving the session secret. A fresh live
+check passed all 37 page/security checks, 59 assets and 48 restored media objects; owner sign-in
+and all three catalogue records also passed. This report commit exercises the real push trigger.
+
+GitHub CI clean installation initially failed because npm 10 required a missing nested optional
+PGlite peer entry. The eight-line lockfile repair preserves all existing dependency versions and
+passes npm 10 clean-install validation. The next GitHub run passed installation, content, types,
+lint, all tests, production build, budgets and secret scanning. Its separate Lighthouse stage
+still reports performance/image and About-page contrast failures; no thresholds were weakened.
 
 1. **GitHub writes verified:** after the user explicitly approved the prepared isolated test,
    the private production credential created a new disposable codex branch and wrote/read back a
@@ -170,11 +177,10 @@ preserving the session secret. A fresh live check passed all 37 page/security ch
    branch or catalogue file was modified. Evidence: `.wrangler/company-github-write-results.json`.
    This resolves the earlier automatic-review blocker for that test. Authenticated admin saves on
    production main were not exercised; repository writes and live admin reads were tested separately.
-2. **Automatic publishing:** the existing deployment workflow remains manual. The company OAuth
-   credential received HTTP 403/code 10000 from the Workers Builds trigger API. Automatic rebuilds
-   after admin content commits are not configured or verified. Do not assume content edits redeploy
-   automatically. Connecting the repository requires appropriate company build permissions and a
-   reviewed/pushed company configuration first. No deployment gate was disabled.
+2. **Automatic publishing:** Cloudflare Workers Builds is now connected through the company
+   dashboard, using its approved deployment credential. The existing GitHub deployment workflow
+   remains an additional manual fallback. The first real push-triggered build is pending verification
+   at this checkpoint. No existing deployment or security gate was disabled.
 3. **Custom domain:** `newgalaxyfurniture.in` has not been purchased, connected, or verified. The
    workers.dev URL above is the actual working public URL. No domain purchase was attempted.
 4. **Deleted-media expiration:** automatic approval review rejected the proposed 30-day `deleted/`
