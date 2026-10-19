@@ -14,9 +14,18 @@
     {
       "alt": "",
       "altSource": "admin",
-      "derivativeFormats": [],
-      "derivativeWidths": [],
-      "derivativesReady": false,
+      "derivativeFormats": [
+        "avif",
+        "webp",
+        "jpeg"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960
+      ],
+      "derivativesReady": true,
       "filename": "about-showroom-1040.webp",
       "height": 585,
       "id": "img_8q6mosdkqa",
