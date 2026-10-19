@@ -2,19 +2,9 @@
  * Lifecycle controls: the transitions that are legal right now, and an honest account of what
  * happens after one is taken.
  *
- * The requirement this component exists to satisfy is 14.12 — "indicate that publishing is in
- * progress and report the actual deployment outcome rather than reporting success before the
- * change is live". So there is no success state on the commit. Publishing goes:
- *
- *   Publishing — live in about a minute   →   Live now
- *                                         →   Publish committed but the site build failed
- *                                         →   Publish committed. Deployment status is
- *                                             unavailable in this environment.
- *
- * The middle branch is the one that is usually missing from admin tools: the commit succeeded
- * and the site did not change, and the previous deployment is still serving (14.13). The third
- * exists because deploy status needs Cloudflare API credentials that a given environment may
- * not have — and "we cannot tell you" is a different statement from "it worked".
+ * Saving a publication starts the persistent progress panel. It checks the public build's
+ * catalogue receipt for this exact product revision; a repository commit or an earlier
+ * successful deployment is never presented as proof that this change is live.
  *
  * Only transitions legal from the current status are rendered, from the same
  * `availableTransitions` the server enforces. When the publish gate would refuse, the reason
@@ -24,7 +14,7 @@
  * Requirements: 12.5, 12.7, 14.2, 14.4, 14.5, 14.12, 14.13, 26.6.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { adminFetch, type FieldErrors } from '@/lib/admin/client';
@@ -32,6 +22,8 @@ import { availableTransitions } from '@/lib/products/transitions';
 import { labelFor } from '@/lib/products/form-validation';
 import type { Product, ProductStatusValue } from '@/schemas/product';
 import type { Role } from '@/lib/auth/permissions';
+import PublicationProgress, { rememberPublication } from './PublicationProgress';
+import type { PendingPublication } from '@/lib/admin/publication';
 
 export interface PublishPanelProps {
   product: Product;
@@ -60,27 +52,18 @@ const ACTION_LABELS: Record<ProductStatusValue, string> = {
   OUT_OF_STOCK: 'Mark out of stock',
 };
 
-type DeployState = 'queued' | 'building' | 'success' | 'failure' | 'unknown';
-
 type Phase =
   | { kind: 'idle' }
   | { kind: 'working'; to: ProductStatusValue }
   | { kind: 'gate'; fields: FieldErrors }
   | { kind: 'error'; message: string }
   | { kind: 'done'; to: ProductStatusValue }
-  | { kind: 'deploying'; to: ProductStatusValue; state: DeployState; commitSha: string | null }
-  | { kind: 'deployed'; commitSha: string | null }
-  | { kind: 'deployFailed'; commitSha: string | null }
-  | { kind: 'deployUnknown'; message: string };
-
-const POLL_INTERVAL_MS = 5000;
-/** Two minutes: a content-only build is about a minute, so this is generous, not hopeful. */
-const POLL_LIMIT = 24;
+  | { kind: 'deploying' };
 
 export default function PublishPanel(props: PublishPanelProps): ReactElement {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const [confirmDelete, setConfirmDelete] = useState('');
-  const polls = useRef(0);
+  const [pending, setPending] = useState<PendingPublication | null>(null);
 
   // The role is not read from the session here: the panel is told what the operator may do,
   // and the server re-derives it anyway. `role` is reconstructed only to ask the transition
@@ -89,58 +72,6 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
   const targets = availableTransitions(props.product.status, role);
 
   const blockerEntries = Object.entries(props.blockers);
-
-  const poll = useCallback(async () => {
-    const result = await adminFetch<{ state: DeployState; commitSha: string | null }>(
-      '/api/admin/deploy-status',
-    );
-    if (!result.ok) {
-      // A missing deploy-status configuration is not a publish failure. Saying so plainly is
-      // the whole point of this branch.
-      setPhase({ kind: 'deployUnknown', message: result.error.message });
-      return true;
-    }
-    if (result.value.state === 'success') {
-      setPhase({ kind: 'deployed', commitSha: result.value.commitSha });
-      return true;
-    }
-    if (result.value.state === 'failure') {
-      setPhase({ kind: 'deployFailed', commitSha: result.value.commitSha });
-      return true;
-    }
-    setPhase((current) =>
-      current.kind === 'deploying'
-        ? { ...current, state: result.value.state, commitSha: result.value.commitSha }
-        : current,
-    );
-    return false;
-  }, []);
-
-  useEffect(() => {
-    if (phase.kind !== 'deploying') return;
-    polls.current = 0;
-    let cancelled = false;
-    const timer = setInterval(() => {
-      polls.current += 1;
-      if (polls.current > POLL_LIMIT) {
-        clearInterval(timer);
-        setPhase({
-          kind: 'deployUnknown',
-          message:
-            'The publish was committed. The build is taking longer than expected — check the deploy in your hosting dashboard.',
-        });
-        return;
-      }
-      void poll().then((finished) => {
-        if (finished && !cancelled) clearInterval(timer);
-      });
-    }, POLL_INTERVAL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-    // `poll` is stable; `phase.kind` is the trigger.
-  }, [phase.kind, poll]);
 
   const transition = useCallback(
     async (to: ProductStatusValue) => {
@@ -162,7 +93,17 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
 
       props.onProduct(result.value.product);
       if (result.value.deployTriggered) {
-        setPhase({ kind: 'deploying', to, state: 'queued', commitSha: result.value.commitSha });
+        const next: PendingPublication = {
+          id: result.value.product.id,
+          slug: result.value.product.slug,
+          updatedAt: result.value.product.updatedAt,
+          to,
+          commitSha: result.value.commitSha,
+          startedAt: Date.now(),
+        };
+        rememberPublication(next);
+        setPending(next);
+        setPhase({ kind: 'deploying' });
       } else {
         setPhase({ kind: 'done', to });
       }
@@ -203,7 +144,7 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
         {props.product.published && (
           <>
             {' — '}
-            <span className="text-walnut">visible to customers</span>
+            <span className="text-walnut">public after the website update finishes</span>
           </>
         )}
       </p>
@@ -263,23 +204,9 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
             build was started.
           </span>
         )}
-        {phase.kind === 'deploying' && (
-          <span>
-            {phase.state === 'building'
-              ? 'Publishing — the site is building, live in about a minute.'
-              : 'Publishing — live in about a minute.'}
-          </span>
-        )}
-        {phase.kind === 'deployed' && <span>Live now.</span>}
-        {phase.kind === 'deployFailed' && (
-          <span className="text-espresso">
-            Publish committed but the site build failed
-            {phase.commitSha === null ? '' : ` (build ${phase.commitSha.slice(0, 8)})`}. The
-            previous version of the site is still serving — fix the content and publish again.
-          </span>
-        )}
-        {phase.kind === 'deployUnknown' && <span className="text-espresso">{phase.message}</span>}
       </div>
+
+      <PublicationProgress productId={props.product.id} pending={pending} />
 
       <div className="flex flex-col gap-3 border-t border-taupe pt-4">
         {props.canWrite && (

@@ -91,7 +91,7 @@ describe('the failure-mode table', () => {
   });
 
   it('7. a build that fails after publish names the build and says the old site still serves', () => {
-    const panel = source('src/components/admin/PublishPanel.tsx');
+    const panel = source('src/components/admin/PublicationProgress.tsx');
     expect(panel).toContain('Publish committed but the site build failed');
     expect(panel).toContain('previous version of the site is still serving');
     expect(panel).toContain('/api/admin/deploy-status');
