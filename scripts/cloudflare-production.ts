@@ -1,6 +1,6 @@
 /** Checked production build/deploy commands shared by local operators and Workers Builds. */
 import { readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { unstable_readConfig } from 'wrangler';
@@ -114,7 +114,27 @@ function runNode(args: string[], publicBuild = false): void {
     throw new Error('Production command failed; deployment stopped.');
 }
 
-function main(): void {
+/** Lint and tests only read source; finish both before the build can proceed. */
+export async function runIndependentChecks(checks: (() => Promise<void>)[]): Promise<void> {
+  const results = await Promise.allSettled(checks.map((check) => check()));
+  if (results.some((result) => result.status === 'rejected')) {
+    throw new Error('Production checks failed; deployment stopped.');
+  }
+}
+
+function runCheck(npm: string, name: string): Promise<void> {
+  return new Promise((resolveCheck, reject) => {
+    const env: NodeJS.ProcessEnv = { ...process.env, DEPLOY_TARGET: 'cloudflare' };
+    delete env.PUBLIC_SITE_URL;
+    const child = spawn(process.execPath, [npm, 'run', name], { cwd: ROOT, stdio: 'inherit', env });
+    child.once('error', reject);
+    child.once('exit', (code) =>
+      code === 0 ? resolveCheck() : reject(new Error(`${name} failed`)),
+    );
+  });
+}
+
+async function main(): Promise<void> {
   if (process.env.CLOUDFLARE_ENV)
     throw new Error('Production command cannot select a preview environment.');
   const mode = process.argv[2];
@@ -125,15 +145,9 @@ function main(): void {
     );
     const npm = process.env.npm_execpath;
     if (!npm) throw new Error('Run through npm run build:cloudflare.');
-    for (const script of [
-      'validate:content',
-      'check',
-      'lint',
-      'test',
-      'build',
-      'size-limit',
-      'scan:secrets',
-    ]) {
+    for (const script of ['validate:content', 'check']) runNode([npm, 'run', script]);
+    await runIndependentChecks([() => runCheck(npm, 'lint'), () => runCheck(npm, 'test')]);
+    for (const script of ['build', 'size-limit', 'scan:secrets']) {
       runNode([npm, 'run', script], script === 'build');
     }
     validateCompanyConfig(JSON.parse(readFileSync(BUILT_CONFIG, 'utf8')), BUILT_CONFIG);
@@ -155,4 +169,9 @@ function main(): void {
   } else throw new Error('Expected build or deploy.');
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  void main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : 'Production command failed.');
+    process.exitCode = 1;
+  });
+}
