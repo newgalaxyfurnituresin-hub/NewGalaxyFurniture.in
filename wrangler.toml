@@ -64,7 +64,7 @@ mode = "smart"
 # --- Public (non-secret) variables ------------------------------------------
 # These are printed on the site itself, so they are configuration, not secrets.
 [vars]
-PUBLIC_SITE_URL = "https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev"
+PUBLIC_SITE_URL = "https://newgalaxyfurniture.in"
 GITHUB_REPO = "newgalaxyfurnituresin-hub/NewGalaxyFurniture.in"
 GITHUB_BRANCH = "main"
 CF_WORKER_NAME = "newgalaxyfurniture"

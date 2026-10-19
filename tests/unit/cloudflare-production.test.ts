@@ -15,6 +15,15 @@ describe('company production deployment guards', () => {
   it('accepts the verified company configuration', () => {
     expect(() => validateCompanyConfig(config(), configPath)).not.toThrow();
   });
+  it.each([
+    'https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev',
+    'https://www.newgalaxyfurniture.in',
+    'http://newgalaxyfurniture.in',
+  ])('rejects a noncanonical production address: %s', (site) => {
+    const value = config();
+    (value.vars as Record<string, unknown>).PUBLIC_SITE_URL = site;
+    expect(() => validateCompanyConfig(value, configPath)).toThrow('canonical URL');
+  });
   it('rejects missing or wrong-zone domain attachments', () => {
     const value = config();
     value.routes = [

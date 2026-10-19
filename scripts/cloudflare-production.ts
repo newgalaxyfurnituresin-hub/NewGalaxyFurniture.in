@@ -9,7 +9,7 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const BUILT_CONFIG = resolve(ROOT, 'dist/server/wrangler.json');
 const ACCOUNT = '202e4307d4836b9170f546dbea1783d4';
 const REPOSITORY = 'newgalaxyfurnituresin-hub/NewGalaxyFurniture.in';
-const SITE = 'https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev';
+const SITE = 'https://newgalaxyfurniture.in';
 
 export interface ProductionConfig {
   routes?: { pattern?: string; custom_domain?: boolean; zone_id?: string }[];
