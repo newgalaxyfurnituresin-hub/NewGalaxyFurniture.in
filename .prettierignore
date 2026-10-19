@@ -13,6 +13,10 @@ public/fonts/
 .kiro/
 .agents/
 
+# Admin content uses serializeContentJson (sorted keys, two-space JSON).
+# validate:content checks these records; Prettier uses a different array layout.
+data/**/*.json
+
 # Verbatim transcription of the design's token blocks. Prettier lowercases hex
 # digits (#3B2A21 â†’ #3b2a21) and trims 0.30 â†’ 0.3 in the easing curves, and these
 # values are specified character for character. Reviewed by eye instead.
