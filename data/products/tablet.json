@@ -35,17 +35,17 @@
   "price": null,
   "priceOnEnquiry": true,
   "primaryImage": "img_qn0gk2yyih",
-  "published": true,
+  "published": false,
   "relatedProductIds": [],
   "shortDescription": "Website tablet layout test. Not for sale.",
   "sku": "NGF-SOF-RAZXU2",
   "slug": "tablet",
-  "status": "OUT_OF_STOCK",
-  "stockStatus": "OUT_OF_STOCK",
+  "status": "UNPUBLISHED",
+  "stockStatus": "IN_STOCK",
   "tags": [
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T13:03:15.986Z",
+  "updatedAt": "2026-10-19T18:04:38.856Z",
   "variants": []
 }
