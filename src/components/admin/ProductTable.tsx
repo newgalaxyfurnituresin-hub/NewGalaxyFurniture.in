@@ -23,7 +23,7 @@ import type { ReactElement } from 'react';
 
 import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
 import { pageOfProducts, type ProductQuery } from '@/lib/products/query';
-import { derivativeUrl, extFromMime, originalUrl } from '@/lib/images/srcset';
+import { derivativeUrl } from '@/lib/images/srcset';
 import type { ProductStatusValue } from '@/schemas/product';
 import type { ProductSummary } from '@/lib/products/index-store';
 import EmptyState from '@/components/ui/EmptyState';
@@ -61,9 +61,8 @@ const STATUS_FILTERS: readonly { value: ProductStatusValue | 'ALL'; label: strin
 function thumbnail(summary: ProductSummary): string | null {
   const thumb = summary.thumbnail;
   if (thumb === null) return null;
-  return thumb.derivativesReady
-    ? derivativeUrl(thumb.productId, thumb.imageId, 320, 'webp')
-    : originalUrl(thumb.productId, thumb.imageId, extFromMime(undefined));
+  // The image service falls back to the actual original format while derivatives are pending.
+  return derivativeUrl(thumb.productId, thumb.imageId, 320, 'webp');
 }
 
 export default function ProductTable(props: ProductTableProps): ReactElement {
