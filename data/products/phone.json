@@ -40,12 +40,12 @@
   "shortDescription": "Website phone layout test. Not for sale.",
   "sku": "NGF-SOF-U921JX",
   "slug": "phone",
-  "status": "PUBLISHED",
-  "stockStatus": "IN_STOCK",
+  "status": "OUT_OF_STOCK",
+  "stockStatus": "OUT_OF_STOCK",
   "tags": [
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T12:54:36.351Z",
+  "updatedAt": "2026-10-19T12:55:25.269Z",
   "variants": []
 }
