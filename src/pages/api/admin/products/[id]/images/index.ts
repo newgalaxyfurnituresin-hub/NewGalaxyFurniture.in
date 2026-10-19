@@ -239,6 +239,7 @@ export async function POST(context: APIContext): Promise<Response> {
           client,
           actor,
           productId: product.id,
+          locks: lockNamespace(context),
           uploads: accepted,
         }),
       );
@@ -271,6 +272,7 @@ async function finishDerivatives(input: {
   client: Parameters<typeof resolveProduct>[0]['client'];
   actor: Parameters<typeof saveProductState>[0]['actor'];
   productId: string;
+  locks: Parameters<typeof withProductLock>[0];
   uploads: readonly AcceptedUpload[];
 }): Promise<void> {
   const results = new Map<string, { widths: number[]; formats: string[]; complete: boolean }>();
@@ -302,36 +304,39 @@ async function finishDerivatives(input: {
   if (results.size === 0) return;
 
   try {
-    const resolved = await resolveProduct(
-      { drafts: input.drafts, client: input.client },
-      input.productId,
-    );
-    if (resolved === null) return;
+    // Re-resolve under the editor's lock so optimization cannot overwrite a photo edit.
+    await withProductLock(input.locks, input.productId, async () => {
+      const resolved = await resolveProduct(
+        { drafts: input.drafts, client: input.client },
+        input.productId,
+      );
+      if (resolved === null) return;
 
-    const images = resolved.product.images.map((image) => {
-      const generated = results.get(image.id);
-      if (generated === undefined) return image;
-      return {
-        ...image,
-        derivativesReady: generated.complete,
-        derivativeWidths: generated.widths,
-        derivativeFormats: generated.formats as ProductImageValue['derivativeFormats'],
-      };
-    });
+      const images = resolved.product.images.map((image) => {
+        const generated = results.get(image.id);
+        if (generated === undefined) return image;
+        return {
+          ...image,
+          derivativesReady: generated.complete,
+          derivativeWidths: generated.widths,
+          derivativeFormats: generated.formats as ProductImageValue['derivativeFormats'],
+        };
+      });
 
-    const validated = validateProduct({ ...resolved.product, images });
-    if (!validated.ok) {
-      console.error('[images] derivative patch failed validation');
-      return;
-    }
+      const validated = validateProduct({ ...resolved.product, images });
+      if (!validated.ok) {
+        console.error('[images] derivative patch failed validation');
+        return;
+      }
 
-    await saveProductState({
-      drafts: input.drafts,
-      client: input.client,
-      product: validated.product,
-      from: resolved.product.status,
-      actor: input.actor,
-      action: 'optimize images',
+      await saveProductState({
+        drafts: input.drafts,
+        client: input.client,
+        product: validated.product,
+        from: resolved.product.status,
+        actor: input.actor,
+        action: 'optimize images',
+      });
     });
   } catch (error) {
     logServerError('images: could not record derivative state', error);
