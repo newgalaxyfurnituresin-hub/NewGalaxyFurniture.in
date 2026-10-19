@@ -49,12 +49,12 @@
   "shortDescription": "Website PC layout test. Not for sale.",
   "sku": "NGF-SOF-IIDW3T",
   "slug": "pc",
-  "status": "PUBLISHED",
-  "stockStatus": "IN_STOCK",
+  "status": "OUT_OF_STOCK",
+  "stockStatus": "OUT_OF_STOCK",
   "tags": [
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T13:01:07.590Z",
+  "updatedAt": "2026-10-19T13:01:21.570Z",
   "variants": []
 }
