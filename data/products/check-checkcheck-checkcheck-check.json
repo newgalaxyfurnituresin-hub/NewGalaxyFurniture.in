@@ -35,14 +35,14 @@
   "price": null,
   "priceOnEnquiry": true,
   "primaryImage": "img_ws7aj0j31n",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "sku": "NGF-SOF-4RHRM6",
   "slug": "check-checkcheck-checkcheck-check",
-  "status": "DRAFT",
+  "status": "PUBLISHED",
   "stockStatus": "IN_STOCK",
   "tags": [],
   "trending": false,
-  "updatedAt": "2026-10-19T18:33:27.865Z",
+  "updatedAt": "2026-10-19T18:33:49.274Z",
   "variants": []
 }
