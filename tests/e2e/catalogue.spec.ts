@@ -95,7 +95,7 @@ for (const slug of CATEGORY_SLUGS) {
       await expect(page.locator('#ngf-category-grid')).toHaveCount(0);
       const empty = page.locator('[data-ngf-empty-state]');
       await expect(empty).toHaveCount(1);
-      await expect(empty.locator('.ngf-emptystate-heading')).toContainText('is being photographed');
+      await expect(empty.locator('.ngf-emptystate-heading')).toContainText('Let’s find your');
       await expect(empty.locator('a[data-ngf-whatsapp]').first()).toHaveAttribute(
         'href',
         /^https:\/\/wa\.me\//,

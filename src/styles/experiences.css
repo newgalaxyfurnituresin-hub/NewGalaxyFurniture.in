@@ -9,7 +9,6 @@
 }
 .ngf-exp-section {
   padding-block: clamp(3.5rem, 7vw, 7rem);
-  scroll-margin-top: 7rem;
 }
 .ngf-exp-eyebrow {
   color: var(--color-sage);

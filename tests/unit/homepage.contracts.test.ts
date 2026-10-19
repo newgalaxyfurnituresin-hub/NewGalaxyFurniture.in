@@ -348,7 +348,9 @@ describe('placeholder discipline (Requirements 7.10, 8.4, 8.8)', () => {
     expect(settings.placeholders).not.toContain('site.heroImage');
     // The logo is the real asset: a path, with positive-integer intrinsic dimensions,
     // and it is no longer an unsupplied placeholder.
-    expect(settings.logo.src).toBe('/brand/logo.png');
+    expect(settings.logo.src).toBe('/brand/logo-192.webp');
+    expect(settings.logo.width).toBe(192);
+    expect(settings.logo.height).toBe(181);
     expect(Number.isInteger(settings.logo.width) && (settings.logo.width ?? 0) > 0).toBe(true);
     expect(Number.isInteger(settings.logo.height) && (settings.logo.height ?? 0) > 0).toBe(true);
     expect(settings.placeholders).not.toContain('site.logo.src');

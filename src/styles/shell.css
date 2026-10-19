@@ -105,9 +105,9 @@
    */
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--color-white) 78%, transparent) 0%,
-    color-mix(in srgb, var(--color-white) 62%, transparent) 55%,
-    color-mix(in srgb, var(--color-white) 70%, transparent) 100%
+    color-mix(in srgb, var(--color-white) 98%, transparent) 0%,
+    color-mix(in srgb, var(--color-white) 94%, transparent) 55%,
+    color-mix(in srgb, var(--color-white) 96%, transparent) 100%
   );
   box-shadow:
     var(--shadow-level2),
@@ -130,9 +130,9 @@
 .ngf-header[data-scrolled='true'] .ngf-header-inner {
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--color-white) 90%, transparent) 0%,
-    color-mix(in srgb, var(--color-white) 80%, transparent) 55%,
-    color-mix(in srgb, var(--color-white) 86%, transparent) 100%
+    color-mix(in srgb, var(--color-white) 99%, transparent) 0%,
+    color-mix(in srgb, var(--color-white) 96%, transparent) 55%,
+    color-mix(in srgb, var(--color-white) 98%, transparent) 100%
   );
   box-shadow:
     var(--shadow-lift),
@@ -154,9 +154,9 @@
 .ngf-header[data-over-hero='true'][data-scrolled='false'] .ngf-header-inner {
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--color-white) 66%, transparent) 0%,
-    color-mix(in srgb, var(--color-white) 48%, transparent) 55%,
-    color-mix(in srgb, var(--color-white) 58%, transparent) 100%
+    color-mix(in srgb, var(--color-white) 92%, transparent) 0%,
+    color-mix(in srgb, var(--color-white) 86%, transparent) 55%,
+    color-mix(in srgb, var(--color-white) 90%, transparent) 100%
   );
   backdrop-filter: saturate(1.7) blur(22px);
   -webkit-backdrop-filter: saturate(1.7) blur(22px);
@@ -174,7 +174,7 @@
 }
 
 /*
- * The glossy sheen — a soft diagonal highlight that sweeps across the glass pill on a slow loop, so
+ * The glossy sheen — a soft diagonal highlight that sweeps across the glass pill once on arrival, so
  * the header reads as a living pane of glass rather than a static bar. It is a decorative
  * `::after` overlay: absolutely filling the pill, masked to the pill's rounded shape with
  * `clip-path` (so it never clips the Shop dropdown, which lives in normal flow), sitting above the
@@ -211,7 +211,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   html:not([data-motion='off']) .ngf-header-inner::after {
-    animation: ngf-header-sheen 7s var(--ease-standard) infinite;
+    animation: ngf-header-sheen 7s var(--ease-standard) 1;
   }
 }
 

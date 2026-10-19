@@ -196,6 +196,28 @@ test.describe('a real session', () => {
     expect(((await wrongToken.json()) as { error?: string }).error).toBe('CSRF_INVALID');
   });
 
+  test('a failed sign-out keeps the operator on the page and offers a retry', async ({ page }) => {
+    const { email, password } = credentials as { email: string; password: string };
+    await signIn(page, email, password);
+    await page.goto('/admin/settings');
+    await page.route('**/api/admin/logout', (route) => route.fulfill({ status: 503 }));
+    await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('Sign out was not confirmed');
+    expect(new URL(page.url()).pathname).toBe('/admin/settings');
+    await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeEnabled();
+
+    await page.unroute('**/api/admin/logout');
+    await page.route('**/api/admin/logout', (route) => route.abort('internetdisconnected'));
+    await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText('Check your connection');
+    expect(new URL(page.url()).pathname).toBe('/admin/settings');
+
+    await page.unroute('**/api/admin/logout');
+    await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/login$/);
+    expect((await page.request.get('/api/admin/session')).status()).toBe(401);
+  });
+
   test('signing out revokes the session rather than merely navigating away', async ({
     page,
     baseURL,

@@ -18,7 +18,7 @@
  * Requirements: 10.17, 11.1, 24.8.
  */
 
-import type { ReactElement } from 'react';
+import { useRef, useState, type ReactElement } from 'react';
 
 import { can, type Permission, type Role } from '@/lib/auth/permissions';
 
@@ -68,6 +68,32 @@ function activeHref(currentPath: string, hrefs: readonly string[]): string | nul
 }
 
 export default function AdminNav({ role, currentPath, csrfToken }: AdminNavProps): ReactElement {
+  const signingOut = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const signOut = async (): Promise<void> => {
+    if (signingOut.current) return;
+    signingOut.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: '{}',
+      });
+      if (response.status !== 204) {
+        setError('Sign out was not confirmed. Please try again.');
+        return;
+      }
+      window.location.assign('/admin/login');
+    } catch {
+      setError('Could not reach the server. Check your connection and try signing out again.');
+    } finally {
+      signingOut.current = false;
+      setBusy(false);
+    }
+  };
   const visible = ADMIN_AREAS.filter((area) => can(role, area.permission));
   const active = activeHref(
     currentPath,
@@ -107,19 +133,18 @@ export default function AdminNav({ role, currentPath, csrfToken }: AdminNavProps
       */}
       <button
         type="button"
-        onClick={() => {
-          void fetch('/api/admin/logout', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: '{}',
-          }).then(() => {
-            window.location.assign('/admin/login');
-          });
-        }}
-        className="mt-4 min-h-[44px] w-full border border-espresso px-3 py-2 text-espresso hover:bg-espresso hover:text-ivory focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
+        onClick={() => void signOut()}
+        disabled={busy}
+        aria-busy={busy}
+        className="mt-4 min-h-[44px] w-full border border-espresso px-3 py-2 text-espresso hover:bg-espresso hover:text-ivory focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:cursor-wait disabled:opacity-60"
       >
-        Sign out
+        {busy ? 'Signing out…' : 'Sign out'}
       </button>
+      {error !== '' && (
+        <p role="alert" className="mt-3 text-small text-clay">
+          {error}
+        </p>
+      )}
     </nav>
   );
 }

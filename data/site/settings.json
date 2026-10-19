@@ -1,9 +1,9 @@
 {
   "businessName": "New Galaxy Furniture",
   "logo": {
-    "src": "/brand/logo.png",
-    "width": 1006,
-    "height": 803,
+    "src": "/brand/logo-192.webp",
+    "width": 192,
+    "height": 181,
     "wordmarkFallback": "NEW GALAXY FURNITURE"
   },
   "heroImage": {

@@ -206,8 +206,8 @@ const meta = pageMeta(Astro, {
       {
         count === 0 ? (
           <CatalogueEmpty
-            heading={`${category.name} is being photographed`}
-            message="Nothing is published in this category yet. Tell us the size, material and finish you have in mind and we will send options and prices."
+            heading={`Let’s find your ${category.name.toLowerCase()}`}
+            message="No pieces are published in this category yet. Share your preferred size, material and finish with our team to discuss current options and prices."
             categoryName={category.name}
           />
         ) : (

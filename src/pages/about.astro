@@ -287,9 +287,9 @@ const meta = pageMeta(Astro, {
         <p>
           The furniture is made in our Bengaluru workshop — see it drawn out on the <a
             href="/workshop">workshop</a
-          > page. Our address, opening hours and a map link appear on the <a href="/contact"
-            >contact page</a
-          > as soon as they are confirmed; until then, message or call and we will arrange a time.
+          > page. Find our showroom address, opening hours and an interactive map on the <a
+            href="/contact">contact page</a
+          >. Message or call us to discuss your visit.
         </p>
       </div>
     </section>
@@ -351,6 +351,17 @@ const meta = pageMeta(Astro, {
 </BaseLayout>
 
 <style>
+  p a {
+    text-decoration: underline;
+    text-decoration-color: var(--color-sage);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  p a:hover {
+    text-decoration-thickness: 2px;
+  }
+
   /*
    * One consistent vertical rhythm for the About page's blocks. The sections used to be separated by
    * a full `--spacing-section` (up to 9rem), which stranded each block in its own screen of

@@ -305,6 +305,13 @@ const mobilePages = [
     document.addEventListener('pointerdown', (event) => {
       if (!header.contains(event.target as Node)) closeAll();
     });
+    for (const details of header.querySelectorAll<HTMLDetailsElement>('details[name="ngf-nav"]')) {
+      details.addEventListener('focusout', () => {
+        window.requestAnimationFrame(() => {
+          if (!details.contains(document.activeElement)) details.open = false;
+        });
+      });
+    }
     header.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
       const open = header.querySelector<HTMLDetailsElement>('details[name="ngf-nav"][open]');

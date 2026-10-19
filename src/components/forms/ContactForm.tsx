@@ -27,7 +27,7 @@ export default function ContactForm(props: ContactFormProps): ReactElement {
       type="CONTACT"
       fields={['name', 'phone', 'message']}
       submitLabel="Send enquiry"
-      intro="Tell us what you are looking for. We reply on WhatsApp or by phone, usually the same day."
+      intro="Tell us what you are looking for and how to reach you. Our team will follow up on WhatsApp or by phone."
       numbers={props.numbers}
       {...(props.heading === undefined ? {} : { heading: props.heading })}
       {...(props.productSlug === undefined ? {} : { productSlug: props.productSlug })}
