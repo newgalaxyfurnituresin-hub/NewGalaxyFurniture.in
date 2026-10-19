@@ -330,7 +330,9 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       }
                     />
                     {image.derivativesReady !== true && (
-                      <span className="mt-1 block text-small text-walnut">Original photo ready</span>
+                      <span className="mt-1 block text-small text-walnut">
+                        Original photo ready
+                      </span>
                     )}
                   </div>
 
