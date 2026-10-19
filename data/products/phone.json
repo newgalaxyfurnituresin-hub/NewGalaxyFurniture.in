@@ -6,7 +6,7 @@
   "category": "sofas",
   "createdAt": "2026-10-19T12:43:38.876Z",
   "currency": "INR",
-  "description": "Responsive website test created using the phone admin layout. This is a demonstration listing for checking the website, not furniture offered for sale. The photograph is illustrative.",
+  "description": "Responsive website test created and saved using the phone admin layout. This is a demonstration listing for checking the website, not furniture offered for sale. The photograph is illustrative.",
   "discount": null,
   "featured": false,
   "id": "p_fqggiyyqd8",
@@ -35,17 +35,17 @@
   "price": null,
   "priceOnEnquiry": true,
   "primaryImage": "img_iwptzlnlvn",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "shortDescription": "Website phone layout test. Not for sale.",
   "sku": "NGF-SOF-U921JX",
   "slug": "phone",
-  "status": "DRAFT",
-  "stockStatus": "IN_STOCK",
+  "status": "OUT_OF_STOCK",
+  "stockStatus": "OUT_OF_STOCK",
   "tags": [
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T12:52:13.937Z",
+  "updatedAt": "2026-10-19T12:55:25.269Z",
   "variants": []
 }
