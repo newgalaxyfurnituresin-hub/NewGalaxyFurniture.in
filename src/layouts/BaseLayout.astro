@@ -111,6 +111,7 @@ const telHref = primary === undefined ? '#' : buildTelUrl(primary.e164);
     <title>{meta.title}</title>
     <meta name="description" content={meta.description} />
     <link rel="canonical" href={meta.canonical} />
+    <script is:inline src="/ngf-domain-migration.js" defer></script>
     {meta.robots !== undefined && <meta name="robots" content={meta.robots} />}
 
     <meta property="og:type" content={meta.og.type} />

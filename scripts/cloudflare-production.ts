@@ -16,7 +16,7 @@ export interface ProductionConfig {
   name?: string;
   account_id?: string;
   triggers?: { crons?: string[] };
-  assets?: { binding?: string; directory?: string };
+  assets?: { binding?: string; directory?: string; run_worker_first?: boolean | string[] };
   vars?: Record<string, unknown>;
   d1_databases?: { binding: string; database_id: string }[];
   kv_namespaces?: { binding: string; id: string }[];
@@ -50,6 +50,12 @@ export function validateCompanyConfig(value: unknown, configPath: string): void 
     'company content repository',
   );
   refuse(config.vars?.PUBLIC_SITE_URL === SITE, 'production canonical URL');
+  refuse(
+    Array.isArray(config.assets?.run_worker_first) &&
+      config.assets.run_worker_first.length === 1 &&
+      config.assets.run_worker_first[0] === '/',
+    'homepage host redirect routing',
+  );
   refuse(
     config.routes?.length === 2 &&
       ['newgalaxyfurniture.in', 'www.newgalaxyfurniture.in'].every((hostname) =>

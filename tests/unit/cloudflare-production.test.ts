@@ -44,6 +44,13 @@ describe('company production deployment guards', () => {
     (assets.assets as { directory: string }).directory = './dist';
     expect(() => validateCompanyConfig(assets, configPath)).toThrow('assets');
   });
+  it('requires the old homepage redirect without routing every asset through the Worker', () => {
+    for (const routing of [false, true, ['/*']]) {
+      const value = config();
+      value.assets!.run_worker_first = routing;
+      expect(() => validateCompanyConfig(value, configPath)).toThrow('host redirect routing');
+    }
+  });
   it('rejects the old repository and credentials placed in public configuration', () => {
     const old = config();
     (old.vars as Record<string, unknown>).GITHUB_REPO = 'Website-Deploys/NewGalaxyFurniture';

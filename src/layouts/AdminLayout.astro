@@ -67,6 +67,7 @@ const bootstrap = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content={meta.robots} />
     <title>{meta.title}</title>
+    <script is:inline src="/ngf-domain-migration.js" defer></script>
     {
       /*
       JSON in a data script: parsed, never evaluated, and serialised through `jsonScriptText` so `<`

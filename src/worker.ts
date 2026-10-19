@@ -12,8 +12,8 @@
  * `main: config.main ?? '@astrojs/cloudflare/entrypoints/server'`, so naming a real source file here
  * is a supported override, not a workaround: the injected default is used only when `main` is unset.
  * `handle` is the adapter's exported request handler (`@astrojs/cloudflare/handler`), so the request
- * path is byte-identical to the default entry — this file adds a handler beside it and changes
- * nothing about it.
+ * path uses the default entry, with a narrow old-host navigation redirect before it and the
+ * scheduled handler beside it. Primary-domain requests retain the adapter's normal behavior.
  *
  * **The scheduled handler is deliberately thin.** It resolves the two things it needs (the D1
  * database and a GitHub client) and hands off; everything else is in `runAnalyticsSnapshot`, which
@@ -37,6 +37,7 @@ import { runAnalyticsSnapshot } from '@/lib/analytics/snapshot-cron';
 import { getD1 } from '@/lib/env';
 import { logServerError } from '@/lib/errors';
 import { createGitHubClient } from '@/lib/github/factory';
+import { legacyDomainRedirect } from '@/lib/seo/legacy-domain';
 
 /**
  * `ScheduledController` / `ExecutionContext` are typed structurally rather than imported from
@@ -89,6 +90,9 @@ async function runSnapshot(now: Date): Promise<void> {
 }
 
 export default {
-  fetch: handle,
+  fetch(...args: Parameters<typeof handle>): Response | Promise<Response> {
+    const redirect = legacyDomainRedirect(args[0]);
+    return redirect ?? (handle(...args) as Promise<Response>);
+  },
   scheduled,
 };

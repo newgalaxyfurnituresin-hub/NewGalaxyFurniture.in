@@ -7,6 +7,8 @@ Live URL: <https://newgalaxyfurniture.in/>
 - The `.in` registry now delegates to `georgia.ns.cloudflare.com` and `lou.ns.cloudflare.com`.
 - The company Cloudflare zone is active and its free Universal SSL certificate is active.
 - `https://newgalaxyfurniture.in/` returns HTTP 200 directly, without forwarding to workers.dev.
+- The temporary homepage now forwards visitors to the purchased domain. A small browser handoff
+  also moves old bookmarked pages and refreshes obsolete registrar redirects before cleaning the address.
 - HTTP requests and the `www` hostname redirect to HTTPS on the root domain; paths and query strings are preserved.
 - `PUBLIC_SITE_URL`, production build guards, canonical URLs, sitemap and robots use the purchased domain.
 - The existing owner-only Access application additionally protects `newgalaxyfurniture.in/api/admin/access`.

@@ -37,7 +37,7 @@ routes = [
 ]
 
 # Prerendered HTML, hashed assets and fonts are served from the static asset store; the Worker only
-# runs for /admin/**, /api/** and /img/**.
+# runs for /admin/**, /api/**, /img/** and the homepage host check below.
 #
 # `./dist/client`, not `./dist`: @astrojs/cloudflare v14 splits the build into `dist/client` (public
 # assets) and `dist/server` (the Worker bundle). Pointing this at `./dist` would place the server
@@ -48,6 +48,9 @@ directory = "./dist/client"
 # Trailing slashes are normalised away at the edge (Requirement 23.15); src/middleware.ts applies the
 # same rule to Worker-served routes and to `astro dev`.
 html_handling = "drop-trailing-slash"
+# The old homepage must reach the host redirect before the static asset is returned.
+# Other public pages retain asset-first delivery and use the same small browser handoff.
+run_worker_first = ["/"]
 
 # --- Scheduled work ---------------------------------------------------------
 # The scheduled handler exists in source, but production scheduling is disabled.
