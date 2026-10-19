@@ -10,12 +10,12 @@ import { ProductImage, ProductSchema } from '@/schemas/product';
 import type { Product, ProductImageValue } from '@/schemas/product';
 
 /**
- * The two real sofas, pinned to the behaviour the operator asked to be guaranteed.
+ * The published sofa and a test-only draft fixture, pinned to the required behaviour.
  *
  * The Premium 3+1+1 Sofa Set (brown-sofa) is now PUBLISHED with its four real, recovered
  * images: it is the first live catalogue product, so this suite reads the committed JSON and
  * fails if a future change accidentally unpublishes it, drops or breaks its images, or breaks
- * the product-specific WhatsApp templating. Corner Sofa remains an image-less DRAFT — the
+ * the product-specific WhatsApp templating. Corner Sofa is now a test-only DRAFT fixture — the
  * single missing image is what keeps it out of the public catalogue and off a PUBLISHED
  * status — and this suite keeps guarding that.
  *
@@ -30,7 +30,8 @@ import type { Product, ProductImageValue } from '@/schemas/product';
  *   - accidentally publishes the corner-sofa draft (status flips off DRAFT / it leaks into
  *     the public catalogue).
  *
- * It does not modify the publish gate or the catalogue filter — it only observes them.
+ * The removed draft lives under tests/fixtures so it cannot reappear in the catalogue or admin.
+ * This suite does not modify the publish gate or the catalogue filter.
  */
 
 /** Read a committed product file straight from `data/products/` and parse the canonical shape. */
@@ -52,7 +53,9 @@ const validImage: ProductImageValue = ProductImage.parse({
 
 const settings = getSiteSettings();
 
-const cornerSofa = loadProduct('corner-sofa');
+const cornerSofa = ProductSchema.parse(
+  JSON.parse(readFileSync(new URL('../fixtures/corner-sofa.json', import.meta.url), 'utf8')),
+);
 const brownSofa = loadProduct('brown-sofa');
 
 /** slug → the exact committed values this suite locks in. */
