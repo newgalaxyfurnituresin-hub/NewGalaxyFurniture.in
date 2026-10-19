@@ -6,7 +6,7 @@
   "category": "sofas",
   "createdAt": "2026-10-19T13:01:34.970Z",
   "currency": "INR",
-  "description": "Responsive website test created using the tablet admin layout. This is a demonstration listing for checking the website, not furniture offered for sale. The photograph is illustrative.",
+  "description": "Responsive website test created and saved using the tablet admin layout. This is a demonstration listing for checking the website, not furniture offered for sale. The photograph is illustrative.",
   "discount": null,
   "featured": false,
   "id": "p_06frzeeubf",
@@ -46,6 +46,6 @@
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T13:02:30.248Z",
+  "updatedAt": "2026-10-19T13:02:44.367Z",
   "variants": []
 }
