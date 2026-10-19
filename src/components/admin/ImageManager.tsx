@@ -116,7 +116,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
       setMessage(
         accepted.length === 0
           ? 'No files were accepted.'
-          : `${String(accepted.length)} image${accepted.length === 1 ? '' : 's'} added. Optimized sizes are being generated.`,
+          : `${String(accepted.length)} image${accepted.length === 1 ? '' : 's'} added. Add a photo description below. Smaller sizes are prepared in the background.`,
       );
     },
     [props],
@@ -330,7 +330,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       }
                     />
                     {image.derivativesReady !== true && (
-                      <span className="mt-1 block text-small text-walnut">Optimizing…</span>
+                      <span className="mt-1 block text-small text-walnut">Original photo ready</span>
                     )}
                   </div>
 
