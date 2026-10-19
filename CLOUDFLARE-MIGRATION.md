@@ -1,8 +1,23 @@
-# Company Cloudflare launch — updated 17 October 2026
+# Company Cloudflare launch — updated 19 October 2026
+
+Live URL: <https://newgalaxyfurniture.in/>
+
+## Custom domain activated and verified — 19 October 2026
+
+- The `.in` registry now delegates to `georgia.ns.cloudflare.com` and `lou.ns.cloudflare.com`.
+- The company Cloudflare zone is active and its free Universal SSL certificate is active.
+- `https://newgalaxyfurniture.in/` returns HTTP 200 directly, without forwarding to workers.dev.
+- HTTP requests and the `www` hostname redirect to HTTPS on the root domain; paths and query strings are preserved.
+- `PUBLIC_SITE_URL`, production build guards, canonical URLs, sitemap and robots use the purchased domain.
+- The existing owner-only Access application additionally protects `newgalaxyfurniture.in/api/admin/access`.
+  Owner sign-in and the authenticated dashboard were verified on the purchased domain.
+- All 31 public pages passed live checks without redirecting to the temporary hostname.
+- The custom-domain build passed 76 suites and 1,086 tests, with all configured production and security checks.
+- The deployment preserves existing resources, secrets, company GitHub bindings and empty production cron schedules.
+
+## Earlier migration and launch verification
 
 **The public website and owner administrator login are live in the company account. Public and authenticated browser checks pass. The company repository credential passed an isolated read/write test. A real push to company main automatically built and deployed successfully through Cloudflare Workers Builds. The separate GitHub Lighthouse audit still reports performance/image and contrast issues, detailed below.**
-
-Live URL: <https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev>
 
 ## Verified destination
 
