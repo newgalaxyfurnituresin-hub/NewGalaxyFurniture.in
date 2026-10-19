@@ -35,17 +35,17 @@
   "price": null,
   "priceOnEnquiry": true,
   "primaryImage": "img_iwptzlnlvn",
-  "published": true,
+  "published": false,
   "relatedProductIds": [],
   "shortDescription": "Website phone layout test. Not for sale.",
   "sku": "NGF-SOF-U921JX",
   "slug": "phone",
-  "status": "OUT_OF_STOCK",
-  "stockStatus": "OUT_OF_STOCK",
+  "status": "UNPUBLISHED",
+  "stockStatus": "IN_STOCK",
   "tags": [
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T12:55:25.269Z",
+  "updatedAt": "2026-10-19T18:05:00.206Z",
   "variants": []
 }
