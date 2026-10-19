@@ -496,6 +496,16 @@
 .ngf-mattress-grid {
   grid-template-columns: 1fr;
 }
+@media (min-width: 560px) {
+  .ngf-mattress-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .ngf-mattress-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 .ngf-exp-projects {
   display: grid;
   gap: 3rem;
@@ -631,9 +641,6 @@
   .ngf-exp-quote {
     grid-template-columns: 1fr 1.2fr;
     gap: clamp(3rem, 8vw, 8rem);
-  }
-  .ngf-mattress-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .ngf-exp-steps {
     grid-template-columns: repeat(4, minmax(0, 1fr));

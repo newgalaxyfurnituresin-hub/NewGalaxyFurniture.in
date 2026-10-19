@@ -17,12 +17,13 @@
  * Requirements: 13.8, 14.14, 14.15, 15.13, 15.14, 15.15, 15.16, 24.5, 26.8, 26.14.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DragEvent, ReactElement } from 'react';
 
 import { adminFetch } from '@/lib/admin/client';
 import { originalUrl, derivativeUrl, extFromMime } from '@/lib/images/srcset';
 import type { ProductImageValue } from '@/schemas/product';
+import type { ProductRevision } from '@/lib/products/revision';
 import { DropZoneGlyph } from '@/components/ui/EmptyState';
 
 export interface ImageManagerProps {
@@ -30,7 +31,12 @@ export interface ImageManagerProps {
   images: readonly ProductImageValue[];
   primaryImage: string | null;
   canWrite: boolean;
-  onChange: (images: ProductImageValue[], primaryImage: string | null) => void;
+  onBusyChange?: (busy: boolean) => void;
+  onChange: (
+    images: ProductImageValue[],
+    primaryImage: string | null,
+    revision?: ProductRevision,
+  ) => void;
 }
 
 interface Rejection {
@@ -60,12 +66,25 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   const [dragOver, setDragOver] = useState(false);
   const dragFrom = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const working = useRef(false);
+  const begin = (): boolean => {
+    if (working.current) return false;
+    working.current = true;
+    setBusy(true);
+    return true;
+  };
+  const finish = (): void => {
+    working.current = false;
+    setBusy(false);
+  };
+  useEffect(() => {
+    props.onBusyChange?.(busy);
+  }, [busy, props.onBusyChange]);
 
   const upload = useCallback(
     async (files: FileList | File[]) => {
       const list = [...files];
-      if (list.length === 0) return;
-      setBusy(true);
+      if (list.length === 0 || !begin()) return;
       setMessage(`Uploading ${String(list.length)} file${list.length === 1 ? '' : 's'}…`);
       setRejected([]);
 
@@ -76,7 +95,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         `/api/admin/products/${props.productId}/images`,
         { method: 'POST', formData: form },
       );
-      setBusy(false);
+      finish();
 
       if (!result.ok) {
         // A 422 whose body carries per-file reasons still arrives as a failure envelope; the
@@ -92,7 +111,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
           ...image,
           order: index,
         }));
-        props.onChange(next, props.primaryImage ?? next[0]?.id ?? null);
+        props.onChange(next, props.primaryImage ?? next[0]?.id ?? null, result.revision);
       }
       setMessage(
         accepted.length === 0
@@ -105,19 +124,20 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
 
   const commitOrder = useCallback(
     async (images: ProductImageValue[]) => {
+      if (!begin()) return;
       // Renumbered locally for an immediate redraw, and renumbered again by the server, which
       // is the copy that counts.
       const renumbered = images.map((image, index) => ({ ...image, order: index }));
-      props.onChange(renumbered, props.primaryImage);
       const result = await adminFetch<{ images: ProductImageValue[] }>(
         `/api/admin/products/${props.productId}/images/order`,
         { method: 'PATCH', body: { orderedIds: renumbered.map((image) => image.id) } },
       );
+      finish();
       if (!result.ok) {
         setMessage(result.error.message);
         return;
       }
-      props.onChange(result.value.images, props.primaryImage);
+      props.onChange(result.value.images, props.primaryImage, result.revision);
     },
     [props],
   );
@@ -136,40 +156,46 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
 
   const setAlt = useCallback(
     async (imageId: string, alt: string) => {
+      if (!begin()) return;
       const result = await adminFetch<{ images: ProductImageValue[]; primaryImage: string | null }>(
         `/api/admin/products/${props.productId}/images/${imageId}`,
         { method: 'PATCH', body: { alt } },
       );
+      finish();
       if (!result.ok) {
         setMessage(result.error.message);
         return;
       }
-      props.onChange(result.value.images, result.value.primaryImage);
+      props.onChange(result.value.images, result.value.primaryImage, result.revision);
     },
     [props],
   );
 
   const setPrimary = useCallback(
     async (imageId: string) => {
+      if (!begin()) return;
       const result = await adminFetch<{ images: ProductImageValue[]; primaryImage: string | null }>(
         `/api/admin/products/${props.productId}/images/${imageId}`,
         { method: 'PATCH', body: { primary: true } },
       );
+      finish();
       if (!result.ok) {
         setMessage(result.error.message);
         return;
       }
-      props.onChange(result.value.images, result.value.primaryImage);
+      props.onChange(result.value.images, result.value.primaryImage, result.revision);
     },
     [props],
   );
 
   const remove = useCallback(
     async (imageId: string) => {
+      if (!begin()) return;
       const result = await adminFetch<undefined>(
         `/api/admin/products/${props.productId}/images/${imageId}`,
         { method: 'DELETE' },
       );
+      finish();
       if (!result.ok) {
         setMessage(result.error.message);
         return;
@@ -180,6 +206,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
       props.onChange(
         next,
         props.primaryImage === imageId ? (next[0]?.id ?? null) : props.primaryImage,
+        result.revision,
       );
       setMessage('Image removed. It can be recovered for 30 days.');
     },
@@ -189,7 +216,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   const onDrop = (event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
     setDragOver(false);
-    if (!props.canWrite) return;
+    if (!props.canWrite || working.current) return;
     void upload(event.dataTransfer.files);
   };
 
@@ -227,6 +254,8 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
             ref={inputRef}
             id="image-upload"
             type="file"
+            aria-label="Product photographs"
+            tabIndex={-1}
             multiple
             accept="image/jpeg,image/png,image/webp,image/avif"
             className="sr-only"
@@ -310,7 +339,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       htmlFor={`alt-${image.id}`}
                       className="text-small font-medium text-espresso"
                     >
-                      Alt text
+                      Photo description
                       <span className="ml-2 font-normal text-walnut">
                         {image.altSource === 'ai' ? 'AI suggestion' : 'Written by you'}
                       </span>
@@ -320,7 +349,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       type="text"
                       defaultValue={image.alt}
                       maxLength={180}
-                      disabled={!props.canWrite}
+                      disabled={!props.canWrite || busy}
                       onBlur={(event) => {
                         if (event.target.value !== image.alt)
                           void setAlt(image.id, event.target.value);
@@ -329,7 +358,8 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       aria-describedby={`alt-hint-${image.id}`}
                     />
                     <p id={`alt-hint-${image.id}`} className="text-small text-walnut">
-                      Describe the photograph for someone who cannot see it. Required to publish.
+                      Briefly describe what is in the photograph. This helps customers using a
+                      screen reader and is required to publish.
                       {image.filename === undefined ? '' : ` Uploaded as “${image.filename}”.`}{' '}
                       {image.width}×{image.height} pixels.
                     </p>
@@ -341,7 +371,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       <button
                         type="button"
                         onClick={() => move(index, index - 1)}
-                        disabled={index === 0}
+                        disabled={index === 0 || busy}
                         className="min-h-[44px] border border-taupe px-3 text-small disabled:opacity-40"
                       >
                         Move up
@@ -349,7 +379,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       <button
                         type="button"
                         onClick={() => move(index, index + 1)}
-                        disabled={index === props.images.length - 1}
+                        disabled={index === props.images.length - 1 || busy}
                         className="min-h-[44px] border border-taupe px-3 text-small disabled:opacity-40"
                       >
                         Move down
@@ -357,7 +387,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       <button
                         type="button"
                         onClick={() => void setPrimary(image.id)}
-                        disabled={isPrimary}
+                        disabled={isPrimary || busy}
                         className="min-h-[44px] border border-taupe px-3 text-small disabled:opacity-40"
                       >
                         {isPrimary ? 'Main photograph' : 'Make main'}
@@ -365,6 +395,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       <button
                         type="button"
                         onClick={() => void remove(image.id)}
+                        disabled={busy}
                         className="min-h-[44px] border border-espresso px-3 text-small text-espresso"
                       >
                         Remove

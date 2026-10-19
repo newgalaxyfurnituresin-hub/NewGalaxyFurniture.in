@@ -250,6 +250,15 @@ const meta = pageMeta(Astro, {
   />
 
   <div class="ngf-pdp">
+    {
+      product.tags.includes('responsive-test') && (
+        <aside class="mb-6 rounded-lg border border-taupe bg-cream px-5 py-4 text-body text-espresso">
+          <strong>Website test listing — not for sale.</strong> This listing checks the product
+          upload experience. Its photograph is illustrative and does not describe an item available
+          to buy.
+        </aside>
+      )
+    }
     <ProductDetail
       product={product}
       categoryName={categoryNames[product.category]}

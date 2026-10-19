@@ -68,6 +68,8 @@ function activeHref(currentPath: string, hrefs: readonly string[]): string | nul
 }
 
 export default function AdminNav({ role, currentPath, csrfToken }: AdminNavProps): ReactElement {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement | null>(null);
   const signingOut = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -101,50 +103,72 @@ export default function AdminNav({ role, currentPath, csrfToken }: AdminNavProps
   );
 
   return (
-    <nav aria-label="Admin navigation" className="text-body">
-      <p className="mb-3 text-small tracking-[0.18em] text-walnut uppercase">
-        {role} · New Galaxy Furniture
-      </p>
-      <ul className="flex flex-col gap-px border-t border-taupe">
-        {visible.map((area) => {
-          const isActive = area.href === active;
-          return (
-            <li key={area.href} className="border-b border-taupe">
-              <a
-                href={area.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={[
-                  // ≥ 44 px tap target (Requirement 24.x responsive strategy).
-                  'flex min-h-[44px] items-center px-3 py-2 no-underline',
-                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne',
-                  isActive ? 'bg-espresso text-ivory' : 'text-obsidian hover:bg-cream',
-                ].join(' ')}
-              >
-                {area.label}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
-      {/*
+    <nav
+      aria-label="Admin navigation"
+      className="ngf-admin-nav text-body"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && menuOpen) {
+          setMenuOpen(false);
+          menuButton.current?.focus();
+        }
+      }}
+    >
+      <button
+        ref={menuButton}
+        type="button"
+        className="ngf-admin-menu-toggle"
+        aria-expanded={menuOpen}
+        aria-controls="ngf-admin-menu"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        <span>{visible.find((area) => area.href === active)?.label ?? 'Website manager'}</span>
+        <span>{menuOpen ? 'Close menu −' : 'Menu +'}</span>
+      </button>
+      <div id="ngf-admin-menu" className="ngf-admin-menu" data-open={menuOpen}>
+        <p className="mb-3 text-small tracking-[0.18em] text-walnut uppercase">
+          {role} · New Galaxy Furniture
+        </p>
+        <ul className="flex flex-col gap-px border-t border-taupe">
+          {visible.map((area) => {
+            const isActive = area.href === active;
+            return (
+              <li key={area.href} className="border-b border-taupe">
+                <a
+                  href={area.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={[
+                    // ≥ 44 px tap target (Requirement 24.x responsive strategy).
+                    'flex min-h-[44px] items-center px-3 py-2 no-underline',
+                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne',
+                    isActive ? 'bg-espresso text-ivory' : 'text-obsidian hover:bg-cream',
+                  ].join(' ')}
+                >
+                  {area.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+        {/*
         A button rather than a plain link: logout is state-changing, so it must be a
         POST carrying the CSRF header. A GET link would be followable by any page on
         the internet and would log the operator out mid-edit.
       */}
-      <button
-        type="button"
-        onClick={() => void signOut()}
-        disabled={busy}
-        aria-busy={busy}
-        className="mt-4 min-h-[44px] w-full border border-espresso px-3 py-2 text-espresso hover:bg-espresso hover:text-ivory focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:cursor-wait disabled:opacity-60"
-      >
-        {busy ? 'Signing out…' : 'Sign out'}
-      </button>
-      {error !== '' && (
-        <p role="alert" className="mt-3 text-small text-clay">
-          {error}
-        </p>
-      )}
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          disabled={busy}
+          aria-busy={busy}
+          className="mt-4 min-h-[44px] w-full border border-espresso px-3 py-2 text-espresso hover:bg-espresso hover:text-ivory focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:cursor-wait disabled:opacity-60"
+        >
+          {busy ? 'Signing out…' : 'Sign out'}
+        </button>
+        {error !== '' && (
+          <p role="alert" className="mt-3 text-small text-clay">
+            {error}
+          </p>
+        )}
+      </div>
     </nav>
   );
 }

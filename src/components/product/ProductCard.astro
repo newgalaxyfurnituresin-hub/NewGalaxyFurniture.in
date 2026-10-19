@@ -82,7 +82,9 @@ const price = formatPriceOrLabel(product.price, product.priceOnEnquiry);
  * "Astro escapes it" is not the whole story.
  */
 const name = safeText(product.name);
-const classification = safeText(categoryName ?? product.tags[0] ?? product.category);
+const classification = product.tags.includes('responsive-test')
+  ? 'Test listing · not for sale'
+  : safeText(categoryName ?? product.tags[0] ?? product.category);
 
 /**
  * Quick Enquire is a real link to WhatsApp that the page's `QuickEnquireHost` island upgrades

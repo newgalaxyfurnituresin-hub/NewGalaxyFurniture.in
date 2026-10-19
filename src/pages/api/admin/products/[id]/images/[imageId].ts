@@ -17,6 +17,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { productRevisionHeaders } from '@/lib/products/revision';
 import type { ObjectBucket } from '@/lib/runtime/types';
 import { z } from 'zod';
 
@@ -94,10 +95,13 @@ export async function PATCH(context: APIContext): Promise<Response> {
         action: body.value.primary === true ? 'set primary image' : 'edit image alt text',
       });
 
-      return jsonResponse({
-        images: validated.product.images,
-        primaryImage: validated.product.primaryImage ?? null,
-      });
+      return jsonResponse(
+        {
+          images: validated.product.images,
+          primaryImage: validated.product.primaryImage ?? null,
+        },
+        { headers: productRevisionHeaders(product.updatedAt, validated.product.updatedAt) },
+      );
     });
   } catch (error) {
     logServerError('images: patch failed', error);
@@ -177,7 +181,11 @@ export async function DELETE(context: APIContext): Promise<Response> {
 
       return new Response(null, {
         status: 204,
-        headers: { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' },
+        headers: {
+          'cache-control': 'no-store',
+          'x-robots-tag': 'noindex, nofollow',
+          ...productRevisionHeaders(product.updatedAt, validated.product.updatedAt),
+        },
       });
     });
   } catch (error) {

@@ -184,92 +184,148 @@ export default function ProductTable(props: ProductTableProps): ReactElement {
           </button>
         </EmptyState>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-small">
-            <caption className="sr-only">
-              Products, most recently edited first{filtered ? ', filtered' : ''}
-            </caption>
-            <thead>
-              <tr className="border-b border-taupe text-left">
-                <th scope="col" className="px-2 py-2">
-                  Image
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  Name
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  SKU
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  Category
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  Status
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  Stock
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  Price
-                </th>
-                <th scope="col" className="px-2 py-2">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {page.items.map((summary) => {
-                const src = thumbnail(summary);
-                return (
-                  <tr key={summary.id} className="border-b border-taupe align-middle">
-                    <td className="px-2 py-2">
-                      {src === null ? (
-                        <span className="flex h-12 w-12 items-center justify-center bg-cream text-small text-walnut">
-                          None
-                        </span>
-                      ) : (
-                        <img
-                          src={src}
-                          alt={summary.thumbnail?.alt ?? ''}
-                          width={48}
-                          height={48}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-12 w-12 bg-cream object-cover"
-                        />
-                      )}
-                    </td>
-                    <td className="px-2 py-2">
-                      <a href={`/admin/products/${summary.id}`} className="underline">
-                        {summary.name}
-                      </a>
-                      {summary.aiAssisted && <span className="ml-2 text-walnut">AI-assisted</span>}
-                    </td>
-                    <td className="px-2 py-2 font-mono">{summary.sku}</td>
-                    <td className="px-2 py-2">
-                      {props.categories.find((entry) => entry.slug === summary.category)?.name ??
-                        summary.category}
-                    </td>
-                    <td className="px-2 py-2">{STATUS_LABELS[summary.status]}</td>
-                    <td className="px-2 py-2">
-                      {STOCK_LABELS[summary.stockStatus] ?? summary.stockStatus}
-                    </td>
-                    <td className="px-2 py-2">
-                      {summary.priceOnEnquiry || summary.price === null
-                        ? PRICE_ON_ENQUIRY_LABEL
-                        : formatINR(summary.price)}
-                    </td>
-                    <td className="px-2 py-2">
-                      {new Date(summary.updatedAt).toLocaleDateString('en-IN', {
-                        dateStyle: 'medium',
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <ul className="ngf-admin-product-cards" aria-label="Products">
+            {page.items.map((summary) => {
+              const src = thumbnail(summary);
+              return (
+                <li key={summary.id}>
+                  <div className="ngf-admin-product-card-top">
+                    {src !== null && (
+                      <img
+                        src={src}
+                        alt={summary.thumbnail?.alt ?? ''}
+                        width={64}
+                        height={64}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )}
+                    <div>
+                      <h2>
+                        <a href={`/admin/products/${summary.id}`}>{summary.name}</a>
+                      </h2>
+                      <p>
+                        {props.categories.find((entry) => entry.slug === summary.category)?.name ??
+                          summary.category}
+                      </p>
+                    </div>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{STATUS_LABELS[summary.status]}</dd>
+                    </div>
+                    <div>
+                      <dt>Price</dt>
+                      <dd>
+                        {summary.priceOnEnquiry || summary.price === null
+                          ? PRICE_ON_ENQUIRY_LABEL
+                          : formatINR(summary.price)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Availability</dt>
+                      <dd>{STOCK_LABELS[summary.stockStatus] ?? summary.stockStatus}</dd>
+                    </div>
+                  </dl>
+                  <a href={`/admin/products/${summary.id}`} className="ngf-admin-card-action">
+                    {props.canWrite ? 'Edit product' : 'View product'}{' '}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="ngf-admin-table-wrap ngf-admin-product-table">
+            <table className="w-full border-collapse text-small">
+              <caption className="sr-only">
+                Products, most recently edited first{filtered ? ', filtered' : ''}
+              </caption>
+              <thead>
+                <tr className="border-b border-taupe text-left">
+                  <th scope="col" className="px-2 py-2">
+                    Image
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    Name
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    SKU
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    Category
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    Status
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    Stock
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    Price
+                  </th>
+                  <th scope="col" className="px-2 py-2">
+                    Updated
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {page.items.map((summary) => {
+                  const src = thumbnail(summary);
+                  return (
+                    <tr key={summary.id} className="border-b border-taupe align-middle">
+                      <td className="px-2 py-2">
+                        {src === null ? (
+                          <span className="flex h-12 w-12 items-center justify-center bg-cream text-small text-walnut">
+                            None
+                          </span>
+                        ) : (
+                          <img
+                            src={src}
+                            alt={summary.thumbnail?.alt ?? ''}
+                            width={48}
+                            height={48}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-12 w-12 bg-cream object-cover"
+                          />
+                        )}
+                      </td>
+                      <td className="px-2 py-2">
+                        <a href={`/admin/products/${summary.id}`} className="underline">
+                          {summary.name}
+                        </a>
+                        {summary.aiAssisted && (
+                          <span className="ml-2 text-walnut">AI-assisted</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 font-mono">{summary.sku}</td>
+                      <td className="px-2 py-2">
+                        {props.categories.find((entry) => entry.slug === summary.category)?.name ??
+                          summary.category}
+                      </td>
+                      <td className="px-2 py-2">{STATUS_LABELS[summary.status]}</td>
+                      <td className="px-2 py-2">
+                        {STOCK_LABELS[summary.stockStatus] ?? summary.stockStatus}
+                      </td>
+                      <td className="px-2 py-2">
+                        {summary.priceOnEnquiry || summary.price === null
+                          ? PRICE_ON_ENQUIRY_LABEL
+                          : formatINR(summary.price)}
+                      </td>
+                      <td className="px-2 py-2">
+                        {new Date(summary.updatedAt).toLocaleDateString('en-IN', {
+                          dateStyle: 'medium',
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {page.pageCount > 1 && (

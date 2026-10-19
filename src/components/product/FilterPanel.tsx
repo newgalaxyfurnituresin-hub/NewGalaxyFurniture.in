@@ -78,12 +78,21 @@ export default function FilterPanel({
   useEffect(() => {
     const shell = shellRef.current;
     if (!sheetOpen || shell === null) return;
-    return activateTrap(shell, {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = (): void => {
+      if (desktop.matches) setSheetOpen(false);
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    const release = activateTrap(shell, {
       onEscape: () => {
         setSheetOpen(false);
         toggleRef.current?.focus();
       },
     });
+    return () => {
+      release();
+      desktop.removeEventListener('change', closeOnDesktop);
+    };
   }, [sheetOpen]);
 
   return (
@@ -130,7 +139,8 @@ export default function FilterPanel({
         ref={shellRef}
         className="ngf-filter-shell"
         data-sheet={sheetOpen ? 'open' : 'closed'}
-        role="group"
+        role={sheetOpen ? 'dialog' : 'group'}
+        aria-modal={sheetOpen ? true : undefined}
         aria-label="Filters"
       >
         <div className="ngf-filter-sheet-head">

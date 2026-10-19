@@ -589,6 +589,8 @@ const headingLines =
     position: absolute;
     inset: 0;
     z-index: 0;
+    width: 100%;
+    height: 100%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background-color: var(--color-cream);
@@ -1131,8 +1133,8 @@ const headingLines =
    * reference is a different composition: the photograph is a CONTAINED banner at the top of the
    * section with the "MANUFACTURER & SHOWROOM" eyebrow sitting over its lower edge, and every other
    * piece of copy — heading, sub, the two CTAs, the three assurances — stacks BELOW it on the page's
-   * cream ground in obsidian text. This whole block is scoped to `max-width: 767px`, so nothing here
-   * touches the locked desktop layout at ≥ 768 px.
+   * cream ground in obsidian text. Phones and portrait tablets use this readable composition;
+   * desktop keeps its image-led overlay from 1024 px.
    * ================================================================== */
 
   /* The mobile eyebrow lives inside the panel; it is only ever shown at phone widths. */
@@ -1151,7 +1153,7 @@ const headingLines =
     font-weight: 600;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 1023px) {
     /* The section no longer reaches up under the header on mobile: the contained image is the top of
        the page, with the floating header over its own top edge, exactly as the reference shows. */
     .ngf-hero {
@@ -1398,6 +1400,37 @@ const headingLines =
       color: var(--color-walnut);
       font-size: 0.9375rem;
       font-weight: 400;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .ngf-hero-copy {
+      padding: 2rem;
+    }
+    .ngf-hero-ctas {
+      flex-direction: row;
+    }
+    .ngf-hero-ctas :global(.ngf-hero-cta) {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+    .ngf-hero-assurances {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+    .ngf-hero-assurances li,
+    .ngf-hero-assurances li:first-child {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+      border-top: 1px solid var(--color-taupe);
+    }
+    .ngf-hero-assurance-label {
+      font-size: 0.9375rem;
+    }
+    .ngf-hero-assurance-sub {
+      font-size: 0.875rem;
     }
   }
 </style>

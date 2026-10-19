@@ -23,6 +23,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { productRevisionHeaders } from '@/lib/products/revision';
 import type { ObjectBucket } from '@/lib/runtime/types';
 
 import { buildLqip, generateDerivatives, sanitizeOriginal } from '@/lib/images/derivatives';
@@ -244,7 +245,10 @@ export async function POST(context: APIContext): Promise<Response> {
 
       return jsonResponse(
         { images: accepted.map((entry) => entry.record), rejected },
-        { status: 201 },
+        {
+          status: 201,
+          headers: productRevisionHeaders(product.updatedAt, validated.product.updatedAt),
+        },
       );
     });
   } catch (error) {

@@ -247,7 +247,7 @@ test('the mobile action bar is present below 768 px and absent at 768 px and abo
   }
 });
 
-test('the catalogue filters are a bottom sheet below 768 px and a sidebar above', async ({
+test('the catalogue filters are a sheet below 1024 px and a sidebar above', async ({
   page,
 }, testInfo) => {
   const width = widthOf(testInfo.project.name);
@@ -260,7 +260,7 @@ test('the catalogue filters are a bottom sheet below 768 px and a sidebar above'
   expect(shellId).toBeTruthy();
   const shell = page.locator(`#${String(shellId)}`);
 
-  if (width <= MOBILE_MAX_WIDTH) {
+  if (width < 1024) {
     // Closed by default, opened by the toggle, closed again by Escape with focus returned.
     await expect(shell).toBeHidden();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');

@@ -1,0 +1,302 @@
+.ngf-admin {
+  padding-bottom: 0;
+}
+.ngf-admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1440px;
+  margin: auto;
+  padding: 1.25rem clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--color-taupe);
+}
+.ngf-admin-brand {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  text-decoration: none;
+  color: var(--color-espresso);
+}
+.ngf-admin-brand span {
+  display: block;
+  font: 500 0.72rem/1.5 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-walnut);
+}
+.ngf-admin-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-pill);
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ngf-admin-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 1440px;
+  margin: auto;
+  padding: 1.25rem clamp(1rem, 3vw, 2rem) 3rem;
+  align-items: start;
+}
+.ngf-admin-sidebar {
+  min-width: 0;
+}
+.ngf-admin-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  font-weight: 600;
+}
+.ngf-admin-menu-toggle span:last-child {
+  font-size: 0.875rem;
+  color: var(--color-walnut);
+  font-weight: 400;
+}
+.ngf-admin-menu {
+  display: none;
+  padding: 1rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
+}
+.ngf-admin-menu[data-open='true'] {
+  display: block;
+  margin-top: 0.5rem;
+}
+.ngf-admin-nav li a {
+  border-radius: var(--radius-soft);
+}
+.ngf-admin-main h1 {
+  font-size: clamp(1.8rem, 3.5vw, 2.65rem);
+  text-wrap: balance;
+}
+.ngf-admin-main :where(input, textarea, select) {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 1rem;
+  border-radius: var(--radius-soft);
+}
+.ngf-admin-main :where(button, a) {
+  overflow-wrap: anywhere;
+}
+.ngf-admin-main :where(button) {
+  touch-action: manipulation;
+}
+.ngf-admin-section {
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  box-shadow: var(--shadow-level1);
+  scroll-margin-top: 1rem;
+}
+.ngf-admin-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+.ngf-admin-fields > * {
+  min-width: 0;
+}
+.ngf-admin-wide {
+  grid-column: 1/-1;
+}
+.ngf-admin-section summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.ngf-admin-section summary h2 {
+  display: inline;
+  font-size: 1.2rem;
+}
+.ngf-admin-section summary > span {
+  margin-left: 0.6rem;
+  color: var(--color-walnut);
+  font: 400 0.875rem var(--font-body);
+}
+.ngf-admin-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ngf-admin-steps li {
+  padding: 0.85rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  font-size: 0.875rem;
+}
+.ngf-admin-steps strong {
+  display: block;
+  font-weight: 600;
+  color: var(--color-sage);
+  margin-bottom: 0.3rem;
+}
+.ngf-admin-savebar {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 20;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-level2);
+}
+.ngf-admin-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+}
+.ngf-admin-product-table {
+  display: none;
+}
+.ngf-admin-product-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+}
+.ngf-admin-product-cards > li {
+  min-width: 0;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  background: var(--color-white);
+}
+.ngf-admin-product-card-top {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.ngf-admin-product-card-top img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+.ngf-admin-product-card-top h2 {
+  font: 500 1.1rem/1.4 var(--font-body);
+  overflow-wrap: anywhere;
+}
+.ngf-admin-product-card-top p {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-walnut);
+}
+.ngf-admin-product-cards dl {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.ngf-admin-product-cards dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.ngf-admin-product-cards dt {
+  color: var(--color-walnut);
+}
+.ngf-admin-product-cards dd {
+  text-align: right;
+}
+.ngf-admin-card-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 1rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+@media (min-width: 640px) and (max-width: 1099px) {
+  .ngf-admin-product-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .ngf-admin-product-cards {
+    display: none;
+  }
+  .ngf-admin-product-table {
+    display: block;
+  }
+}
+@media (min-width: 640px) {
+  .ngf-admin-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ngf-admin-menu ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .ngf-admin-shell {
+    grid-template-columns: 224px minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .ngf-admin-sidebar {
+    position: sticky;
+    top: 1rem;
+  }
+  .ngf-admin-menu-toggle {
+    display: none;
+  }
+  .ngf-admin-menu,
+  .ngf-admin-menu[data-open='true'] {
+    display: block;
+    margin: 0;
+  }
+  .ngf-admin-menu ul {
+    display: flex;
+  }
+}
+@media (max-width: 479px) {
+  .ngf-admin-header {
+    gap: 0.5rem;
+  }
+  .ngf-admin-brand {
+    font-size: 1rem;
+  }
+  .ngf-admin-view {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+  }
+  .ngf-admin-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ngf-admin-steps li {
+    padding: 0.65rem 0.8rem;
+  }
+  .ngf-admin-steps strong {
+    display: inline;
+    margin-right: 0.4rem;
+  }
+  .ngf-admin-savebar button {
+    width: 100%;
+  }
+}

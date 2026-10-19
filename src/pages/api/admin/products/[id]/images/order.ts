@@ -13,6 +13,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { productRevisionHeaders } from '@/lib/products/revision';
 import { z } from 'zod';
 
 import {
@@ -86,7 +87,10 @@ export async function PATCH(context: APIContext): Promise<Response> {
         action: 'reorder images',
       });
 
-      return jsonResponse({ images: validated.product.images });
+      return jsonResponse(
+        { images: validated.product.images },
+        { headers: productRevisionHeaders(product.updatedAt, validated.product.updatedAt) },
+      );
     });
   } catch (error) {
     logServerError('images: reorder failed', error);

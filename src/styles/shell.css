@@ -1290,6 +1290,12 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
 
 @media (min-width: 768px) {
   .ngf-catalogue {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ngf-catalogue {
     grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
     padding-inline: 2rem;
   }
@@ -2132,7 +2138,7 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
   display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .ngf-filter-sheet-actions {
     position: sticky;
     bottom: 0;
@@ -2172,7 +2178,7 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
 }
 
 /* Sidebar at ≥ 768 px, bottom sheet below it (design → Responsive strategy). */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .ngf-filter-shell {
     position: fixed;
     inset: auto 0 0 0;
@@ -2189,7 +2195,7 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .ngf-filter-toggle {
     display: none;
   }
@@ -2207,7 +2213,7 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
   gap: 1rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .ngf-filter-sheet-head {
     display: none;
   }

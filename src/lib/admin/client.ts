@@ -14,6 +14,8 @@
  * Requirements: 10.8, 10.9, 26.3, 26.9.
  */
 
+import type { ProductRevision } from '@/lib/products/revision';
+
 export interface AdminBootstrap {
   csrfToken: string | null;
   role: string | null;
@@ -48,7 +50,8 @@ export interface ApiFailure {
   status: number;
 }
 
-export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiFailure };
+export type ApiResult<T> =
+  { ok: true; value: T; revision?: ProductRevision } | { ok: false; error: ApiFailure };
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -104,10 +107,26 @@ export async function adminFetch<T>(
     };
   }
 
-  if (response.status === 204) return { ok: true, value: undefined as T };
+  const previousUpdatedAt = response.headers.get('x-ngf-previous-updated-at');
+  const updatedAt = response.headers.get('x-ngf-updated-at');
+  const revision = previousUpdatedAt && updatedAt ? { previousUpdatedAt, updatedAt } : undefined;
+  if (response.status === 204)
+    return { ok: true, value: undefined as T, ...(revision ? { revision } : {}) };
 
   let payload: unknown = null;
-  const text = await response.text();
+  let text: string;
+  try {
+    text = await response.text();
+  } catch {
+    return {
+      ok: false,
+      error: {
+        code: 'NETWORK',
+        message: 'The connection was interrupted. Your changes are still here — please try again.',
+        status: 0,
+      },
+    };
+  }
   if (text !== '') {
     try {
       payload = JSON.parse(text);
@@ -135,7 +154,7 @@ export async function adminFetch<T>(
     };
   }
 
-  return { ok: true, value: payload as T };
+  return { ok: true, value: payload as T, ...(revision ? { revision } : {}) };
 }
 
 /** Merge two field-error maps without losing either side's messages. */

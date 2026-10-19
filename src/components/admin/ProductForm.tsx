@@ -26,7 +26,7 @@
  * Requirements: 12.1, 12.3, 12.8, 13.1–13.13, 14.4, 14.5, 24.8, 24.9, 26.9.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import {
@@ -46,6 +46,7 @@ import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
 import ImageManager from './ImageManager';
 import PublishPanel from './PublishPanel';
 import type { Product, StockStatusValue } from '@/schemas/product';
+import { advanceProductRevision } from '@/lib/products/revision';
 
 export interface CategoryOption {
   slug: string;
@@ -117,8 +118,23 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   const [draft, setDraft] = useState<Product>(props.product);
   const [serverErrors, setServerErrors] = useState<FieldErrors>({});
   const [save, setSave] = useState<SaveState>({ kind: 'idle' });
+  const [attemptedSave, setAttemptedSave] = useState(false);
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const saving = useRef(false);
+  const [hasEdits, setHasEdits] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
 
-  const localErrors = useMemo(() => fieldIssues(draft), [draft]);
+  const localErrors = useMemo(() => {
+    const found = fieldIssues(draft);
+    if (draft.name.trim().length < 2)
+      found.name = ['Enter a product name with at least 2 characters.'];
+    if (draft.category === '') found.category = ['Choose a category for this product.'];
+    return Object.fromEntries(
+      Object.entries(found).filter(
+        ([key]) => attemptedSave || touched.has(key.split('.')[0] ?? key),
+      ),
+    );
+  }, [draft, attemptedSave, touched]);
   const errors = useMemo(
     () => mergeFieldErrors(localErrors, serverErrors),
     [localErrors, serverErrors],
@@ -126,6 +142,8 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   const blockers = useMemo(() => publishBlockers(draft), [draft]);
 
   const update = useCallback((patch: Partial<Product>) => {
+    setHasEdits(true);
+    setTouched((current) => new Set([...current, ...Object.keys(patch)]));
     setDraft((current) => ({ ...current, ...patch }));
     // A server message about a field the operator is now editing is stale by definition.
     setServerErrors((current) => {
@@ -153,62 +171,85 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
 
   const doSave = useCallback(
     async (options: { confirmSlugChange?: boolean } = {}) => {
-      setSave({ kind: 'saving' });
-      setServerErrors({});
+      if (saving.current) return;
+      setAttemptedSave(true);
+      if (draft.name.trim().length < 2 || draft.category === '') {
+        setSave({
+          kind: 'failed',
+          message: 'Add a product name and choose a category to continue.',
+        });
+        document
+          .getElementById(draft.name.trim().length < 2 ? 'field-name' : 'field-category')
+          ?.focus();
+        return;
+      }
+      saving.current = true;
+      try {
+        setSave({ kind: 'saving' });
+        setServerErrors({});
 
-      if (props.mode === 'create') {
-        const created = await adminFetch<{ id: string; slug: string; sku: string }>(
-          '/api/admin/products',
-          { method: 'POST', body: patchFrom(draft) },
-        );
-        if (!created.ok) {
-          setServerErrors(created.error.fields ?? {});
-          setSave({ kind: 'failed', message: created.error.message });
+        if (props.mode === 'create') {
+          const created = await adminFetch<{ id: string; slug: string; sku: string }>(
+            '/api/admin/products',
+            { method: 'POST', body: patchFrom(draft) },
+          );
+          if (!created.ok) {
+            setServerErrors(created.error.fields ?? {});
+            setSave({ kind: 'failed', message: created.error.message });
+            return;
+          }
+          // The editor for a saved product is a different URL, and the operator should land
+          // there — the record now has an id, a slug and a SKU it did not have a moment ago.
+          window.location.assign(`/admin/products/${created.value.id}?created=1`);
           return;
         }
-        // The editor for a saved product is a different URL, and the operator should land
-        // there — the record now has an id, a slug and a SKU it did not have a moment ago.
-        window.location.assign(`/admin/products/${created.value.id}?created=1`);
-        return;
-      }
 
-      const result = await adminFetch<{ product: Product; savedAt?: string }>(
-        `/api/admin/products/${draft.id}`,
-        {
-          method: 'PATCH',
-          body: {
-            patch: patchFrom(draft),
-            expectedUpdatedAt: draft.updatedAt,
-            ...(options.confirmSlugChange === true ? { confirmSlugChange: true } : {}),
+        const result = await adminFetch<{ product: Product; savedAt?: string }>(
+          `/api/admin/products/${draft.id}`,
+          {
+            method: 'PATCH',
+            body: {
+              patch: patchFrom(draft),
+              expectedUpdatedAt: draft.updatedAt,
+              ...(options.confirmSlugChange === true ? { confirmSlugChange: true } : {}),
+            },
           },
-        },
-      );
+        );
 
-      if (result.ok) {
-        setDraft(result.value.product);
-        setSave({ kind: 'saved', at: result.value.product.updatedAt });
-        return;
-      }
+        if (result.ok) {
+          setDraft(result.value.product);
+          setHasEdits(false);
+          setSave({ kind: 'saved', at: result.value.product.updatedAt });
+          return;
+        }
 
-      setServerErrors(result.error.fields ?? {});
-      if (result.error.code === 'CONFIRMATION_REQUIRED') {
-        const remote = result.error.remote as { proposedSlug?: string } | undefined;
+        setServerErrors(result.error.fields ?? {});
+        if (result.error.code === 'CONFIRMATION_REQUIRED') {
+          const remote = result.error.remote as { proposedSlug?: string } | undefined;
+          setSave({
+            kind: 'rename',
+            message: result.error.message,
+            proposedSlug: remote?.proposedSlug ?? '',
+          });
+          return;
+        }
+        if (result.error.code === 'CONFLICT') {
+          setSave({
+            kind: 'conflict',
+            message: result.error.message,
+            remote: (result.error.remote as Product | null) ?? null,
+          });
+          return;
+        }
+        setSave({ kind: 'failed', message: result.error.message });
+      } catch {
         setSave({
-          kind: 'rename',
-          message: result.error.message,
-          proposedSlug: remote?.proposedSlug ?? '',
+          kind: 'failed',
+          message: 'Could not save the product. Your changes are still here — please try again.',
         });
-        return;
+      } finally {
+        saving.current = false;
       }
-      if (result.error.code === 'CONFLICT') {
-        setSave({
-          kind: 'conflict',
-          message: result.error.message,
-          remote: (result.error.remote as Product | null) ?? null,
-        });
-        return;
-      }
-      setSave({ kind: 'failed', message: result.error.message });
     },
     [draft, props.mode],
   );
@@ -217,22 +258,33 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
 
   return (
     <form
-      className="flex flex-col gap-8"
+      className="ngf-product-form flex flex-col gap-5"
       onSubmit={(event) => {
         event.preventDefault();
         void doSave();
       }}
     >
+      <ol className="ngf-admin-steps" aria-label="Product setup">
+        <li>
+          <strong>1. Product details</strong>Name, category and price.
+        </li>
+        <li>
+          <strong>2. Add photographs</strong>Create the draft, then upload images.
+        </li>
+        <li>
+          <strong>3. Check & publish</strong>Review the checklist and go live.
+        </li>
+      </ol>
       {/* Save state, stated plainly and never optimistically. */}
       <div
         aria-live="polite"
-        className="flex flex-wrap items-center justify-between gap-3 border border-taupe bg-white px-4 py-3"
+        className="ngf-admin-savebar flex flex-wrap items-center justify-between gap-3 border border-taupe bg-white px-4 py-3"
       >
         <div className="text-small">
           {save.kind === 'saving' && <span>Saving…</span>}
           {save.kind === 'saved' && (
             <span>
-              Draft saved at{' '}
+              Saved at{' '}
               {new Date(save.at).toLocaleString('en-IN', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
@@ -257,10 +309,14 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         {!readOnly && (
           <button
             type="submit"
-            disabled={save.kind === 'saving'}
+            disabled={save.kind === 'saving' || imageBusy}
             className="min-h-[44px] bg-espresso px-5 py-2 text-ivory hover:bg-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:opacity-60"
           >
-            {props.mode === 'create' ? 'Create draft' : 'Save draft'}
+            {save.kind === 'saving'
+              ? 'Saving…'
+              : props.mode === 'create'
+                ? 'Save & add photos'
+                : 'Save changes'}
           </button>
         )}
       </div>
@@ -311,6 +367,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             type="button"
             onClick={() => {
               if (save.remote !== null) setDraft(save.remote);
+              setHasEdits(false);
               setSave({ kind: 'idle' });
             }}
             className="mt-3 min-h-[44px] border border-espresso px-4 py-2 text-espresso"
@@ -326,7 +383,14 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           <ul className="mt-2 flex flex-col gap-1 text-small">
             {errorEntries.map(([path, messages]) => (
               <li key={path}>
-                <a href={`#${groupFor(path)}`} className="underline">
+                <a
+                  href={`#${groupFor(path)}`}
+                  className="underline"
+                  onClick={() => {
+                    const section = document.getElementById(groupFor(path));
+                    if (section instanceof HTMLDetailsElement) section.open = true;
+                  }}
+                >
                   {labelFor(path)}
                 </a>
                 : {messages.join(' ')}
@@ -348,6 +412,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             label="Product name"
             required
             value={draft.name}
+            placeholder="For example, a three-seater sofa"
             maxLength={120}
             disabled={readOnly}
             errors={errors.name}
@@ -379,7 +444,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           <TextAreaField
             id="field-description"
             label="Description"
-            required
+            required={props.mode === 'edit'}
             rows={7}
             value={draft.description}
             maxLength={6000}
@@ -463,7 +528,9 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
       {/* -------------------------------------------------------------- Product */}
       <FormSection
         id="product"
-        title="Product"
+        title="Sizes, materials & options"
+        collapsible
+        forceOpen={Object.keys(errors).some((path) => groupFor(path) === 'product')}
         description="Materials, finish, size and what a customer can have changed."
       >
         <TextField
@@ -657,6 +724,8 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
       <FormSection
         id="marketing"
         title="Marketing"
+        collapsible
+        forceOpen={Object.keys(errors).some((path) => groupFor(path) === 'marketing')}
         description="Where this product is highlighted, and what it is grouped with."
       >
         <CheckboxField
@@ -714,6 +783,8 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
       <FormSection
         id="seo"
         title="Search engines"
+        collapsible
+        forceOpen={Object.keys(errors).some((path) => groupFor(path) === 'seo')}
         description="Leave these empty and the site generates them from the product name and description."
       >
         <Wide>
@@ -775,11 +846,13 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               images={draft.images}
               primaryImage={draft.primaryImage ?? null}
               canWrite={props.canWrite}
-              onChange={(images, primaryImage) =>
+              onBusyChange={setImageBusy}
+              onChange={(images, primaryImage, revision) =>
                 setDraft((current) => ({
                   ...current,
                   images,
-                  ...(primaryImage === null ? {} : { primaryImage }),
+                  primaryImage: primaryImage ?? undefined,
+                  updatedAt: advanceProductRevision(current.updatedAt, revision),
                 }))
               }
             />
@@ -795,12 +868,20 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           description="Save your edits first — publishing acts on the stored draft."
         >
           <Wide>
+            {(hasEdits || imageBusy) && (
+              <p className="mb-3 text-small text-walnut">
+                {imageBusy
+                  ? 'Wait for your photographs to finish saving before publishing.'
+                  : 'Save your changes above to enable publishing.'}
+              </p>
+            )}
             <PublishPanel
               product={draft}
               blockers={blockers}
               canPublish={props.canPublish}
               canWrite={props.canWrite}
               canDelete={props.canDelete}
+              disabled={hasEdits || imageBusy || save.kind === 'saving'}
               onProduct={(next) => setDraft(next)}
             />
           </Wide>

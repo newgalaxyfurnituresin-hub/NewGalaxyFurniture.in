@@ -40,6 +40,7 @@ export interface PublishPanelProps {
   canWrite: boolean;
   canPublish: boolean;
   canDelete: boolean;
+  disabled?: boolean;
   onProduct: (product: Product) => void;
 }
 
@@ -230,7 +231,7 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
             <button
               key={to}
               type="button"
-              disabled={phase.kind === 'working'}
+              disabled={phase.kind === 'working' || props.disabled === true}
               onClick={() => void transition(to)}
               className="min-h-[44px] border border-espresso px-4 py-2 text-espresso hover:bg-espresso hover:text-ivory focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:opacity-60"
             >
@@ -315,7 +316,7 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
               />
               <button
                 type="button"
-                disabled={confirmDelete !== props.product.slug}
+                disabled={confirmDelete !== props.product.slug || props.disabled === true}
                 onClick={() => void remove()}
                 className="min-h-[44px] border border-espresso px-4 py-2 text-espresso disabled:opacity-50"
               >

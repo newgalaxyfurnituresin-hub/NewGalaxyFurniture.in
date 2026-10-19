@@ -362,6 +362,8 @@ export interface FormSectionProps {
   description?: string;
   /** Rendered next to the heading — e.g. "2 fields need attention". */
   status?: ReactNode;
+  collapsible?: boolean;
+  forceOpen?: boolean;
   children: ReactNode;
 }
 
@@ -374,10 +376,12 @@ export function FormSection({
   title,
   description,
   status,
+  collapsible = false,
+  forceOpen = false,
   children,
 }: FormSectionProps): ReactElement {
-  return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="border-t border-taupe pt-6">
+  const content = (
+    <>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id={`${id}-heading`} className="font-display text-h3 text-espresso">
           {title}
@@ -387,12 +391,26 @@ export function FormSection({
       {description !== undefined && (
         <p className="mt-1 max-w-[var(--measure-prose)] text-small text-walnut">{description}</p>
       )}
-      <div className="mt-4 grid gap-4 md:grid-cols-2">{children}</div>
+      <div className="ngf-admin-fields">{children}</div>
+    </>
+  );
+  return collapsible ? (
+    <details id={id} className="ngf-admin-section" open={forceOpen || undefined}>
+      <summary>
+        <h2 id={`${id}-heading`}>{title}</h2>
+        <span>Optional details</span>
+      </summary>
+      {description !== undefined && <p className="mt-2 text-small text-walnut">{description}</p>}
+      <div className="ngf-admin-fields">{children}</div>
+    </details>
+  ) : (
+    <section id={id} aria-labelledby={`${id}-heading`} className="ngf-admin-section">
+      {content}
     </section>
   );
 }
 
 /** Full-width cell inside a `FormSection`'s two-column grid. */
 export function Wide({ children }: { children: ReactNode }): ReactElement {
-  return <div className="md:col-span-2">{children}</div>;
+  return <div className="ngf-admin-wide">{children}</div>;
 }
