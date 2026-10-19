@@ -45,7 +45,7 @@ export function publishBlockers(draft: Product): FieldErrors {
     ...draft,
     // The gate is asked about the *published* record: a draft's `published: false` would
     // otherwise fail the mirror invariant and mask the real blockers.
-    status: 'PUBLISHED',
+    status: draft.stockStatus === 'OUT_OF_STOCK' ? 'OUT_OF_STOCK' : 'PUBLISHED',
     published: true,
   });
   const gate = checkPublishGate(candidate);

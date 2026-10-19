@@ -169,6 +169,23 @@
 .ngf-admin-product-table {
   display: none;
 }
+.ngf-admin-product-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: end;
+}
+.ngf-admin-product-filters :where(input, select) {
+  width: 100%;
+}
+.ngf-admin-product-filters > p {
+  grid-column: 1/-1;
+}
+@media (min-width: 640px) {
+  .ngf-admin-product-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 .ngf-admin-product-cards {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

@@ -694,13 +694,17 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           label="Stock status"
           required
           value={draft.stockStatus}
-          disabled={readOnly || draft.madeToOrder}
+          disabled={readOnly || draft.madeToOrder || draft.status === 'OUT_OF_STOCK'}
           errors={errors.stockStatus}
-          options={STOCK_OPTIONS}
+          options={STOCK_OPTIONS.filter(
+            (option) => option.value !== 'OUT_OF_STOCK' || draft.status === 'OUT_OF_STOCK',
+          )}
           hint={
-            draft.madeToOrder
-              ? 'Fixed to “Made to order” while made-to-order is on.'
-              : 'Marking a product out of stock here does not unpublish it — use the status controls for that.'
+            draft.status === 'OUT_OF_STOCK'
+              ? 'Use Publish in Status and publishing to restock this item.'
+              : draft.madeToOrder
+                ? 'Fixed to “Made to order” while made-to-order is on.'
+                : 'After publishing, use Mark out of stock below to keep an unavailable item visible.'
           }
           onChange={(value) => update({ stockStatus: value as StockStatusValue })}
         />
@@ -708,7 +712,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           id="field-madeToOrder"
           label="Made to order"
           checked={draft.madeToOrder}
-          disabled={readOnly}
+          disabled={readOnly || draft.status === 'OUT_OF_STOCK'}
           hint="Sets the stock status to “Made to order”."
           onChange={(checked) =>
             update(

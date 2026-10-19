@@ -22,6 +22,15 @@ interface ExecutionContextLike {
 
 function executionContextOf(locals: unknown): ExecutionContextLike | null {
   if (typeof locals !== 'object' || locals === null) return null;
+  // Astro's Cloudflare adapter exposes the request context here, independently of Netlify.
+  const cloudflare = (locals as { cfContext?: unknown }).cfContext;
+  if (
+    typeof cloudflare === 'object' &&
+    cloudflare !== null &&
+    typeof (cloudflare as { waitUntil?: unknown }).waitUntil === 'function'
+  ) {
+    return cloudflare as ExecutionContextLike;
+  }
   // `@astrojs/netlify` sets `locals.netlify = { context }`; the Netlify Functions context may
   // carry a `waitUntil`. Read it structurally so a runtime that omits it falls back cleanly.
   const netlify = (locals as { netlify?: unknown }).netlify;

@@ -222,6 +222,17 @@ describe('the editorâ€™s inline validation is the serverâ€™s validatio
     expect(publishBlockers(demoSofa)).toStrictEqual({});
     expect(isPublishReady(demoSofa)).toBe(true);
   });
+  it('does not show a false publishing error for an already-public out-of-stock item', () => {
+    const unavailable: Product = {
+      ...demoSofa,
+      status: 'OUT_OF_STOCK',
+      stockStatus: 'OUT_OF_STOCK',
+      published: true,
+      madeToOrder: false,
+    };
+    expect(publishBlockers(unavailable)).toStrictEqual({});
+    expect(isPublishReady(unavailable)).toBe(true);
+  });
 });
 
 describe('the lifecycle', () => {

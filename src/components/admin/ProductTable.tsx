@@ -92,7 +92,7 @@ export default function ProductTable(props: ProductTableProps): ReactElement {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="ngf-admin-product-filters">
         <div className="flex flex-col gap-1">
           <label htmlFor="filter-q" className="text-small font-medium text-espresso">
             Search
