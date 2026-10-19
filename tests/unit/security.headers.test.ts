@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
+import { auditHtml } from '../../scripts/audit-csp';
 
 import { FRAMEWORK_INLINE_SCRIPTS } from '@/lib/security/inline-script-hashes';
 import {
@@ -102,7 +103,7 @@ describe('the content security policy', () => {
     expect(directives.get('style-src')).toBe("'self' 'unsafe-inline'");
     expect(directives.get('connect-src')).toBe("'self' https://api.whatsapp.com");
     expect(directives.get('font-src')).toBe("'self'");
-    expect(directives.get('frame-src')).toBe("'none'");
+    expect(directives.get('frame-src')).toBe('https://www.google.com/maps/embed');
     expect(directives.get('object-src')).toBe("'none'");
     expect(directives.get('base-uri')).toBe("'none'");
     expect(directives.get('form-action')).toBe("'self'");
@@ -168,5 +169,19 @@ describe('public/_headers', () => {
     expect(cacheControl).toContain('max-age=');
     // Immutable on an unhashed URL means a fix can never be shipped to a returning visitor.
     expect(cacheControl).not.toContain('immutable');
+  });
+});
+
+describe('public showroom map isolation', () => {
+  it('permits only titled lazy Google Maps embeds and refuses arbitrary frames or srcdoc', () => {
+    const frame =
+      '<iframe src="https://www.google.com/maps/embed?pb=verified" title="Showroom map" loading="lazy"></iframe>';
+    expect(auditHtml(frame, 'contact')).toEqual([]);
+    expect(
+      auditHtml(frame.replace('www.google.com/maps/embed', 'example.test/map'), 'contact').length,
+    ).toBeGreaterThan(0);
+    expect(
+      auditHtml(frame.replace('loading="lazy"', 'srcdoc="unsafe"'), 'contact').length,
+    ).toBeGreaterThan(0);
   });
 });

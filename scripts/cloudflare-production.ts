@@ -12,6 +12,7 @@ const REPOSITORY = 'newgalaxyfurnituresin-hub/NewGalaxyFurniture.in';
 const SITE = 'https://newgalaxyfurniture.newgalaxyfurnitures-in.workers.dev';
 
 export interface ProductionConfig {
+  routes?: { pattern?: string; custom_domain?: boolean; zone_id?: string }[];
   name?: string;
   account_id?: string;
   triggers?: { crons?: string[] };
@@ -49,6 +50,18 @@ export function validateCompanyConfig(value: unknown, configPath: string): void 
     'company content repository',
   );
   refuse(config.vars?.PUBLIC_SITE_URL === SITE, 'production canonical URL');
+  refuse(
+    config.routes?.length === 2 &&
+      ['newgalaxyfurniture.in', 'www.newgalaxyfurniture.in'].every((hostname) =>
+        config.routes?.some(
+          (route) =>
+            route.pattern === hostname &&
+            route.custom_domain === true &&
+            route.zone_id === 'e2a8b54e03b144580ecad35cc5479a17',
+        ),
+      ),
+    'verified company custom domains',
+  );
   refuse(
     config.vars?.CF_ACCESS_TEAM_DOMAIN === 'https://winter-firefly-d5dd.cloudflareaccess.com' &&
       config.vars.CF_ACCESS_AUD ===

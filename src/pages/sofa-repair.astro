@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import EditorialPhoto from '@/components/experiences/EditorialPhoto.astro';
+import CategoryIllustration from '@/components/motion/CategoryIllustration.astro';
 import RepairQuoteForm from '@/components/forms/RepairQuoteForm';
 import ImagePreload from '@/components/ui/ImagePreload.astro';
 import { experiences } from '@/lib/content/experiences';
@@ -64,7 +65,8 @@ const steps = [
         >
       </nav>
       <p class="ngf-exp-eyebrow">Care for the pieces you love</p>
-      <h1 id="repair-heading">{repair.heading}</h1>
+      <h1 id="repair-heading">Sofa Repair &amp; Restoration</h1>
+      <p class="ngf-exp-category-intro">{repair.heading}</p>
       <p class="ngf-exp-lede">{repair.description}</p>
       <div class="ngf-exp-actions">
         <a class="ngf-exp-button" href="#repair-quote"
@@ -76,6 +78,11 @@ const steps = [
       <p class="ngf-exp-note">A conversation first. A considered decision next.</p>
     </div>
     <div class="ngf-exp-hero-media" data-reveal>
+      <div class="ngf-exp-category-emblem" aria-hidden="true">
+        <CategoryIllustration illustration="sofa" trigger="inView" /><span
+          >Repair &amp; restore</span
+        >
+      </div>
       <EditorialPhoto photo={repair.hero} priority /><span
         class="ngf-exp-image-label"
         aria-hidden="true">Renew / Reimagine / Relove</span

@@ -23,6 +23,7 @@ import EnquiryIsland from '@/components/forms/EnquiryIsland.astro';
 import CallLink from '@/components/ui/CallLink.astro';
 import WhatsAppLink from '@/components/ui/WhatsAppLink.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import ShowroomMap from '@/components/ui/ShowroomMap.astro';
 import { getSiteSettings } from '@/lib/content/site';
 import { localBusinessJsonLd } from '@/lib/seo/jsonld';
 import { pageMeta, siteOrigin } from '@/lib/seo/page';
@@ -154,57 +155,7 @@ const meta = pageMeta(Astro, {
               }
             </div>
 
-            {
-              /*
-              A clickable map thumbnail. It is a same-origin, inline-SVG stylised map — not a
-              Google Maps iframe (the CSP forbids frames) and not an off-origin tile image (the CSP
-              limits img-src to 'self'). The pin marks the locality the address gives, and the whole
-              tile opens the operator's real Google Maps link in a new tab, so the visual is
-              decorative while the destination is the genuine map.
-            */
-              location.mapUrl !== null && (
-                <a
-                  class="ngf-contact-map"
-                  href={location.mapUrl}
-                  target="_blank"
-                  rel="noopener"
-                  aria-label={`Open the New Galaxy Furniture location${location.city.trim() !== '' ? ` in ${location.city.trim()}` : ''} in Google Maps`}
-                >
-                  <svg
-                    class="ngf-contact-map-canvas"
-                    viewBox="0 0 240 180"
-                    role="img"
-                    aria-hidden="true"
-                    preserveAspectRatio="xMidYMid slice"
-                  >
-                    <rect width="240" height="180" fill="#EDE7DD" />
-                    <path
-                      d="M-10 60 L120 30 L260 70 M-10 120 L100 100 L260 130 M60 -10 L90 90 L70 200 M170 -10 L150 90 L180 200"
-                      stroke="#D8CBB6"
-                      stroke-width="6"
-                      fill="none"
-                    />
-                    <path
-                      d="M-10 88 L110 66 L260 96 M120 -10 L104 92 L128 200"
-                      stroke="#C9A15A"
-                      stroke-width="3"
-                      fill="none"
-                      opacity="0.7"
-                    />
-                    <circle cx="120" cy="86" r="26" fill="#B88A45" opacity="0.14" />
-                  </svg>
-                  <span class="ngf-contact-map-pin" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="26" height="26" fill="#1C1A18">
-                      <path d="M12 22s-7-6.2-7-12A7 7 0 1 1 19 10c0 5.8-7 12-7 12Z" />
-                      <circle cx="12" cy="10" r="2.6" fill="#EDE7DD" />
-                    </svg>
-                  </span>
-                  {location.city.trim() !== '' && (
-                    <span class="ngf-contact-map-label">{location.city.trim()}</span>
-                  )}
-                </a>
-              )
-            }
+            <ShowroomMap />
           </div>
         </div>
 
@@ -497,54 +448,6 @@ const meta = pageMeta(Astro, {
     .ngf-contact-directions:hover {
       background-color: var(--color-cream);
     }
-  }
-
-  .ngf-contact-map {
-    position: relative;
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    border: 1px solid var(--color-taupe);
-    border-radius: var(--radius-md);
-    background-color: #ede7dd;
-    transition:
-      transform var(--dur-fast) var(--ease-standard),
-      box-shadow var(--dur-fast) var(--ease-standard);
-  }
-
-  @media (hover: hover) {
-    .ngf-contact-map:hover {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-level1);
-    }
-  }
-
-  .ngf-contact-map-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
-  .ngf-contact-map-pin {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    display: inline-flex;
-    transform: translate(-50%, -100%);
-    filter: drop-shadow(0 1px 1px rgb(28 26 24 / 0.25));
-  }
-
-  .ngf-contact-map-label {
-    position: absolute;
-    right: 0.5rem;
-    bottom: 0.5rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: var(--radius-soft);
-    background-color: color-mix(in srgb, var(--color-white) 85%, transparent);
-    color: var(--color-obsidian);
-    font-size: 0.75rem;
-    font-weight: 600;
   }
 
   /* Where we deliver: inline dot chips ----------------------------------- */

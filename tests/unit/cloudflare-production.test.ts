@@ -15,6 +15,13 @@ describe('company production deployment guards', () => {
   it('accepts the verified company configuration', () => {
     expect(() => validateCompanyConfig(config(), configPath)).not.toThrow();
   });
+  it('rejects missing or wrong-zone domain attachments', () => {
+    const value = config();
+    value.routes = [
+      { pattern: 'newgalaxyfurniture.in', custom_domain: true, zone_id: 'wrong-zone' },
+    ];
+    expect(() => validateCompanyConfig(value, configPath)).toThrow('custom domains');
+  });
   it.each(['account_id', 'name'] as const)('rejects a changed %s', (field) => {
     const value = config();
     value[field] = 'wrong-target';

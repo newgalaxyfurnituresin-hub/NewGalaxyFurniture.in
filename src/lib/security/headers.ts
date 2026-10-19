@@ -54,7 +54,7 @@ export const CONTENT_SECURITY_POLICY = [
   ["script-src 'self'", ...INLINE_SCRIPT_HASH_SOURCES].join(' '),
   "connect-src 'self' https://api.whatsapp.com",
   "font-src 'self'",
-  "frame-src 'none'",
+  'frame-src https://www.google.com/maps/embed',
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'self'",

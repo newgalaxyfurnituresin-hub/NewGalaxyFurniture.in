@@ -31,6 +31,10 @@ compatibility_date = "2026-09-02"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 preview_urls = true
+routes = [
+  { pattern = "newgalaxyfurniture.in", custom_domain = true, zone_id = "e2a8b54e03b144580ecad35cc5479a17" },
+  { pattern = "www.newgalaxyfurniture.in", custom_domain = true, zone_id = "e2a8b54e03b144580ecad35cc5479a17" },
+]
 
 # Prerendered HTML, hashed assets and fonts are served from the static asset store; the Worker only
 # runs for /admin/**, /api/** and /img/**.
@@ -114,6 +118,7 @@ bucket_name = "ngf-media"
 #     CLOUDFLARE_ENV=preview npm run build && wrangler deploy
 # ----------------------------------------------------------------------------
 [env.preview]
+routes = []
 name = "new-galaxy-furniture-preview"
 workers_dev = true
 

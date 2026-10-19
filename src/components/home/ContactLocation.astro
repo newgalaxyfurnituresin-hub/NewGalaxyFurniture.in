@@ -16,6 +16,7 @@
 import PlaceholderCopy from '@/components/home/PlaceholderCopy.astro';
 import SectionHeader from '@/components/home/SectionHeader.astro';
 import ContactNumbers from '@/components/ui/ContactNumbers.astro';
+import ShowroomMap from '@/components/ui/ShowroomMap.astro';
 import { getSiteSettings } from '@/lib/content/site';
 import type { HomepageSection } from '@/schemas/homepage';
 
@@ -59,6 +60,7 @@ const hasAddress = addressLines.length > 0 || location.city.trim() !== '';
       </div>
 
       <div class="ngf-contact-place">
+        <ShowroomMap />
         {
           hasAddress ? (
             <div class="ngf-contact-line">

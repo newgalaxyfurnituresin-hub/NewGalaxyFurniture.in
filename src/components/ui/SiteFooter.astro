@@ -17,6 +17,7 @@
  */
 import BrandMark from '@/components/ui/BrandMark.astro';
 import ContactNumbers from '@/components/ui/ContactNumbers.astro';
+import ShowroomMap from '@/components/ui/ShowroomMap.astro';
 import { getSiteSettings } from '@/lib/content/site';
 import { CATEGORY_NAV, POLICY_NAV, SUPPORT_NAV } from '@/lib/site/navigation';
 
@@ -86,15 +87,7 @@ const year = new Date().getFullYear();
       <h2 class="ngf-footer-heading">Orders &amp; enquiries</h2>
       {/* Both numbers, one label, both channels. */}
       <ContactNumbers layout="stack" />
-      {
-        settings.location.mapUrl !== null && (
-          <p>
-            <a href={settings.location.mapUrl} rel="noopener">
-              Find us on the map
-            </a>
-          </p>
-        )
-      }
+      <ShowroomMap compact />
       {
         social.length > 0 && (
           <ul class="ngf-footer-social">

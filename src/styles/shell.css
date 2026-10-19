@@ -1481,7 +1481,6 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
   color: var(--color-walnut);
 }
 
-.ngf-cathero-glyph :global(svg),
 .ngf-cathero-glyph svg {
   display: block;
   width: 100%;

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import EditorialPhoto from '@/components/experiences/EditorialPhoto.astro';
+import CategoryIllustration from '@/components/motion/CategoryIllustration.astro';
 import ProductCard from '@/components/product/ProductCard.astro';
 import CatalogueControls from '@/components/product/CatalogueControls';
 import QuickEnquireHost from '@/components/forms/QuickEnquireHost.astro';
@@ -82,11 +83,11 @@ const guidance = [
         <a href="/collection">Collection</a><span aria-hidden="true">/</span><span
           aria-current="page">Mattresses</span
         >
-      </nav><p class="ngf-exp-eyebrow">A little more comfort. Every day.</p><h1
-        id="mattress-heading"
-      >
-        {content.heading}
-      </h1><p class="ngf-exp-lede">{content.description}</p><div class="ngf-exp-actions">
+      </nav><p class="ngf-exp-eyebrow">Explore the collection</p><h1 id="mattress-heading">
+        Mattresses
+      </h1><p class="ngf-exp-category-intro">{content.heading}</p><p class="ngf-exp-lede">
+        {content.description}
+      </p><div class="ngf-exp-actions">
         <a class="ngf-exp-button" href="#mattress-collection"
           >Explore mattresses <span aria-hidden="true">↓</span></a
         >{
@@ -99,6 +100,9 @@ const guidance = [
       </div><p class="ngf-exp-note">Thoughtful choices for the room you retreat to.</p>
     </div>
     <div class="ngf-exp-hero-media" data-reveal>
+      <div class="ngf-exp-category-emblem" aria-hidden="true">
+        <CategoryIllustration illustration="bed" trigger="inView" /><span>Mattress collection</span>
+      </div>
       <EditorialPhoto photo={content.hero} priority /><span
         class="ngf-exp-image-label"
         aria-hidden="true">The art of slowing down</span

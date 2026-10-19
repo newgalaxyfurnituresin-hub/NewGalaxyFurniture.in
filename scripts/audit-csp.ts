@@ -178,7 +178,14 @@ export function auditHtml(html: string, page: string): CspViolation[] {
   }
 
   // --- forbidden elements --------------------------------------------------
-  if (/<iframe\b/i.test(html)) add("frame-src 'none'", '<iframe> present');
+  for (const frame of html.matchAll(/<iframe\b[^>]*>/gi)) {
+    const src = attributeOf(frame[0], 'src') ?? '';
+    if (!/^https:\/\/www\.google\.com\/maps\/embed\?pb=/.test(src))
+      add('frame-src', 'Unapproved frame source');
+    if (!attributeOf(frame[0], 'title') || attributeOf(frame[0], 'loading') !== 'lazy')
+      add('frame-src', 'Map frames require a title and lazy loading');
+    if (/\ssrcdoc\s*=/i.test(frame[0])) add('frame-src', 'Inline frame documents are forbidden');
+  }
   if (/<object\b/i.test(html)) add("object-src 'none'", '<object> present');
   if (/<embed\b/i.test(html)) add("object-src 'none'", '<embed> present');
   if (/<base\b/i.test(html)) add("base-uri 'none'", '<base> present');
@@ -249,7 +256,7 @@ function main(): void {
     console.log(
       `[audit-csp] ${String(pages)} page(s): 0 violations of the deployed policy â€” every inline ` +
         `script hashes to one of the ${String(ALLOWED_HASHES.size)} allowlisted framework ` +
-        'bootstraps, no inline handler, no cross-origin subresource, no frame or object.',
+        'bootstraps, no inline handler, only approved lazy map frames, no cross-origin script or object.',
     );
     return;
   }

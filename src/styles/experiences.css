@@ -39,11 +39,49 @@
   text-decoration: underline;
 }
 .ngf-exp-hero h1 {
-  font-size: clamp(2.6rem, 5.1vw, 5.15rem);
+  font-size: clamp(2.5rem, 4.5vw, 4.25rem);
   line-height: 1.06;
   letter-spacing: -0.045em;
-  max-width: 11ch;
+  max-width: 17ch;
   text-wrap: pretty;
+}
+.ngf-exp-category-intro {
+  margin-top: 1rem;
+  font: 400 clamp(1.2rem, 2vw, 1.65rem)/1.4 var(--font-display);
+  color: var(--color-sage);
+  max-width: 28ch;
+}
+.ngf-exp-category-emblem {
+  position: absolute;
+  z-index: 1;
+  right: 1.25rem;
+  bottom: 3.5rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  width: clamp(110px, 14vw, 155px);
+  padding: 1rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
+  background: var(--color-ivory);
+  color: var(--color-espresso);
+  box-shadow: var(--shadow-level1);
+  pointer-events: none;
+}
+.ngf-exp-category-emblem svg {
+  width: 100%;
+  height: auto;
+  max-height: 90px;
+}
+.ngf-exp-category-emblem span {
+  font: 600 0.6rem/1.4 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.ngf-exp-hero-media .ngf-editorial-photo img {
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
 }
 .ngf-exp-lede {
   font-size: clamp(0.95rem, 1.2vw, 1.08rem);
@@ -178,9 +216,21 @@
   display: grid;
   gap: 2.5rem 1.6rem;
 }
+.ngf-exp-service {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  box-shadow: var(--shadow-level1);
+  transition:
+    transform var(--dur-normal) var(--ease-standard),
+    box-shadow var(--dur-normal) var(--ease-standard);
+}
 .ngf-exp-service-image {
   position: relative;
   overflow: hidden;
+  border-radius: var(--radius-md);
 }
 .ngf-exp-service-image .ngf-editorial-photo {
   aspect-ratio: 4/3;
@@ -611,6 +661,10 @@
   }
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ngf-exp-service:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+  }
   .ngf-exp-button:hover span,
   .ngf-exp-text-link:hover span[aria-hidden] {
     transform: translate(3px, -2px);

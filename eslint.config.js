@@ -101,7 +101,7 @@ export default defineConfig(
            *   that adapter's own file.
            */
           selector:
-            'Literal[value=/^https?:\\/\\/(?!localhost|127\\.0\\.0\\.1|schema\\.org|www\\.w3\\.org|api\\.github\\.com|api\\.netlify\\.com|api\\.cloudflare\\.com|api\\.openai\\.com|api\\.anthropic\\.com)/]',
+            'Literal[value=/^https?:\\/\\/(?!localhost|127\\.0\\.0\\.1|schema\\.org|www\\.w3\\.org|www\\.google\\.com\\/maps\\/embed|api\\.github\\.com|api\\.netlify\\.com|api\\.cloudflare\\.com|api\\.openai\\.com|api\\.anthropic\\.com)/]',
           message:
             'No hard-coded hostname. Read the origin from PUBLIC_SITE_URL via src/lib/env.ts.',
         },

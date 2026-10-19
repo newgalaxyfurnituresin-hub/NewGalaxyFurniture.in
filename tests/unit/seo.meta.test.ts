@@ -319,6 +319,7 @@ const ALLOWED_HOSTS = [
   'api.openai.com',
   'api.anthropic.com',
   'api.whatsapp.com',
+  'www.google.com', // The fixed public Maps embed; never an application or credential endpoint.
   'wa.me',
   // The sitemap protocol namespace. Like schema.org, the string *is* the identifier.
   'www.sitemaps.org',

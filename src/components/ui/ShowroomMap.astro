@@ -1,0 +1,85 @@
+---
+import { getSiteSettings } from '@/lib/content/site';
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+const settings = getSiteSettings();
+// Google's public Share → Embed a map output, verified against the configured showroom listing.
+const embed =
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.252430807159!2d77.7209273!3d12.955692500000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae130077088baf%3A0xef7ec954b004d936!2sNew%20Galaxy%20Furniture!5e0!3m2!1sen!2sin!4v1792389310917!5m2!1sen!2sin';
+const verified =
+  settings.location.mapUrl !== null &&
+  new URL(settings.location.mapUrl).pathname === '/AwFa4wPaSpi4wSmC9';
+---
+
+{
+  settings.location.mapUrl && (
+    <section
+      class:list={['ngf-showroom-map', { 'ngf-showroom-map-compact': compact }]}
+      aria-label="Showroom location"
+    >
+      {verified && (
+        <iframe
+          src={embed}
+          title="Map showing New Galaxy Furniture on Varthur Main Road, Thubarahalli, Bengaluru"
+          width="600"
+          height={compact ? 220 : 360}
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+        />
+      )}
+      <a
+        href={settings.location.mapUrl}
+        target="_blank"
+        rel="noopener"
+        class="ngf-showroom-map-link"
+      >
+        Find us on the map <span aria-hidden="true">↗</span>
+      </a>
+      {!compact && (
+        <p>
+          {settings.location.addressLines.join(', ')}, {settings.location.city}
+        </p>
+      )}
+    </section>
+  )
+}
+<style>
+  .ngf-showroom-map {
+    min-width: 0;
+    margin-block: 1.25rem;
+  }
+  iframe {
+    display: block;
+    width: 100%;
+    height: clamp(260px, 35vw, 360px);
+    border: 1px solid var(--color-taupe);
+    border-radius: var(--radius-lg);
+    background: var(--color-cream);
+  }
+  .ngf-showroom-map-compact iframe {
+    height: 220px;
+  }
+  .ngf-showroom-map-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    min-height: 44px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-espresso);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .ngf-showroom-map-link:focus-visible {
+    outline: 2px solid var(--color-espresso);
+    outline-offset: 4px;
+  }
+  p {
+    font-size: 0.8rem;
+    color: var(--color-walnut);
+    line-height: 1.6;
+  }
+</style>
