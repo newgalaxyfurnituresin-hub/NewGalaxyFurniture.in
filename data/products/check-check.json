@@ -35,15 +35,15 @@
   "price": 200000,
   "priceOnEnquiry": false,
   "primaryImage": "img_wi4z86hqer",
-  "published": true,
+  "published": false,
   "relatedProductIds": [],
   "shortDescription": "check checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck checkcheck check",
   "sku": "NGF-OUT-LZ8DU3",
   "slug": "check-check",
-  "status": "PUBLISHED",
+  "status": "UNPUBLISHED",
   "stockStatus": "IN_STOCK",
   "tags": [],
   "trending": false,
-  "updatedAt": "2026-10-19T18:19:17.177Z",
+  "updatedAt": "2026-10-19T18:46:25.632Z",
   "variants": []
 }
