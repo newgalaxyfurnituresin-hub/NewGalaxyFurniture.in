@@ -44,17 +44,17 @@
   "price": null,
   "priceOnEnquiry": true,
   "primaryImage": "img_8q6mosdkqa",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "shortDescription": "Website PC layout test. Not for sale.",
   "sku": "NGF-SOF-IIDW3T",
   "slug": "pc",
-  "status": "DRAFT",
+  "status": "PUBLISHED",
   "stockStatus": "IN_STOCK",
   "tags": [
     "responsive-test"
   ],
   "trending": false,
-  "updatedAt": "2026-10-19T13:00:33.769Z",
+  "updatedAt": "2026-10-19T13:01:07.590Z",
   "variants": []
 }
