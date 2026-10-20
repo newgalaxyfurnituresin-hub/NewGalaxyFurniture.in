@@ -49,13 +49,16 @@
     "react-dom": "19.2.8",
     "zod": "4.3.6"
   },
+  "overrides": {
+    "sharp": "0.35.5"
+  },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@astrojs/cloudflare": "14.2.6",
     "@axe-core/playwright": "4.13.0",
     "@cloudflare/workers-types": "^5.20260902.1",
     "@eslint/js": "^10.0.1",
-    "@netlify/functions": "^4.2.5",
+    "@netlify/functions": "6.0.3",
     "@playwright/test": "1.62.1",
     "@size-limit/file": "13.0.3",
     "@tailwindcss/vite": "4.3.3",
