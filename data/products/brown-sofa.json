@@ -116,7 +116,6 @@
       "alt": "Premium 3+1+1 Sofa Set — top view",
       "altSource": "admin",
       "derivativeFormats": [
-        "avif",
         "webp",
         "jpeg"
       ],
@@ -125,16 +124,26 @@
         480,
         640,
         960,
-        1280
+        1280,
+        1600,
+        2000,
+        3840
       ],
       "derivativesReady": true,
-      "height": 1071,
-      "id": "img_h0mv17oeuf",
-      "key": "products/p_322e7n6mth/img_h0mv17oeuf/original.jpg",
-      "lqip": "data:image/webp;base64,UklGRhQEAABXRUJQVlA4TAgEAAAvF0AEEM1VICICHggAECQFAICZndm7vdtr9767u3b/7m6v69/5j+qlfCHhv0cBEABIAAAQAAASAAAAPBJ8ledTKLpPp776pOv2fu/r/nb3dndmd2bmAAAAHghQEisHAMD5v5nZzSbptZ9W4QAAjkIBoAAAAAAAAAAAAAAAAFAAAAUAAAAAAFA5dc1PkmR3Z54HApAEyQEAcP5V3T2ze/vxe+cJgiABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEIB65/M3szHR35LMvr0leRlrl4dJ1Frqx6/DDJuaap7ReOb9BEOrCISyhABpIXgbPM6GMaDOXAJFzal1Dl0yiljrOgwpgU8+GyE82f9bEq+JofOLymSGEW5yCzV9FmyE1aDrtoiB/AtRl0Ip7bM4RtOqkF+aGqh5+/zPS1/7H3w9/tuPfHzMsGlsU+KqZNl3ZMqly6hYAdQcFEsGFEMtmOnDjvlnzMx5buW+tv7/OLb+N9af6uud+lPT6wYNK8nWb3dQRbzZ4lqcprrkJkJAm0vXb5+v+OuXvPD89+vO57sv3g+l89YY3v+beT+w+6u7DxnP6YcfXOazvfSPMs6Jh3aUiXpGl6yx69in9NElw2Opf0WnKsdIN/VdtXDWA+DBXBXm6zvcvzyh1I7LktnntdOiitF9l9V+YL6NqS8mXWpyTaTAjSIAIIsHc0+sI5wbm/+Wx43x5U8nBrh9bw4um8UNsMJwTv7+Lx5T1/3lI300FtQA5YMrUQsmZpIybs/pG7jffy4t2HuwPf7h36g3Tv7N+kzPfqt5xdB0v4/7H30fPnSMMS82gJxiaJUU9sV7obvWjH3v68cUPvcXbS55+Uy8pdYZBgDgB5+5ne/H0aDY4/0p7qZ3Fuu/WXsx5V2OR8geyNga6ib6RYBTk9EMNX3NNx/l6HTE9vZam5XzyNHjllvt33j1l55TtnfcObh+ytXPrdrvJsDEu4/JIaenk8vgpqzUR7ar1fL+qJjU16HVtVaMqsKWqQ3XFAlto4kVNU9Sp2n366c64ZW/URxtvnIMKqa90/bfjwzwmCWlsWD0SIVCoAmBCJTCJIQWIEWpRb7s0/ofX49bq154XAajkbKD7dc9/fq3EuLO3jSsUSQVgBCQAsIAAABYasES9yPrA9ck9H+6BKBwgQKeVdRje9l63m7GUoBRCAAEQEAADBACQEhQimFTBWthmVS4QgkWgoZOXzq1XzVZnEElBCAkAQAglIEAGUpADksmFXDIB5iRgcgQkQgEmihK6AkpSahRCSUIuKEkplIzBFIzAOUmYETgFAygQZgKBDCQgEjK5BCZLDGf6ak+tObXlsdul22NrDb2Zmz20Vm7N3KyhL6fWzl2DMyIDiORJXgA=",
+      "enhancedFrom": {
+        "height": 1071,
+        "id": "img_h0mv17oeuf",
+        "key": "products/p_322e7n6mth/img_h0mv17oeuf/original.jpg",
+        "mime": "image/jpeg",
+        "width": 1468
+      },
+      "height": 2802,
+      "id": "img_e40ede8c6d",
+      "key": "products/p_322e7n6mth/img_e40ede8c6d/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRsoAAABXRUJQVlA4IL4AAADwBQCdASoYABIAPqlEnkqmI6KhsBgIAMAVCWUAsR9o5csIXOetadxlhTE8AODbRfWGL4bs+hRxQADJ+4dwPbcdJ8irIPt+VMu1TqufEuhtR/NtLQqRo8jNbRDHZNQcl4UXTWpYOmWUAtFnv9ts2Pekg23DUvfQclkhoW1VCTfu7GSlyzoOO3sdTDtjoI9kr9mj0oBAdPgtCIJRn1i7E7zPm7cLgXhCodsv4HMpH1IrzUqMlz+iNoE6noLFFIAA",
       "mime": "image/jpeg",
       "order": 3,
-      "width": 1468
+      "width": 3840
     }
   ],
   "keywords": [],
@@ -161,6 +170,6 @@
     "Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-20T08:54:09.653Z",
+  "updatedAt": "2026-10-20T08:54:53.262Z",
   "variants": []
 }
