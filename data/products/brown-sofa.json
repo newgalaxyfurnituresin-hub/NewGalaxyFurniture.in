@@ -83,7 +83,6 @@
       "alt": "Premium 3+1+1 Sofa Set — right angle",
       "altSource": "admin",
       "derivativeFormats": [
-        "avif",
         "webp",
         "jpeg"
       ],
@@ -92,16 +91,26 @@
         480,
         640,
         960,
-        1280
+        1280,
+        1600,
+        2000,
+        3840
       ],
       "derivativesReady": true,
-      "height": 1071,
-      "id": "img_4s0p5opq3z",
-      "key": "products/p_322e7n6mth/img_4s0p5opq3z/original.jpg",
-      "lqip": "data:image/webp;base64,UklGRggEAABXRUJQVlA4TPwDAAAvFwAEEM1VICICHggAENwGAIC7+0+T7LNk7bf5T5e0TLJl1q3oYkrLMBMCAxtQA0AHEAUAQAEAGAObAdQYZsZ0025h8SFtpm3apG363yT9///7v7+7CwAAwAMBSqKtAAA4/zOzs3t333+/3v8EEgEAAEAAUAAAAAAAAAAAgAAAAAAAAgAAAACoIirv3e7d3Zmd8UCAkuA6AADO/83M7u3eTyRBvl8KaKEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGjxUcm53GX3duZF/iwcSXgpDrb9qnRFPLts5jjRAGOIQJB8Ci5HyCGDa8tZvUVuli6YUUgYUjgqM6sMe37m6l6XNSfz8Cj2TU/FsUSCiNum5uXRcV6Unqr/CR8pHtPy1i7rwuWpX1aZI9TEzBBFAp5xV83k5DO5p7PfaU1ve4qD8Yq35bh+N3+3c36QfsKaZSDHWw67MHHPypeBkCAOD51CUWg4snMm3vN8avq2sZnD1Ky1XHy7sK9/pv98SiuNp6mPj/LPqzMmY5broJuGnyKEA99lCs3FOfH1u87v8rjbH7ibPDVP8McvKFfyeRnJNaYJuvEws7pNCOigCMhkHCCsRZf3VXcaTUls6a609tNyf1mzqDF/9F6v3S9r/9P42+ZWI27v9ttn83mZBUq184o2J+aqkhlX3XrXtiv7dap8XPSX7QrpcN6MqO0sray/5rRvuUG2V/T382q3dYz0Yf78vv/u+e0j8jfSRpGdjVrX9CLXuWt3PO+f+v3zrGIxaSqp3FYthmhth9yHvdzMfBJTbxtHLn5PwNCi/D/ZnnjkwK5nE6c6d+KDz3NaIEp427C3Qdo4ClgDs4DgfIDS6V8P5vkpeRcDuUrM+JLY0KFGMIi6lLlJ0TrGjqVLE9sUqdGllDllxT9mU+fGuF6HDUZpjulmIs5QGElNm3vaHPLOUEfU9vPrf/XNQ1bvOrerOGENXi6MidmGdGacIwa1THbjfUY7IwF+LP/9N6QohpZ9WvSiacos0xNWhFWKjcWNrq/+29pd8g8oSy5U+kc6Pqbzo/hncnvKOleHxsbFIg4pHHDiMwgFIfpMXwKWkW19qbVa62/zsJUETArjiQkJCCncnvX2WKH4d5sfAg5hAogEDABOIAEaICGu6yh0YGYdxXYIUAAgKIKASEf58TSMD9/593/LbmsQmd1ykAAnEMAJRCGhywQuC2ZygwiBWASBkzAIAAe9fvn1eXi/qUc1JSSOpTLmLu+AIwqhACDBIR4Eu7ogvL7u3Z4FGm5X0cEGwABSKOpIcZcPJTRIhy2Hnzxf2sJ1DeXwHCRIAR4Ic9fePJ7ULZNY8VHz/UXeXm6v6vaq1XW97s/qVsIAAAA=",
+      "enhancedFrom": {
+        "height": 1071,
+        "id": "img_4s0p5opq3z",
+        "key": "products/p_322e7n6mth/img_4s0p5opq3z/original.jpg",
+        "mime": "image/jpeg",
+        "width": 1469
+      },
+      "height": 2800,
+      "id": "img_5aad85cb8d",
+      "key": "products/p_322e7n6mth/img_5aad85cb8d/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRvgAAABXRUJQVlA4IOwAAABwBQCdASoYABIAPqlMoEwmJCMiKAgAwBUJZQCsAYvWXGbLf86+tpI9uWnc3tulCICPyYNAAP7yhlP7xT3l5x6y+GJt/1ds2JuU9X/GmM4trZdOXzoGQkkrcYhd3Mwoq5yS7Tg+f6gZHQEgC/RGWlvjnLunZKXFAxvkfIKhJbMpuxQjNQ4wCUVlCRK+qrYkulAsf+aR3uGeNfsbJnxmKwohLnnRfpij5ChMD/X0dk2he5suftnoM5LnKFisgY35e1NZY4YybQEvYaB2yRSr/DN0mtg8/OWk3Rn0sRGi7rBYEvFt889mAPanPJYAAA==",
       "mime": "image/jpeg",
       "order": 2,
-      "width": 1469
+      "width": 3840
     },
     {
       "alt": "Premium 3+1+1 Sofa Set — top view",
@@ -152,6 +161,6 @@
     "Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-20T08:53:30.556Z",
+  "updatedAt": "2026-10-20T08:54:09.653Z",
   "variants": []
 }
