@@ -14,9 +14,17 @@
     {
       "alt": "",
       "altSource": "admin",
-      "derivativeFormats": [],
-      "derivativeWidths": [],
-      "derivativesReady": false,
+      "derivativeFormats": [
+        "avif",
+        "webp",
+        "jpeg"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640
+      ],
+      "derivativesReady": true,
       "filename": "Screenshot 2026-09-28 091311.png",
       "height": 78,
       "id": "img_le38mv7uqw",
