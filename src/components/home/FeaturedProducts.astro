@@ -55,7 +55,7 @@ const [lead, ...rest] = products;
           <ProductCard product={lead} categoryName={categoryNames[lead.category]} eager />
         </div>
         {rest.length > 0 && (
-          <ul class="ngf-featured-rest" data-reveal data-motion-group>
+          <ul class="ngf-featured-rest" data-reveal data-motion-group data-motion-cards>
             {rest.map((product) => (
               <li>
                 <ProductCard product={product} categoryName={categoryNames[product.category]} />

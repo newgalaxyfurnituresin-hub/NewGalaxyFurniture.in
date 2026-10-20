@@ -81,6 +81,15 @@ export function bootMotion(): void {
 
   const animate = motionOK();
 
+  // Compact grids can span several screens. Reveal each card as it arrives rather than
+  // animating the entire list before its lower rows have ever been seen.
+  if (animate && window.matchMedia('(max-width: 1024px)').matches) {
+    for (const grid of document.querySelectorAll('[data-motion-cards]')) {
+      grid.removeAttribute('data-reveal');
+      for (const card of grid.children) card.setAttribute('data-reveal', 'tile');
+    }
+  }
+
   controller = createRevealController({ animate });
   controller.observeAll(document);
 

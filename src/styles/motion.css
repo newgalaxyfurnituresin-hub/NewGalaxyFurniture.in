@@ -604,3 +604,48 @@
   color: var(--color-walnut);
   font-size: var(--text-small);
 }
+
+/* Compact browsing: small, once-only arrivals, with readable labels throughout.
+ * Cards opt in at runtime, so a blocked script leaves a completely static grid.
+ * Explicit transitions avoid tying the finish to a visitor's scrolling speed. */
+@media (max-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  html:not([data-motion='off']) [data-motion-cards] > [data-reveal='tile'] {
+    --ngf-reveal-delay: 0ms;
+
+    opacity: 1;
+    animation: none;
+    transform: none;
+    transition: transform 420ms var(--ease-entrance);
+  }
+
+  html:not([data-motion='off']) [data-motion-cards] > [data-reveal='tile']:not([data-revealed]) {
+    transform: translate3d(0, 10px, 0);
+  }
+
+  html:not([data-motion='off']) [data-motion-cards] > [data-reveal='tile']:nth-child(even) {
+    transition-delay: 45ms;
+  }
+
+  html:not([data-motion='off']) [data-motion-cards] > [data-reveal='tile'] img {
+    transition: transform 520ms var(--ease-entrance);
+  }
+
+  html:not([data-motion='off'])
+    [data-motion-cards]
+    > [data-reveal='tile']:not([data-revealed])
+    img {
+    transform: scale(1.025);
+  }
+}
+
+/* A quiet acknowledgement for touch, without a sticky hover state or moving text. */
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  html:not([data-motion='off']) :is(.ngf-category-frame, .ngf-exp-text-link) {
+    transition: transform 160ms var(--ease-standard);
+  }
+
+  html:not([data-motion='off']) .ngf-category-tile:active .ngf-category-frame,
+  html:not([data-motion='off']) .ngf-exp-text-link:active {
+    transform: scale(0.985);
+  }
+}

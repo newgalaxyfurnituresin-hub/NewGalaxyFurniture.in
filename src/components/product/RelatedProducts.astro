@@ -49,7 +49,7 @@ const { products, categoryNames = {}, heading = 'You might also like', explore }
           </a>
         )}
       </div>
-      <ul class="ngf-grid" data-reveal data-motion-group>
+      <ul class="ngf-grid" data-reveal data-motion-group data-motion-cards>
         {products.map((product) => (
           <li>
             <ProductCard product={product} categoryName={categoryNames[product.category]} />

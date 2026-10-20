@@ -222,7 +222,13 @@ const meta = pageMeta(Astro, {
             count above it already say this in the design.
           */}
             <h2 class="sr-only">{category.name} products</h2>
-            <ul class="ngf-grid" id="ngf-category-grid" data-reveal data-motion-group>
+            <ul
+              class="ngf-grid"
+              id="ngf-category-grid"
+              data-reveal
+              data-motion-group
+              data-motion-cards
+            >
               {products.map((product, position) => (
                 <li>
                   <ProductCard

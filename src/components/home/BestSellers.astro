@@ -55,7 +55,7 @@ const CURATED_NOTE = 'Curated by us — the site records no online transactions.
         headingId="ngf-bestsellers-heading"
       />
 
-      <ul class="ngf-bestsellers-grid" data-reveal data-motion-group>
+      <ul class="ngf-bestsellers-grid" data-reveal data-motion-group data-motion-cards>
         {products.map((product, index) => (
           <li data-emphasis={index % 3 === 0 ? 'wide' : 'narrow'}>
             <ProductCard product={product} categoryName={categoryNames[product.category]} />
