@@ -44,6 +44,7 @@ import { productUrlPath, renameProductState } from '@/lib/github/rename';
 import { readValidatedJson } from '@/lib/auth/guard';
 import { takenIdentifiers } from '@/lib/products/index-store';
 import { withProductLock } from '@/lib/github/client';
+import { checkPublishGate } from '@/schemas/publish-gate';
 
 export const prerender = false;
 
@@ -93,6 +94,15 @@ export async function PATCH(context: APIContext): Promise<Response> {
       const validated = validateProduct(candidate);
       if (!validated.ok) {
         return errorResponse(ERROR_CODES.VALIDATION_FAILED, { fields: validated.fields });
+      }
+      if (validated.product.published && body.value.patch.colorOptions !== undefined) {
+        const gate = checkPublishGate(validated.product);
+        if (!gate.ok)
+          return errorResponse(ERROR_CODES.PUBLISH_GATE_FAILED, {
+            fields: gate.fields,
+            message:
+              'Add a different product photograph for every colour before saving this public product.',
+          });
       }
 
       // Rename detection. `taken` excludes this product so a rename never collides with

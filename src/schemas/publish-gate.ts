@@ -16,6 +16,7 @@
 
 import { issue, requireMinLength, requireNonEmpty } from './issue';
 import { ProductSchema } from './product';
+import { imagesForColor } from '@/lib/products/colors';
 
 export const PublishReadySchema = ProductSchema.superRefine((p, ctx) => {
   requireNonEmpty(ctx, p.name, 'name');
@@ -28,6 +29,26 @@ export const PublishReadySchema = ProductSchema.superRefine((p, ctx) => {
   if (p.images.length < 1) issue(ctx, 'images', 'At least one image required');
   if (!p.stockStatus) issue(ctx, 'stockStatus', 'Stock status required');
   if (p.images.some((i) => !i.alt.trim())) issue(ctx, 'images', 'Every image needs alt text');
+  const assigned = new Set<string>();
+  for (const [index, color] of (p.colorOptions ?? []).entries()) {
+    const photos = imagesForColor(p.images, color);
+    if (photos.length === 0)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['colorOptions', index, 'imageIds'],
+        message: `Add at least one real photograph of the ${color.name} product before publishing.`,
+      });
+    for (const photo of photos) {
+      if (assigned.has(photo.id))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['colorOptions', index, 'imageIds'],
+          message:
+            'Different colours must use their own photographs. This photo is already assigned to another colour.',
+        });
+      assigned.add(photo.id);
+    }
+  }
   // SEO fallbacks are generated, so seoTitle/seoDescription are not hard-required.
 });
 

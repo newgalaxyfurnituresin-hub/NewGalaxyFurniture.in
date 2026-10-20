@@ -39,7 +39,12 @@ export function orderedGalleryImages(product: Product): ProductImageValue[] {
 export function galleryImagesOf(product: Product): GalleryImageProps[] {
   return orderedGalleryImages(product).map((image) => {
     const ref = { productId: product.id, image };
-    const widths = derivativeWidthsFor(image.width);
+    const widths =
+      image.enhancedFrom && image.derivativesReady && image.derivativeWidths?.length
+        ? [...image.derivativeWidths]
+            .filter((width) => width > 0 && width <= image.width)
+            .sort((a, b) => a - b)
+        : derivativeWidthsFor(image.width);
     // The largest derivative that actually exists for this image — Requirement 4.6's "largest
     // available Derivative", never an upscale of the original.
     const largest = widths[widths.length - 1] ?? image.width;

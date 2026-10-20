@@ -9,6 +9,9 @@ import {
 } from '@/lib/products/colors';
 import { applyProductPatch, ProductPatchInput } from '@/lib/products/input';
 import { toSearchDoc } from '@/lib/search/build-index';
+import { imagesForColor } from '@/lib/products/colors';
+import { checkPublishGate } from '@/schemas/publish-gate';
+import { galleryImagesOf } from '@/lib/products/gallery-images';
 
 const brown: ColorOption = {
   id: 'col_brown0001',
@@ -19,6 +22,51 @@ const brown: ColorOption = {
 const cream: ColorOption = { id: 'col_cream0001', name: 'Cream', stockStatus: 'OUT_OF_STOCK' };
 const product = { ...demoSofa, colorOptions: [brown, cream] };
 describe('colour inventory', () => {
+  it('requires separate real photos for every structured colour before publishing', () => {
+    expect(checkPublishGate(product).ok).toBe(false);
+    const ready = {
+      ...product,
+      colorOptions: [
+        { ...brown, imageIds: [demoSofa.images[0]!.id] },
+        { ...cream, imageIds: [demoSofa.images[1]!.id] },
+      ],
+    };
+    expect(checkPublishGate(ready).ok).toBe(true);
+    expect(
+      checkPublishGate({
+        ...ready,
+        colorOptions: [ready.colorOptions[0]!, { ...cream, imageIds: [demoSofa.images[0]!.id] }],
+      }).ok,
+    ).toBe(false);
+    expect(
+      ProductSchema.safeParse({
+        ...ready,
+        colorOptions: [{ ...brown, imageIds: ['img_foreign001'] }],
+      }).success,
+    ).toBe(false);
+  });
+  it('keeps a colour linked to its preserved original after applying the 4K copy', () => {
+    const source = demoSofa.images[0]!;
+    const enhanced = {
+      ...source,
+      id: 'img_enhanced01',
+      width: 3840,
+      height: 2560,
+      derivativesReady: true,
+      derivativeWidths: [320, 1280, 3840],
+      enhancedFrom: { id: source.id, key: source.key, width: source.width, height: source.height },
+    };
+    const color = { ...brown, imageIds: [source.id] };
+    expect(imagesForColor([enhanced], color).map((image) => image.id)).toEqual([enhanced.id]);
+    const props = galleryImagesOf({
+      ...demoSofa,
+      images: [enhanced],
+      primaryImage: enhanced.id,
+    })[0]!;
+    expect(props.zoomSrc).toContain('-3840.webp');
+    expect(props.srcSet).toContain('3840w');
+    expect(source.id).toBe(demoSofa.images[0]!.id);
+  });
   it('preserves legacy colour names and their existing stock status', () => {
     expect(colorOptionsOf(demoSofa).map((option) => option.name)).toEqual(demoSofa.availableColors);
     expect(colorStockSummary(demoSofa)).toBe(demoSofa.stockStatus);

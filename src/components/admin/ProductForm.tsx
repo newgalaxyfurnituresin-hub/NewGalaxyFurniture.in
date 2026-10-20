@@ -46,6 +46,7 @@ import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
 import ImageManager from './ImageManager';
 import PublishPanel from './PublishPanel';
 import ColorEditor from './ColorEditor';
+import { colorOptionsOf } from '@/lib/products/colors';
 import PublicationProgress from './PublicationProgress';
 import type { PendingPublication } from '@/lib/admin/publication';
 import type { Product, StockStatusValue } from '@/schemas/product';
@@ -127,6 +128,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   const saving = useRef(false);
   const [hasEdits, setHasEdits] = useState(false);
   const [imageBusy, setImageBusy] = useState(false);
+  const [colorBusy, setColorBusy] = useState(false);
   const [deleted, setDeleted] = useState<PendingPublication | null>(null);
 
   const localErrors = useMemo(() => {
@@ -176,7 +178,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
 
   const doSave = useCallback(
     async (options: { confirmSlugChange?: boolean } = {}) => {
-      if (saving.current) return;
+      if (saving.current || imageBusy || colorBusy) return;
       setAttemptedSave(true);
       if (draft.name.trim().length < 2 || draft.category === '') {
         setSave({
@@ -256,7 +258,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         saving.current = false;
       }
     },
-    [draft, props.mode],
+    [draft, props.mode, imageBusy, colorBusy],
   );
 
   const errorEntries = Object.entries(errors);
@@ -330,7 +332,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         {!readOnly && (
           <button
             type="submit"
-            disabled={save.kind === 'saving' || imageBusy}
+            disabled={save.kind === 'saving' || imageBusy || colorBusy}
             className="min-h-[44px] bg-espresso px-5 py-2 text-ivory hover:bg-obsidian focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne disabled:opacity-60"
           >
             {save.kind === 'saving'
@@ -862,7 +864,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               productId={draft.id}
               images={draft.images}
               primaryImage={draft.primaryImage ?? null}
-              canWrite={props.canWrite}
+              canWrite={props.canWrite && !colorBusy}
               onBusyChange={setImageBusy}
               onChange={(images, primaryImage, revision) =>
                 setDraft((current) => ({
@@ -892,7 +894,29 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             ))}
           <ColorEditor
             product={draft}
-            disabled={readOnly}
+            disabled={readOnly || imageBusy || save.kind === 'saving'}
+            canUpload={props.mode === 'edit'}
+            onBusyChange={setColorBusy}
+            onPhotos={(colorId, added, revision) => {
+              setHasEdits(true);
+              setDraft((current) => ({
+                ...current,
+                images: [...current.images, ...added].map((image, index) => ({
+                  ...image,
+                  order: index,
+                })),
+                primaryImage: current.primaryImage ?? added[0]?.id,
+                updatedAt: advanceProductRevision(current.updatedAt, revision),
+                colorOptions: colorOptionsOf(current).map((color) =>
+                  color.id === colorId
+                    ? {
+                        ...color,
+                        imageIds: [...(color.imageIds ?? []), ...added.map((image) => image.id)],
+                      }
+                    : color,
+                ),
+              }));
+            }}
             onChange={(colorOptions) =>
               update({ colorOptions, availableColors: colorOptions.map((option) => option.name) })
             }
@@ -908,9 +932,9 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           description="Save your edits first — publishing acts on the stored draft."
         >
           <Wide>
-            {(hasEdits || imageBusy) && (
+            {(hasEdits || imageBusy || colorBusy) && (
               <p className="mb-3 text-small text-walnut">
-                {imageBusy
+                {imageBusy || colorBusy
                   ? 'Wait for your photographs to finish saving before publishing.'
                   : 'Save your changes above to enable publishing.'}
               </p>
@@ -921,7 +945,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               canPublish={props.canPublish}
               canWrite={props.canWrite}
               canDelete={props.canDelete}
-              disabled={hasEdits || imageBusy || save.kind === 'saving'}
+              disabled={hasEdits || imageBusy || colorBusy || save.kind === 'saving'}
               onProduct={(next) => setDraft(next)}
               onDeleted={setDeleted}
             />

@@ -107,7 +107,11 @@ export const ProductVariant = z.object({
 
 export const ProductColorOption = z.object({
   id: z.string().regex(/^col_[a-z0-9]{8,16}$/),
-  name: z.string().trim().min(1).max(60),
+  name: z.string().trim().min(1, 'Enter a colour name.').max(60),
+  imageIds: z
+    .array(z.string().regex(/^img_[a-z0-9]{10}$/))
+    .max(20)
+    .optional(),
   hex: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, 'Use a six-digit colour such as #8B5E3C')
@@ -205,6 +209,14 @@ export function enforceProductInvariants(p: ProductFields, ctx: z.RefinementCtx)
       });
     colorNames.add(option.name.toLocaleLowerCase());
     colorIds.add(option.id);
+    for (const imageId of option.imageIds ?? []) {
+      if (!p.images.some((image) => image.id === imageId || image.enhancedFrom?.id === imageId))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['colorOptions', index, 'imageIds'],
+          message: 'Choose a photograph belonging to this product.',
+        });
+    }
   }
   // 1. price XOR priceOnEnquiry
   if (p.priceOnEnquiry && p.price !== null) {

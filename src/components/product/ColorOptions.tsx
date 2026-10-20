@@ -1,5 +1,11 @@
-import { useState } from 'react';
-import { colorOptionsOf, colorStock, type ColorProduct } from '@/lib/products/colors';
+import { useEffect, useState } from 'react';
+import {
+  colorOptionsOf,
+  colorStock,
+  initialColorOf,
+  imagesForColor,
+  type ColorProduct,
+} from '@/lib/products/colors';
 import { stockLabel } from '@/lib/products/labels';
 import { mattressOption } from '@/lib/products/mattress-options';
 import { formatINR } from '@/lib/money';
@@ -8,7 +14,8 @@ import { useScopedId } from '@/lib/ui/ids';
 import type { Product } from '@/schemas/product';
 
 type ChoiceProduct = ColorProduct &
-  Pick<Product, 'name' | 'sku' | 'price' | 'priceOnEnquiry' | 'variants'>;
+  Pick<Product, 'name' | 'sku' | 'price' | 'priceOnEnquiry' | 'variants'> &
+  Partial<Pick<Product, 'images' | 'slug'>>;
 export default function ColorOptions({
   product,
   number,
@@ -19,15 +26,28 @@ export default function ColorOptions({
   productUrl: string;
 }): React.JSX.Element | null {
   const colors = colorOptionsOf(product);
-  const [selected, setSelected] = useState(
-    colors.find((color) => colorStock(product, color) !== 'OUT_OF_STOCK')?.id ??
-      colors[0]?.id ??
-      '',
-  );
+  const [selected, setSelected] = useState(initialColorOf(product)?.id ?? '');
   const [size, setSize] = useState(product.variants[0]?.id ?? '');
   const group = useScopedId('product-colour');
   const color = colors.find((option) => option.id === selected);
   const variant = product.variants.find((option) => option.id === size);
+  const photoIds = color
+    ? imagesForColor(product.images ?? [], color)
+        .map((image) => image.id)
+        .join(',')
+    : '';
+  useEffect(() => {
+    if (!product.slug || (!photoIds && product.colorOptions === undefined)) return;
+    document.dispatchEvent(
+      new CustomEvent('ngf:product-colour', {
+        detail: {
+          slug: product.slug,
+          imageIds: photoIds ? photoIds.split(',') : [],
+          colorName: color?.name ?? '',
+        },
+      }),
+    );
+  }, [product.slug, photoIds, color?.name, product.colorOptions]);
   if (!color) return null;
   const option = variant ? mattressOption(product, variant) : null;
   const stock = colorStock(product, color, variant?.stockStatus);
@@ -35,7 +55,13 @@ export default function ColorOptions({
   const message = `Hello, I would like to ${unavailable ? 'ask about restocking' : 'enquire about'} ${product.name} (SKU: ${product.sku}).\nSelected colour: ${color.name}.\n${variant ? `Selected option: ${variant.label}${variant.sku ? ` (SKU: ${variant.sku})` : ''}.\n` : ''}Availability shown: ${stockLabel(stock)}.\nPlease confirm the selected colour${variant ? ' and size' : ''}, price and availability.\n${productUrl}`;
   const price = option ? option.price : product.priceOnEnquiry ? null : product.price;
   return (
-    <div className="ngf-color-options min-w-0">
+    <div
+      className="ngf-color-options min-w-0"
+      data-ngf-colour-product={product.slug}
+      data-ngf-colour-images={photoIds}
+      data-ngf-colour-name={color.name}
+      data-ngf-colour-linked={product.colorOptions !== undefined ? 'true' : 'false'}
+    >
       <fieldset>
         <legend className="mb-3 text-body font-medium">Choose a colour</legend>
         <div className="grid min-w-0 gap-2 sm:grid-cols-2">

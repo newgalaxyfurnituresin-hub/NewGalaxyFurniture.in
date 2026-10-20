@@ -32,7 +32,7 @@
  * Requirements: 4.4, 4.5, 4.6, 4.14, 4.15, 4.16, 4.17, 4.18, 15.17, 15.18, 24.3, 24.5, 24.7.
  */
 
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   applyGalleryKey,
@@ -94,6 +94,8 @@ export interface GalleryProps {
   productName: string;
   /** The product slug, so a zoom can be counted against the piece it was of. */
   productSlug?: string;
+  initialImageIds?: readonly string[];
+  initialColorName?: string;
 }
 
 /** Below this many pixels of horizontal travel a touch is a tap or a scroll, not a swipe. */
@@ -102,14 +104,58 @@ export const SWIPE_THRESHOLD_PX = 40;
 const GalleryZoom = lazy(async () => import('./GalleryZoom'));
 
 export default function Gallery({
-  images,
+  images: allImages,
   productName,
   productSlug,
+  initialImageIds,
+  initialColorName = '',
 }: GalleryProps): React.JSX.Element | null {
+  const [imageIds, setImageIds] = useState<readonly string[] | undefined>(initialImageIds);
+  const [colorName, setColorName] = useState(initialColorName);
+  const images =
+    imageIds === undefined
+      ? allImages
+      : imageIds.flatMap((id) => {
+          const photo = allImages.find((image) => image.id === id);
+          return photo ? [photo] : [];
+        });
   const [state, setState] = useState<GalleryState>(() => initialGalleryState(images.length));
   const openerRef = useRef<HTMLElement | null>(null);
   const touchStartX = useRef<number | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!productSlug) return;
+    const apply = (ids: unknown, name: unknown): void => {
+      if (!Array.isArray(ids)) return;
+      const known = ids.filter(
+        (id): id is string => typeof id === 'string' && allImages.some((image) => image.id === id),
+      );
+      if (known.length !== ids.length) return;
+      setImageIds(known);
+      setColorName(typeof name === 'string' ? name : '');
+      setState(initialGalleryState(known.length));
+    };
+    const receive = (event: Event): void => {
+      const detail = (
+        event as CustomEvent<{ slug?: string; imageIds?: unknown; colorName?: unknown }>
+      ).detail;
+      if (detail?.slug === productSlug) apply(detail.imageIds, detail.colorName);
+    };
+    document.addEventListener('ngf:product-colour', receive);
+    // The colour selector can hydrate before this gallery. Its DOM retains the latest choice.
+    const selector = [...document.querySelectorAll<HTMLElement>('[data-ngf-colour-product]')].find(
+      (element) => element.dataset.ngfColourProduct === productSlug,
+    );
+    if (
+      selector &&
+      (selector.dataset.ngfColourLinked === 'true' || selector.dataset.ngfColourImages)
+    )
+      apply(
+        selector.dataset.ngfColourImages ? selector.dataset.ngfColourImages.split(',') : [],
+        selector.dataset.ngfColourName,
+      );
+    return () => document.removeEventListener('ngf:product-colour', receive);
+  }, [allImages, productSlug]);
 
   const current = images[state.index];
   const label = positionLabel(state);
@@ -178,7 +224,12 @@ export default function Gallery({
     setState((previous) => (travel < 0 ? nextImage(previous) : previousImage(previous)));
   }, []);
 
-  if (images.length === 0 || current === undefined) return null;
+  if (images.length === 0 || current === undefined)
+    return colorName ? (
+      <div className="border border-taupe bg-cream p-6" role="status">
+        Photographs for {colorName} are not available yet. Please ask our team before ordering.
+      </div>
+    ) : null;
 
   const rail = showsThumbnailRail(state);
   const indicators = showsPositionIndicators(state);
@@ -195,7 +246,7 @@ export default function Gallery({
         ref={stageRef}
         className="ngf-gallery-stage"
         role="group"
-        aria-label={`${productName} photographs`}
+        aria-label={`${productName}${colorName ? ` — ${colorName}` : ''} photographs`}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -272,6 +323,7 @@ export default function Gallery({
         (4.5, 4.14). One element, so the spoken and the seen text cannot drift.
       */}
       <p className="ngf-gallery-position" role="status">
+        {colorName ? `${colorName} · ` : ''}
         {label}
       </p>
 

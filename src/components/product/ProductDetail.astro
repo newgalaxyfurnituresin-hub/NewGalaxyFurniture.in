@@ -36,7 +36,14 @@ import StockBadge from '@/components/product/StockBadge.astro';
 import VariantList from '@/components/product/VariantList.astro';
 import MattressOptions from '@/components/product/MattressOptions';
 import ColorOptions from '@/components/product/ColorOptions';
-import { colorOptionsOf, colorStockSummary } from '@/lib/products/colors';
+import {
+  colorOptionsOf,
+  colorStockSummary,
+  initialColorOf,
+  imagesForColor,
+} from '@/lib/products/colors';
+import Gallery from '@/components/product/Gallery';
+import { galleryImagesOf } from '@/lib/products/gallery-images';
 import '@/styles/experiences.css';
 import CallLink from '@/components/ui/CallLink.astro';
 import ResponsiveImage from '@/components/ui/ResponsiveImage.astro';
@@ -153,6 +160,8 @@ const hasSpecs =
  */
 const displayStock = colorStockSummary(product);
 const hasColors = colorOptionsOf(product).length > 0;
+const initialColor = initialColorOf(product);
+const colorImages = initialColor ? imagesForColor(product.images, initialColor) : [];
 const outOfStock = displayStock === 'OUT_OF_STOCK';
 const whatsappLabel = outOfStock
   ? 'Ask about availability on WhatsApp'
@@ -194,6 +203,15 @@ const quickEnquireHref = (() => {
     {
       hasGallerySlot ? (
         <slot name="gallery" />
+      ) : (hasColors && product.colorOptions !== undefined) || colorImages.length > 0 ? (
+        <Gallery
+          client:visible
+          images={galleryImagesOf(product)}
+          productName={name}
+          productSlug={product.slug}
+          initialImageIds={colorImages.map((image) => image.id)}
+          initialColorName={initialColor?.name}
+        />
       ) : primary === null ? (
         <div class="ngf-pdp-media-empty">No photograph yet</div>
       ) : (
@@ -295,6 +313,8 @@ const quickEnquireHref = (() => {
             availableColors: product.availableColors,
             colorOptions: product.colorOptions,
             variants: product.variants,
+            slug: product.slug,
+            images: product.images,
           }}
           number={settings.whatsapp[0]?.e164}
           productUrl={productUrl ?? ''}

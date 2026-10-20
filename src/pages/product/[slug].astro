@@ -43,6 +43,7 @@ import { aggregateRatingFor, getPublishedReviews } from '@/lib/content/reviews';
 import { getSiteSettings } from '@/lib/content/site';
 import { formatPriceOrLabel } from '@/lib/money';
 import { galleryImagesOf } from '@/lib/products/gallery-images';
+import { initialColorOf, imagesForColor } from '@/lib/products/colors';
 import { staticProductImages } from '@/lib/products/static-images';
 import { fallbackSrc } from '@/lib/images/srcset';
 import { manualRelatedSlugs, relatedProducts } from '@/lib/products/related';
@@ -130,7 +131,12 @@ const galleryImages = galleryImagesOf(product).map((image) => {
     zoomSrcSet: staticSrc,
   };
 });
-const primary = galleryImages[0];
+const initialColor = initialColorOf(product);
+const initialColorImages = initialColor ? imagesForColor(product.images, initialColor) : [];
+const primary =
+  (initialColorImages[0]
+    ? galleryImages.find((image) => image.id === initialColorImages[0]?.id)
+    : undefined) ?? galleryImages[0];
 
 /* -------------------------------------------------------------------------- */
 /* Marketing sections (public PDP only)                                       */
@@ -278,6 +284,16 @@ const meta = pageMeta(Astro, {
             images={galleryImages}
             productName={product.name}
             productSlug={product.slug}
+            initialImageIds={
+              product.colorOptions?.length || initialColorImages.length > 0
+                ? initialColorImages.map((image) => image.id)
+                : undefined
+            }
+            initialColorName={
+              product.colorOptions?.length || initialColorImages.length > 0
+                ? initialColor?.name
+                : undefined
+            }
           />
         )
       }

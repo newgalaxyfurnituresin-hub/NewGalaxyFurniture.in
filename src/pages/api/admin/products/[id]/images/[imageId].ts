@@ -35,6 +35,7 @@ import { resolveProduct, saveProductState } from '@/lib/github/drafts';
 import { runAfterResponse } from '@/lib/admin/background';
 import { softDeleteImage } from '@/lib/images/store';
 import { validateProduct } from '@/lib/products/input';
+import { checkPublishGate } from '@/schemas/publish-gate';
 import { withProductLock } from '@/lib/github/client';
 
 export const prerender = false;
@@ -147,6 +148,18 @@ export async function DELETE(context: APIContext): Promise<Response> {
       const candidate: Record<string, unknown> = {
         ...product,
         images,
+        ...(product.colorOptions === undefined
+          ? {}
+          : {
+              colorOptions: product.colorOptions.map((color) => ({
+                ...color,
+                imageIds: (color.imageIds ?? []).filter(
+                  (id) =>
+                    id !== imageId &&
+                    id !== product.images.find((image) => image.id === imageId)?.enhancedFrom?.id,
+                ),
+              })),
+            }),
         updatedAt: new Date().toISOString(),
       };
       // Deleting the last image leaves no primary to point at, and a stale reference is
@@ -157,6 +170,16 @@ export async function DELETE(context: APIContext): Promise<Response> {
       const validated = validateProduct(candidate);
       if (!validated.ok) {
         return errorResponse(ERROR_CODES.VALIDATION_FAILED, { fields: validated.fields });
+      }
+
+      if (product.published && product.colorOptions?.length) {
+        const gate = checkPublishGate(validated.product);
+        if (!gate.ok)
+          return errorResponse(ERROR_CODES.PUBLISH_GATE_FAILED, {
+            fields: gate.fields,
+            message:
+              'This photo is required by a published colour. Add a replacement photo or remove that colour first.',
+          });
       }
 
       await saveProductState({

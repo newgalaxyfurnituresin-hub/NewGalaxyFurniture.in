@@ -112,8 +112,18 @@ export async function POST(context: APIContext): Promise<Response> {
   }
 
   let files: File[];
+  let colorName = '';
   try {
     const form = await readBoundedForm(context.request, 12 * 1024 * 1024);
+    const colorValue = form.get('colorName');
+    if (
+      colorValue !== null &&
+      (typeof colorValue !== 'string' || !colorValue.trim() || colorValue.trim().length > 60)
+    )
+      return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
+        fields: { colorName: ['Enter a colour name of up to 60 characters.'] },
+      });
+    colorName = typeof colorValue === 'string' ? colorValue.trim() : '';
     files = form.getAll('file').filter((entry): entry is File => entry instanceof File);
   } catch {
     return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
@@ -190,7 +200,9 @@ export async function POST(context: APIContext): Promise<Response> {
             key,
             // Alt text is the operator's to write; an empty string is honest and the publish
             // gate refuses to publish without it. Nothing is invented here (14.4, 15.15).
-            alt: '',
+            alt: colorName
+              ? `${product.name} — ${colorName} — photograph ${accepted.length + 1}`.slice(0, 180)
+              : '',
             width: decoded.width,
             height: decoded.height,
             order: order + accepted.length,
@@ -206,7 +218,14 @@ export async function POST(context: APIContext): Promise<Response> {
       }
 
       if (accepted.length === 0) {
-        return jsonResponse({ images: [], rejected }, { status: 422 });
+        return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
+          message:
+            rejected
+              .slice(0, 5)
+              .map((entry) => `${entry.filename}: ${entry.message}`)
+              .join(' ') || 'No photographs were accepted. Choose a supported image and try again.',
+          fields: { files: rejected.map((entry) => entry.message) },
+        });
       }
 
       const nextImages = [...product.images, ...accepted.map((entry) => entry.record)].map(

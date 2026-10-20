@@ -1,7 +1,24 @@
-import type { Product, StockStatusValue } from '@/schemas/product';
+import type { Product, ProductImageValue, StockStatusValue } from '@/schemas/product';
 
 export type ColorProduct = Pick<Product, 'colorOptions' | 'availableColors' | 'stockStatus'>;
 export type ColorOption = NonNullable<Product['colorOptions']>[number];
+
+export function imagesForColor(
+  images: readonly ProductImageValue[],
+  color: ColorOption,
+): ProductImageValue[] {
+  return (color.imageIds ?? [])
+    .flatMap((id) => {
+      const image = images.find((entry) => entry.id === id || entry.enhancedFrom?.id === id);
+      return image ? [image] : [];
+    })
+    .filter((image, index, all) => all.findIndex((entry) => entry.id === image.id) === index);
+}
+
+export function initialColorOf(product: ColorProduct): ColorOption | undefined {
+  const colors = colorOptionsOf(product);
+  return colors.find((color) => colorStock(product, color) !== 'OUT_OF_STOCK') ?? colors[0];
+}
 
 /** Legacy names keep their existing product availability until explicitly edited. */
 export function colorOptionsOf(product: ColorProduct): ColorOption[] {
