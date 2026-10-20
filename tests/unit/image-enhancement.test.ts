@@ -12,6 +12,8 @@ import { validSource } from '../../scripts/admin-photo-enhancer';
 import { parseImageRequest } from '@/lib/images/delivery';
 import { validateUpload } from '@/lib/images/validate';
 import { fileFrom, makePng } from '../fixtures/images';
+import { findAdminRoute } from '@/lib/auth/routes';
+import { evaluateGuard } from '@/lib/auth/guard';
 
 let store = fakeKeyValueStore();
 const productId = demoSofa.id;
@@ -34,6 +36,28 @@ beforeEach(() => {
 });
 
 describe('admin photo enhancement queue', () => {
+  it('registers every enhancement operation with the real permission guard', async () => {
+    for (const [method, path] of [
+      ['GET', `/api/admin/products/${productId}/image-enhancements`],
+      ['GET', `/api/admin/products/${productId}/images/${image.id}/enhancement`],
+      ['POST', `/api/admin/products/${productId}/images/${image.id}/enhancement`],
+    ]) {
+      expect(findAdminRoute(method!, path!)?.auth).toEqual({
+        kind: 'permission',
+        permission: 'product.write',
+      });
+      const result = await evaluateGuard({
+        request: new Request(`https://newgalaxyfurniture.in${path}`, {
+          method,
+          headers: { origin: 'https://newgalaxyfurniture.in', 'content-type': 'application/json' },
+        }),
+        sessions: store,
+        expectedOrigin: 'https://newgalaxyfurniture.in',
+      });
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.response.status).toBe(401);
+    }
+  });
   it('accepts a lower-resolution enhancement source without changing ordinary upload constraints', async () => {
     const file = fileFrom('small.png', 'image/png', makePng(512, 384));
     expect((await validateUpload(file)).ok).toBe(false);

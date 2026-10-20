@@ -122,6 +122,9 @@ export const ADMIN_ROUTES: readonly AdminRoute[] = [
   route('PATCH', '/api/admin/products/:id/images/order', permission('product.write')),
   route('PATCH', '/api/admin/products/:id/images/:imageId', permission('product.write')),
   route('DELETE', '/api/admin/products/:id/images/:imageId', permission('product.write')),
+  route('GET', '/api/admin/products/:id/image-enhancements', permission('product.write')),
+  route('GET', '/api/admin/products/:id/images/:imageId/enhancement', permission('product.write')),
+  route('POST', '/api/admin/products/:id/images/:imageId/enhancement', permission('product.write')),
 
   // --- Categories -----------------------------------------------------------
   route('GET', '/api/admin/categories', READ),
