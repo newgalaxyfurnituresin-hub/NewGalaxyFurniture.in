@@ -18,6 +18,7 @@
  */
 
 import { derivativeUrl } from '@/lib/images/srcset';
+import { colorStockSummary, colorOptionsOf } from '@/lib/products/colors';
 import { primaryImageOf } from '@/schemas/product';
 import type { Product } from '@/schemas/product';
 import { PRODUCT_FLAGS } from './types';
@@ -41,7 +42,7 @@ export function flagsOf(product: Product): number {
 export function coloursOf(product: Product): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const value of [product.color, ...product.availableColors]) {
+  for (const value of [product.color, ...colorOptionsOf(product).map((option) => option.name)]) {
     if (value === undefined) continue;
     const trimmed = value.trim();
     if (trimmed === '' || seen.has(trimmed.toLowerCase())) continue;
@@ -79,7 +80,7 @@ export function toSearchDoc(product: Product): SearchDoc {
     o: coloursOf(product),
     t: product.tags,
     p: product.priceOnEnquiry ? null : product.price,
-    st: product.stockStatus,
+    st: colorStockSummary(product),
     f: flagsOf(product),
     ts: epochSeconds(product.createdAt),
     th: primary === null ? '' : derivativeUrl(product.id, primary.id, THUMB_WIDTH, 'webp'),

@@ -16,6 +16,8 @@
  */
 import type { Product } from '@/schemas/product';
 import { safeText } from '@/lib/security/sanitize';
+import { colorOptionsOf, colorStock } from '@/lib/products/colors';
+import { stockLabel } from '@/lib/products/labels';
 
 interface Props {
   product: Product;
@@ -45,7 +47,12 @@ function dimensionLine(dimensions: Product['dimensions']): string {
 const rows: { term: string; value: string }[] = [
   { term: 'Material', value: product.material ?? '' },
   { term: 'Colour', value: product.color ?? '' },
-  { term: 'Available colours', value: product.availableColors.join(', ') },
+  {
+    term: 'Colour options',
+    value: colorOptionsOf(product)
+      .map((option) => `${option.name} (${stockLabel(colorStock(product, option))})`)
+      .join(', '),
+  },
   { term: 'Size', value: product.size ?? '' },
   { term: 'Dimensions', value: dimensionLine(product.dimensions) },
 ]

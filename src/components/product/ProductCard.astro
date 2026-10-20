@@ -34,6 +34,7 @@ import { getSiteSettings } from '@/lib/content/site';
 import { derivativeUrl } from '@/lib/images/srcset';
 import { formatPriceOrLabel } from '@/lib/money';
 import { stockLabel } from '@/lib/products/labels';
+import { colorStockSummary } from '@/lib/products/colors';
 import { staticProductImages } from '@/lib/products/static-images';
 import { buildEnquiryMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
 import { safeText } from '@/lib/security/sanitize';
@@ -183,8 +184,8 @@ const hoverSrc =
     }
     <div class="ngf-card-meta">
       <p class="ngf-card-price">{price}</p>
-      <span class="ngf-card-stock" data-stock={product.stockStatus}>
-        {stockLabel(product.stockStatus)}
+      <span class="ngf-card-stock" data-stock={colorStockSummary(product)}>
+        {stockLabel(colorStockSummary(product))}
       </span>
     </div>
 

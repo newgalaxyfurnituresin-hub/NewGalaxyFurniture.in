@@ -35,6 +35,8 @@ import SpecList from '@/components/product/SpecList.astro';
 import StockBadge from '@/components/product/StockBadge.astro';
 import VariantList from '@/components/product/VariantList.astro';
 import MattressOptions from '@/components/product/MattressOptions';
+import ColorOptions from '@/components/product/ColorOptions';
+import { colorOptionsOf, colorStockSummary } from '@/lib/products/colors';
 import '@/styles/experiences.css';
 import CallLink from '@/components/ui/CallLink.astro';
 import ResponsiveImage from '@/components/ui/ResponsiveImage.astro';
@@ -149,7 +151,9 @@ const hasSpecs =
  * The message itself needs no branch: `buildEnquiryMessage` already asks about "price,
  * availability and order details", which is the right sentence in both cases.
  */
-const outOfStock = product.stockStatus === 'OUT_OF_STOCK';
+const displayStock = colorStockSummary(product);
+const hasColors = colorOptionsOf(product).length > 0;
+const outOfStock = displayStock === 'OUT_OF_STOCK';
 const whatsappLabel = outOfStock
   ? 'Ask about availability on WhatsApp'
   : 'Order or Enquire on WhatsApp';
@@ -178,7 +182,7 @@ const quickEnquireHref = (() => {
 })();
 ---
 
-<article class="ngf-pdp-showroom" data-product={product.slug} data-stock={product.stockStatus}>
+<article class="ngf-pdp-showroom" data-product={product.slug} data-stock={displayStock}>
   {
     /*
     The gallery column. The interactive island fills the `gallery` slot on the public page; the
@@ -268,7 +272,7 @@ const quickEnquireHref = (() => {
         originalPrice={product.originalPrice}
         discount={product.discount}
       />
-      <StockBadge status={product.stockStatus} />
+      <StockBadge status={displayStock} />
     </div>
 
     {
@@ -278,14 +282,37 @@ const quickEnquireHref = (() => {
       and copy-link all resolve to what activation resolves to (Requirement 5.11).
     */
     }
+    {
+      hasColors && (
+        <ColorOptions
+          client:visible
+          product={{
+            name,
+            sku,
+            price: product.price,
+            priceOnEnquiry: product.priceOnEnquiry,
+            stockStatus: product.stockStatus,
+            availableColors: product.availableColors,
+            colorOptions: product.colorOptions,
+            variants: product.variants,
+          }}
+          number={settings.whatsapp[0]?.e164}
+          productUrl={productUrl ?? ''}
+        />
+      )
+    }
     <div class="ngf-pdp-actions">
       <div class="ngf-pdp-cta-row">
-        <WhatsAppLink
-          context={enquiryContext}
-          label={whatsappLabel}
-          variant="solid"
-          class="ngf-pdp-cta"
-        />
+        {
+          !hasColors && (
+            <WhatsAppLink
+              context={enquiryContext}
+              label={whatsappLabel}
+              variant="solid"
+              class="ngf-pdp-cta"
+            />
+          )
+        }
         <CallLink
           label={callLabel}
           variant="outline"
@@ -293,7 +320,7 @@ const quickEnquireHref = (() => {
           class="ngf-pdp-cta"
         />
         {
-          quickEnquireHref !== null && (
+          !hasColors && quickEnquireHref !== null && (
             <a
               href={quickEnquireHref}
               target="_blank"
@@ -428,7 +455,9 @@ const quickEnquireHref = (() => {
     }
 
     {
-      product.category === 'mattresses' && product.variants.length > 0 && settings.whatsapp[0] ? (
+      hasColors ? null : product.category === 'mattresses' &&
+        product.variants.length > 0 &&
+        settings.whatsapp[0] ? (
         <MattressOptions
           client:visible
           product={{

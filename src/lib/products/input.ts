@@ -37,6 +37,7 @@ import {
   Dimensions,
   ProductSchema,
   ProductVariant,
+  ProductColorOption,
   StockStatus,
   type Product,
 } from '@/schemas/product';
@@ -70,6 +71,7 @@ const EditableFields = z.object({
   material: z.string().max(120).nullable(),
   color: z.string().max(60).nullable(),
   availableColors: z.array(z.string().max(60)).max(20),
+  colorOptions: z.array(ProductColorOption).max(20),
   dimensions: Dimensions.nullable(),
   size: z.string().max(60).nullable(),
   variants: z.array(ProductVariant).max(20),
@@ -210,6 +212,11 @@ export function normalizeProduct(draft: Product): Product {
 
   return {
     ...draft,
+    ...(draft.colorOptions === undefined
+      ? {}
+      : {
+          availableColors: draft.colorOptions.map((option) => option.name.trim()),
+        }),
     price,
     originalPrice,
     discount: derivedDiscount(price, originalPrice),
@@ -261,6 +268,7 @@ const PLAIN_KEYS = [
   'description',
   'priceOnEnquiry',
   'availableColors',
+  'colorOptions',
   'variants',
   'stockStatus',
   'madeToOrder',

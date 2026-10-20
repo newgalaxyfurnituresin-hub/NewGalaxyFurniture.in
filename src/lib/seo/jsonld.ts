@@ -29,6 +29,7 @@
  */
 
 import type { AggregateRating } from '@/lib/content/reviews';
+import { colorStockSummary } from '@/lib/products/colors';
 import type { Crumb } from '@/lib/site/breadcrumbs';
 import type { Product, StockStatusValue } from '@/schemas/product';
 import type { SiteSettings } from '@/schemas/site';
@@ -98,7 +99,7 @@ export function productJsonLd(input: ProductJsonLdInput): object {
           url: canonical,
           priceCurrency: product.currency,
           price: String(product.price),
-          availability: availabilityFor(product.stockStatus),
+          availability: availabilityFor(colorStockSummary(product)),
           itemCondition: `${CONTEXT}/NewCondition`,
           seller: { '@type': 'Organization', name: businessName },
         });

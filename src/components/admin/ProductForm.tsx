@@ -45,6 +45,7 @@ import { fieldIssues, groupFor, labelFor, publishBlockers } from '@/lib/products
 import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
 import ImageManager from './ImageManager';
 import PublishPanel from './PublishPanel';
+import ColorEditor from './ColorEditor';
 import PublicationProgress from './PublicationProgress';
 import type { PendingPublication } from '@/lib/admin/publication';
 import type { Product, StockStatusValue } from '@/schemas/product';
@@ -88,6 +89,7 @@ function patchFrom(draft: Product): Record<string, unknown> {
     material: draft.material ?? null,
     color: draft.color ?? null,
     availableColors: draft.availableColors,
+    ...(draft.colorOptions === undefined ? {} : { colorOptions: draft.colorOptions }),
     dimensions: draft.dimensions ?? null,
     size: draft.size ?? null,
     variants: draft.variants,
@@ -563,20 +565,12 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         />
         <TextField
           id="field-color"
-          label="Colour"
+          label="Colour shown in the photographs (optional)"
           value={draft.color ?? ''}
           maxLength={60}
           disabled={readOnly}
           errors={errors.color}
           onChange={(value) => update({ color: value === '' ? undefined : value })}
-        />
-        <ListField
-          id="field-availableColors"
-          label="Available colours"
-          values={draft.availableColors}
-          disabled={readOnly}
-          errors={errors.availableColors}
-          onChange={(values) => update({ availableColors: values })}
         />
         <TextField
           id="field-size"
@@ -880,6 +874,29 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               }
             />
           )}
+        </Wide>
+      </FormSection>
+
+      <FormSection
+        id="colors"
+        title="Colours & availability"
+        description="Offer different colours and manage stock for each one."
+      >
+        <Wide>
+          {Object.entries(errors)
+            .filter(([path]) => path.startsWith('colorOptions'))
+            .map(([path, messages]) => (
+              <p key={path} role="alert" className="mb-3 text-small">
+                {messages.join(' ')}
+              </p>
+            ))}
+          <ColorEditor
+            product={draft}
+            disabled={readOnly}
+            onChange={(colorOptions) =>
+              update({ colorOptions, availableColors: colorOptions.map((option) => option.name) })
+            }
+          />
         </Wide>
       </FormSection>
 

@@ -105,6 +105,16 @@ export const ProductVariant = z.object({
   stockStatus: StockStatus.optional(),
 });
 
+export const ProductColorOption = z.object({
+  id: z.string().regex(/^col_[a-z0-9]{8,16}$/),
+  name: z.string().trim().min(1).max(60),
+  hex: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Use a six-digit colour such as #8B5E3C')
+    .optional(),
+  stockStatus: StockStatus,
+});
+
 const ProductObject = z
   .object({
     // identity
@@ -140,6 +150,7 @@ const ProductObject = z
     material: z.string().max(120).optional(),
     color: z.string().max(60).optional(),
     availableColors: z.array(z.string().max(60)).max(20).default([]),
+    colorOptions: z.array(ProductColorOption).max(20).optional(),
     dimensions: Dimensions.optional(),
     size: z.string().max(60).optional(),
     variants: z.array(ProductVariant).max(20).default([]),
@@ -183,6 +194,18 @@ type ProductFields = z.output<typeof ProductObject>;
  * deliberately advisory and not enforced: a rename must not break a live URL.
  */
 export function enforceProductInvariants(p: ProductFields, ctx: z.RefinementCtx): void {
+  const colorNames = new Set<string>();
+  const colorIds = new Set<string>();
+  for (const [index, option] of (p.colorOptions ?? []).entries()) {
+    if (colorNames.has(option.name.toLocaleLowerCase()) || colorIds.has(option.id))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['colorOptions', index, 'name'],
+        message: 'Each colour must have a unique name and identifier.',
+      });
+    colorNames.add(option.name.toLocaleLowerCase());
+    colorIds.add(option.id);
+  }
   // 1. price XOR priceOnEnquiry
   if (p.priceOnEnquiry && p.price !== null) {
     issue(ctx, 'price', 'Clear price when using price-on-enquiry');
