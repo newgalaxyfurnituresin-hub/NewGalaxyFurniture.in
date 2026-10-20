@@ -53,18 +53,33 @@ async function token(): Promise<string> {
   return value;
 }
 
-async function api(path: string, init: RequestInit = {}): Promise<Response> {
-  const response = await fetch(BASE + path, {
-    ...init,
-    redirect: 'error',
-    signal: AbortSignal.timeout(90_000),
-    headers: { ...init.headers, authorization: `Bearer ${await token()}` },
-  });
-  if (response.status === 401 || response.status === 403) {
-    lastRefresh = 0;
-    throw new Error('Company Cloudflare permission is unavailable. Reconnect the company account.');
+/** Cloudflare may report an expired OAuth session as either 401 or 403. Refresh once. */
+export async function requestWithSession(
+  url: string,
+  init: RequestInit,
+  readToken: (refresh: boolean) => Promise<string>,
+  fetcher: typeof fetch = fetch,
+): Promise<Response> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const headers = new Headers(init.headers);
+    headers.set('authorization', `Bearer ${await readToken(attempt > 0)}`);
+    const response = await fetcher(url, {
+      ...init,
+      headers,
+      redirect: 'error',
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (response.status !== 401 && response.status !== 403) return response;
+    await response.body?.cancel();
   }
-  return response;
+  throw new Error('Company Cloudflare permission is unavailable. Reconnect the company account.');
+}
+
+async function api(path: string, init: RequestInit = {}): Promise<Response> {
+  return await requestWithSession(BASE + path, init, async (refresh) => {
+    if (refresh) lastRefresh = 0;
+    return await token();
+  });
 }
 
 const kvPath = (key: string): string =>
@@ -263,38 +278,48 @@ async function main(): Promise<void> {
   );
   try {
     do {
-      if (Date.now() - lastHeartbeat > 5 * 60_000) {
-        await writeKey(ENHANCEMENT_HEARTBEAT, { lastSeen: Date.now() });
-        lastHeartbeat = Date.now();
-      }
-      const latest = z.array(z.string()).safeParse(await readKey(ENHANCEMENT_POINTER));
-      const keys = new Set(latest.success ? latest.data : []);
-      if (Date.now() - lastList > 5 * 60_000) {
-        for (const key of await listedKeys()) keys.add(key);
-        lastList = Date.now();
-      }
-      for (const key of keys) {
-        if (stopping || finished.has(key) || !key.startsWith(ENHANCEMENT_PREFIX)) continue;
-        const parsed = EnhancementJob.safeParse(await readKey(key));
-        if (!parsed.success || enhancementKey(parsed.data.productId, parsed.data.imageId) !== key)
-          continue;
-        const job = parsed.data;
-        if (
-          job.state === 'queued' ||
-          (job.state === 'processing' && Date.now() - job.updatedAt > 20 * 60_000)
-        ) {
-          try {
-            await processJob(job);
-            finished.add(key);
-          } catch (error) {
-            console.error(
-              error instanceof Error ? error.message : 'Enhancement failed; original preserved.',
-            );
-          }
-        } else if (['ready', 'applied'].includes(job.state)) finished.add(key);
+      let retryDelay = 10;
+      try {
+        if (Date.now() - lastHeartbeat > 5 * 60_000) {
+          await writeKey(ENHANCEMENT_HEARTBEAT, { lastSeen: Date.now() });
+          lastHeartbeat = Date.now();
+        }
+        const latest = z.array(z.string()).safeParse(await readKey(ENHANCEMENT_POINTER));
+        const keys = new Set(latest.success ? latest.data : []);
+        if (Date.now() - lastList > 5 * 60_000) {
+          for (const key of await listedKeys()) keys.add(key);
+          lastList = Date.now();
+        }
+        for (const key of keys) {
+          if (stopping || finished.has(key) || !key.startsWith(ENHANCEMENT_PREFIX)) continue;
+          const parsed = EnhancementJob.safeParse(await readKey(key));
+          if (!parsed.success || enhancementKey(parsed.data.productId, parsed.data.imageId) !== key)
+            continue;
+          const job = parsed.data;
+          if (
+            job.state === 'queued' ||
+            (job.state === 'processing' && Date.now() - job.updatedAt > 20 * 60_000)
+          ) {
+            try {
+              await processJob(job);
+              finished.add(key);
+            } catch (error) {
+              console.error(
+                error instanceof Error ? error.message : 'Enhancement failed; original preserved.',
+              );
+            }
+          } else if (['ready', 'applied'].includes(job.state)) finished.add(key);
+        }
+      } catch (error) {
+        if (process.argv[2] === '--once') throw error;
+        console.error(
+          error instanceof Error ? error.message : 'Photo queue connection interrupted.',
+        );
+        console.error('The processor will reconnect in one minute. Original photos are safe.');
+        retryDelay = 60;
       }
       if (process.argv[2] === '--once') break;
-      for (let second = 0; second < 10 && !stopping; second++) {
+      for (let second = 0; second < retryDelay && !stopping; second++) {
         try {
           await access(stopPath);
           stopping = true;
