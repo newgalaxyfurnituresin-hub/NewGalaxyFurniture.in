@@ -50,7 +50,6 @@
       "alt": "Premium 3+1+1 Sofa Set — left angle",
       "altSource": "admin",
       "derivativeFormats": [
-        "avif",
         "webp",
         "jpeg"
       ],
@@ -59,16 +58,26 @@
         480,
         640,
         960,
-        1280
+        1280,
+        1600,
+        2000,
+        3840
       ],
       "derivativesReady": true,
-      "height": 1071,
-      "id": "img_jp7qakvaqj",
-      "key": "products/p_322e7n6mth/img_jp7qakvaqj/original.jpg",
-      "lqip": "data:image/webp;base64,UklGRjAEAABXRUJQVlA4TCQEAAAvF0AEEM1VICICHggAEOMGAIAkSZIk6f/38/rf/29bbT62tWwzj7Ft25vVsNmgUOimm4IBAAAwAAAAgCoYulEwo9hULfa+bOt332Vpf5/9Z0lyl1xydwMAAHggAEmQHAAA51/dPTO7e3cf+UgSBAAAQAAAAAABAAAAAAAAAAAAAAAAACAAAIEIILxH7v92d6anuzwQoCRIrgCA83+vqntmZm8vySXBkeADfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBzJ3e7M3E53V73IN5/uhRqT2jmVpEnBwnQ+7EKFg1yalJyGySARKEEkcpaHz0zS7+7XlWPWkhoN0/JwqQzjetSe7jPXrdiaXhTXpi/HQtnNcxUyiYUq6dUx0DicRJZGzctjutJ9PjgTYsA8PBqLILnYtrntprWTC0O9+vpOpEnrZ+nyV5WmWuqtq3UULVUbvORUgpNkACogAIGiyeP/X7+fq+GjeV/BmPnwvN3/bn/sP+3098SpClDrunGW6Sx5FpIUSCpkRIwkEiHJEOkmXa/YS2UUNiEElFzA3//Ar9/qv588537it54dng13rweeLhIpOsDpsysEFVbEVtpjkerF8mHrqYYgFb/+Tz780H/+Az+6E+a39i84kRFG2C+CXbqJ0vMsLD0AdjB31yLXgvICBOB26z6/v91sf/V3rexd6vs27+ilG9+s8+mj8Xx76BbDiq3P5+a3eP3VnGaftPbTR/2y93jd53pCO8+0vXoC1kImwHQxnLp5Y9nNS8BabNH+nlFdD6Aji+MquyFTKQmPMb/sU/PyY7z0/Mqx1rVBDlmBJcclxLWF9fgy58/HqzOeD49fPhdtlkpy43265lYT8MpwwO3LeNZRrGf+4uxf4P4U7MuIKLcQFSyMoBJMg4Qq+DrqNxdDC8IHW4SFq4+32jwCFvuMg97P9mlyTktLtJ9atZgPDHv9M+xnN7dzvMM4wnSvz5Hu5u4ISKhNwuiP68Ow5/LQtRMvyXTPLR5FPp6HGWRH6YD1bp27r7/59u4vw1rn/CJzm/FqYv3NH78s5V5OPtrF80Zvm6LJKARL3XKYOkU+6tjq3HA+DdxTrZoaymp6Y86mr+05r8X0hEWh9eDW0+0o1t37d68vnCQhWQCZtKHlcyobqSUpmWomIiiAQAJFglQwEf2S9CxFTWksilveQVOxO3QDTuSsPywTBCSgZSAkQxBBWIQAAo2JEKCSJnl/Anq5Ws4b63Fr2dfWjzvL1tbzQfbGZYtKFwlVMicwICIzIAYiMIJxFk0bN0krjJJVC6OEtfaFGtfXcbuNZ1vrbOfSdW99eUu2z4CGgf8pmSchjSlhbPul9dEUMQSAYqEOaIlZaE5USi+CWIE0Z5ejamneNuV2DyGUBDSgOX05lm8fldoyKFalkkAViwAA",
+      "enhancedFrom": {
+        "height": 1071,
+        "id": "img_jp7qakvaqj",
+        "key": "products/p_322e7n6mth/img_jp7qakvaqj/original.jpg",
+        "mime": "image/jpeg",
+        "width": 1468
+      },
+      "height": 2802,
+      "id": "img_f0f4001731",
+      "key": "products/p_322e7n6mth/img_f0f4001731/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRuoAAABXRUJQVlA4IN4AAAAwBgCdASoYABIAPqlKn0smJCKhqAqowBUJYwCxCyAE+A67A5eqXs7Mfx3jozZHcpso7yVurTN5wTwAAPdMpjZUAuoiSuE8Rgs9FVM2VgUN/jnHDvFzzMgd830o5rvGiLQEIyffOxZoK1Lzost5L96mdFCNpe5yThvasyh9bvqiqe14Y5stDDnHJ/o51pGbO4kIgGEvb/P9zA2h6Nugn9JfwLVHjFwJ9/2C+jXIVGjUZQmrMkPd9M5ZoKIhchUqVJmfWqFwCZ0REA+ug1SZWObWostvbIDu8NfD9yKAAAA=",
       "mime": "image/jpeg",
       "order": 1,
-      "width": 1468
+      "width": 3840
     },
     {
       "alt": "Premium 3+1+1 Sofa Set — right angle",
@@ -143,6 +152,6 @@
     "Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-20T08:52:44.311Z",
+  "updatedAt": "2026-10-20T08:53:30.556Z",
   "variants": []
 }
