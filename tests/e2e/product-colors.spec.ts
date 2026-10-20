@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 test.skip(process.env.NGF_COLOR_HARNESS !== '1', 'Uses the isolated local colour fixture.');
-for (const width of [320, 768, 1440]) {
+for (const width of [320, 375, 430, 768, 1024, 1440]) {
   test(`manage and enquire about colour availability at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     const errors: string[] = [];
@@ -113,4 +114,59 @@ test('colour selection survives late gallery hydration and a reviewed 4K replace
   expect(await gallery.locator('figure[data-current=true] img').getAttribute('src')).toContain(
     'img_4kresult01',
   );
+});
+
+test('the existing image remover keeps new colour selections valid without reloading', async ({
+  page,
+}) => {
+  await page.goto('/admin/products/edit?reset=1');
+  await page.getByRole('button', { name: 'Add colour', exact: true }).click();
+  const color = page.getByRole('group', { name: 'Colour 1', exact: true });
+  await color.getByLabel('Colour name', { exact: true }).fill('Brown');
+  await color.getByRole('checkbox', { name: 'Use photo 1 for Brown', exact: true }).check();
+  await color.getByLabel('Upload photos for Brown', { exact: true }).setInputFiles({
+    name: 'second.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('isolated fixture'),
+  });
+  await expect(color.getByText('2 photo(s) selected.', { exact: false })).toBeVisible();
+  let saved = page.waitForResponse(
+    (r) => r.request().method() === 'PATCH' && r.url().endsWith('/p_device0001'),
+  );
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await saved;
+  await page
+    .getByRole('region', { name: 'Images', exact: true })
+    .getByRole('button', { name: 'Remove', exact: true })
+    .first()
+    .click();
+  await expect(color.getByText('1 photo(s) selected.', { exact: false })).toBeVisible();
+  saved = page.waitForResponse(
+    (r) => r.request().method() === 'PATCH' && r.url().endsWith('/p_device0001'),
+  );
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  const result = await saved;
+  expect(result.ok()).toBe(true);
+  const body = result.request().postDataJSON() as {
+    patch: { colorOptions: { imageIds: string[] }[] };
+  };
+  expect(body.patch.colorOptions[0]!.imageIds).toHaveLength(1);
+  expect(body.patch.colorOptions[0]!.imageIds).not.toContain('img_9fba8059b3');
+});
+
+test('new colour-photo controls retain the existing admin accessibility at phone, tablet and desktop sizes', async ({
+  page,
+}) => {
+  await page.goto('/admin/products/edit?reset=1');
+  await page.getByRole('button', { name: 'Add colour', exact: true }).click();
+  const color = page.getByRole('group', { name: 'Colour 1', exact: true });
+  await color.getByLabel('Colour name', { exact: true }).fill('Brown');
+  await color.getByRole('checkbox', { name: 'Use photo 1 for Brown', exact: true }).check();
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const result = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(result.violations).toEqual([]);
+  }
 });

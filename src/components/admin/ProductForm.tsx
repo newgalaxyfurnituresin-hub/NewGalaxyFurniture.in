@@ -46,7 +46,7 @@ import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
 import ImageManager from './ImageManager';
 import PublishPanel from './PublishPanel';
 import ColorEditor from './ColorEditor';
-import { colorOptionsOf } from '@/lib/products/colors';
+import { colorOptionsOf, retainColorPhotos } from '@/lib/products/colors';
 import PublicationProgress from './PublicationProgress';
 import type { PendingPublication } from '@/lib/admin/publication';
 import type { Product, StockStatusValue } from '@/schemas/product';
@@ -870,6 +870,9 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
                 setDraft((current) => ({
                   ...current,
                   images,
+                  ...(current.colorOptions === undefined
+                    ? {}
+                    : { colorOptions: retainColorPhotos(current.colorOptions, images) }),
                   primaryImage: primaryImage ?? undefined,
                   updatedAt: advanceProductRevision(current.updatedAt, revision),
                 }))

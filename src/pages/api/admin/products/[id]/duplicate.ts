@@ -31,6 +31,8 @@ import { productContentPath } from '@/lib/github/paths';
 import { resolveProduct, saveProductState } from '@/lib/github/drafts';
 import { takenIdentifiers } from '@/lib/products/index-store';
 import { validateProduct } from '@/lib/products/input';
+import { duplicateProductMedia } from '@/lib/images/duplicate';
+import { getR2 } from '@/lib/env';
 
 export const prerender = false;
 
@@ -47,7 +49,11 @@ export async function POST(context: APIContext): Promise<Response> {
     const source = resolved.product;
 
     const taken = await takenIdentifiers(drafts);
-    const copy = duplicateProduct(source, taken);
+    const draftCopy = duplicateProduct(source, taken);
+    const copy =
+      source.images.length === 0
+        ? draftCopy
+        : await duplicateProductMedia(getR2(context), source.id, draftCopy);
 
     const validated = validateProduct(copy);
     if (!validated.ok) {

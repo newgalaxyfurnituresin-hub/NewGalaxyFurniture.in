@@ -3,6 +3,19 @@ import type { Product, ProductImageValue, StockStatusValue } from '@/schemas/pro
 export type ColorProduct = Pick<Product, 'colorOptions' | 'availableColors' | 'stockStatus'>;
 export type ColorOption = NonNullable<Product['colorOptions']>[number];
 
+/** Keep the open editor consistent with an image deletion, without losing 4K source aliases. */
+export function retainColorPhotos(
+  colors: readonly ColorOption[],
+  images: readonly ProductImageValue[],
+): ColorOption[] {
+  return colors.map((color) => ({
+    ...color,
+    imageIds: (color.imageIds ?? []).filter((id) =>
+      images.some((image) => image.id === id || image.enhancedFrom?.id === id),
+    ),
+  }));
+}
+
 export function imagesForColor(
   images: readonly ProductImageValue[],
   color: ColorOption,
