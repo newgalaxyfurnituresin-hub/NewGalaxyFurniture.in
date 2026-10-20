@@ -4,13 +4,29 @@ The Windows computer prepares AI-enhanced copies with a **3,840-pixel longest ed
 
 ## Everyday use
 
+### Upload directly in the website admin
+
+1. Start **Start Admin Photo Enhancer.cmd** on this Windows computer. Keep the computer on and the tool running. If it was started in the background, **Stop Admin Photo Enhancer.cmd** stops it after its current photo.
+2. Upload normally in the website admin, including from a phone or tablet. Photos below 4K are queued automatically. Older photos have an **Enhance to 4K** button.
+3. The admin shows waiting, processing, failure and ready states. Processing and transfer time vary; the original remains usable while waiting.
+4. Click **Review 4K photo**, compare details, then **Use reviewed 4K photo**. The enhanced copy receives a new immutable image ID; the original remains recoverable. Product descriptions, order and primary-photo selection are preserved.
+5. For drafts, publish as usual. Applying to an already published product triggers the existing deployment workflow; the public website changes after that deployment completes.
+
+The local agent makes outbound authenticated requests to the verified company Cloudflare account. It uses the existing local company Wrangler login, with credentials remaining on this computer. No tunnel, public computer endpoint, additional API key, paid AI service, database migration or cron is needed. Only the authenticated company administrator can review and apply a result. The local agent stages photos and cannot publish products.
+
+If the computer is off or authentication expires, jobs wait and the original is preserved. Restart the tool or reconnect the company Wrangler login privately. Do not send credentials in chat. A recent heartbeat is an approximate online indicator, not a promise that processing has started.
+
+Queue discovery uses a single-key wake-up read with an occasional recovery listing, and heartbeats are limited to once every five minutes. This avoids rapid listing and heartbeat writes consuming the free KV quota. Existing account free-plan limits still apply. Jobs expire after seven days; expired or failed jobs can be queued again in admin.
+
+### Prepare files locally before uploading (optional)
+
 1. Double-click **Enhance Photos.cmd** in the project folder. It opens the input and review folders.
 2. Copy photos into the input folder. Keep the processing window open; it shows progress. Images process one at a time to control GPU memory use.
 3. In the review folder, open **index.html**. Open each comparison and click the images to inspect full size. Check colour, fabric, stitching and furniture shape.
 4. If the result accurately represents the product, upload **enhanced-4k.jpg** through the website's existing admin photo uploader. Add the description and choose the main photo as usual.
 5. Keep the untouched original. Do not use an enhanced photo if it invents or distorts product details.
 
-This is a **local preparation workflow**, not a cloud upload interceptor. Uploads made directly on the website are unchanged. The computer must be on, with the processing window open, for the input-folder watcher to work. Processing and review do not upload, publish, delete or replace website images. There is no background startup task or exposed local HTTP service.
+The optional input-folder workflow prepares files locally without uploading them. The admin agent above automatically handles files uploaded directly through admin. Both need this computer running; use one enhancer tool at a time. There is no automatic Windows startup task or exposed local HTTP service.
 
 ## Setup on this Windows computer
 

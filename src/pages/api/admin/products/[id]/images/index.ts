@@ -49,6 +49,7 @@ import { validateProduct } from '@/lib/products/input';
 import { withProductLock } from '@/lib/github/client';
 import type { ImageCodec, RawImage } from '@/lib/images/codec';
 import type { ProductImageValue } from '@/schemas/product';
+import { enhancementKey, queueEnhancement, wakeEnhancements } from '@/lib/images/enhancement';
 
 export const prerender = false;
 
@@ -147,7 +148,9 @@ export async function POST(context: APIContext): Promise<Response> {
         }
 
         // 2. Validation, including the decode, which is also the metadata strip.
-        const outcome = await validateUpload(file, (bytes, type) => codec.decode(bytes, type));
+        const outcome = await validateUpload(file, (bytes, type) => codec.decode(bytes, type), {
+          allowEnhancementSource: true,
+        });
         if (!outcome.ok) {
           rejected.push({
             filename: file.name,
@@ -228,6 +231,21 @@ export async function POST(context: APIContext): Promise<Response> {
         actor,
         action: 'add images',
       });
+
+      const enhancementKeys: string[] = [];
+      for (const upload of accepted) {
+        try {
+          const job = await queueEnhancement(drafts, product.id, upload.record, false);
+          if (job) enhancementKeys.push(enhancementKey(product.id, upload.record.id));
+        } catch (error) {
+          logServerError('images: enhancement queue unavailable; upload preserved', error);
+        }
+      }
+      try {
+        await wakeEnhancements(drafts, enhancementKeys);
+      } catch (error) {
+        logServerError('images: enhancement wake-up deferred; queue preserved', error);
+      }
 
       // 5. Derivatives after the response. `waitUntil` keeps the isolate alive for the work
       // without the operator waiting on it.

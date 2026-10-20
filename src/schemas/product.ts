@@ -75,6 +75,16 @@ export const ProductImage = z.object({
   derivativeWidths: z.array(z.number().int().positive()).max(12).optional(),
   /** The formats actually stored at those widths. */
   derivativeFormats: z.array(DerivativeFormat).max(3).optional(),
+  /** An enhanced copy keeps a recoverable reference to the untouched upload. */
+  enhancedFrom: z
+    .object({
+      id: z.string().regex(/^img_[a-z0-9]{10}$/),
+      key: z.string(),
+      width: z.number().int().positive(),
+      height: z.number().int().positive(),
+      mime: z.string().max(60).optional(),
+    })
+    .optional(),
 });
 
 export const Dimensions = z

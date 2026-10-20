@@ -80,7 +80,12 @@ const ref = { productId, image };
  * ladder on a card" is a rule that holds only where someone remembered it.
  */
 const candidates =
-  widths ?? (context === 'card' ? cardWidths(image.width) : derivativeWidthsFor(image.width));
+  widths ??
+  (context === 'card'
+    ? cardWidths(image.width)
+    : image.enhancedFrom && image.derivativesReady && image.derivativeWidths?.length
+      ? image.derivativeWidths
+      : derivativeWidthsFor(image.width));
 const srcset = staticSrc === undefined ? buildSrcSet(ref, candidates) : undefined;
 const sizes = staticSrc === undefined ? pickSizes(context) : undefined;
 const src = staticSrc ?? fallbackSrc(ref);

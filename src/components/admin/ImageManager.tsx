@@ -50,6 +50,12 @@ interface UploadResponse {
   rejected: Rejection[];
 }
 
+interface EnhancementStatus {
+  imageId: string;
+  state: 'none' | 'queued' | 'processing' | 'ready' | 'failed' | 'applied' | '4k';
+  queuedAt?: number;
+}
+
 /** The thumbnail source: a small derivative once it exists, the original until then. */
 function thumbnailFor(productId: string, image: ProductImageValue): string {
   if (image.derivativesReady === true && (image.derivativeWidths ?? []).length > 0) {
@@ -64,6 +70,10 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   const [rejected, setRejected] = useState<Rejection[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [enhancements, setEnhancements] = useState<Record<string, EnhancementStatus>>({});
+  const [computerOnline, setComputerOnline] = useState(false);
+  const [reviewImage, setReviewImage] = useState<string | null>(null);
+  const imageIds = props.images.map((image) => image.id).join(',');
   const dragFrom = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const working = useRef(false);
@@ -80,6 +90,66 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   useEffect(() => {
     props.onBusyChange?.(busy);
   }, [busy, props.onBusyChange]);
+
+  useEffect(() => {
+    if (!props.canWrite || !imageIds) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async (): Promise<void> => {
+      if (!document.hidden) {
+        const result = await adminFetch<{ images: EnhancementStatus[]; computerOnline: boolean }>(
+          `/api/admin/products/${props.productId}/image-enhancements`,
+        );
+        if (!cancelled && result.ok) {
+          setEnhancements(
+            Object.fromEntries(result.value.images.map((image) => [image.imageId, image])),
+          );
+          setComputerOnline(result.value.computerOnline);
+        }
+      }
+      if (!cancelled)
+        timer = setTimeout(() => {
+          void poll();
+        }, 15_000);
+    };
+    void poll();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [props.productId, props.canWrite, imageIds]);
+
+  const enhance = async (imageId: string, action: 'queue' | 'apply'): Promise<void> => {
+    if (!begin()) return;
+    const result = await adminFetch<{
+      images?: ProductImageValue[];
+      primaryImage?: string | null;
+      state?: EnhancementStatus['state'];
+    }>(`/api/admin/products/${props.productId}/images/${imageId}/enhancement`, {
+      method: 'POST',
+      body: { action },
+    });
+    finish();
+    if (!result.ok) {
+      setMessage(result.error.message);
+      return;
+    }
+    if (action === 'apply' && result.value.images) {
+      props.onChange(result.value.images, result.value.primaryImage ?? null, result.revision);
+      setReviewImage(null);
+      setMessage(
+        'Reviewed 4K photo applied. The original is preserved. Published products update on the website after deployment finishes.',
+      );
+    } else {
+      setEnhancements((current) => ({
+        ...current,
+        [imageId]: { imageId, state: result.value.state ?? 'queued', queuedAt: Date.now() },
+      }));
+      setMessage(
+        'Photo queued for 4K enhancement. Keep the company computer’s photo enhancer running.',
+      );
+    }
+  };
 
   const upload = useCallback(
     async (files: FileList | File[]) => {
@@ -247,8 +317,13 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
               : 'Drop more images here'}
           </p>
           <p className="max-w-[46ch] text-small text-walnut">
-            JPEG, PNG, WebP or AVIF. At least 800 pixels wide, up to 12 MB each. Up to 20 images per
-            product.
+            JPEG, PNG, WebP or AVIF. At least 256 pixels wide and 64 pixels high, up to 12 MB each.
+            Up to 20 images per product.
+          </p>
+          <p className="max-w-[52ch] text-small text-walnut">
+            New photos below 4K are queued for AI enhancement automatically. Keep the company
+            computer’s photo enhancer running, then review and apply the 4K copy here. Your original
+            is always preserved.
           </p>
           <input
             ref={inputRef}
@@ -365,6 +440,119 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                       {image.filename === undefined ? '' : ` Uploaded as “${image.filename}”.`}{' '}
                       {image.width}×{image.height} pixels.
                     </p>
+                    {props.canWrite && (
+                      <div
+                        className="border border-taupe bg-cream p-3 text-small"
+                        aria-live="polite"
+                      >
+                        {Math.max(image.width, image.height) >= 3840 ? (
+                          <p>
+                            {image.enhancedFrom
+                              ? '4K copy applied · original preserved'
+                              : '4K-size original photo'}
+                          </p>
+                        ) : (
+                          <>
+                            <p>
+                              {enhancements[image.id]?.state === 'ready'
+                                ? 'Your 4K copy is ready to review.'
+                                : enhancements[image.id]?.state === 'processing'
+                                  ? 'Enhancing to 4K… Processing usually takes 30–90 seconds, plus transfer time. You can keep editing.'
+                                  : enhancements[image.id]?.state === 'queued'
+                                    ? computerOnline
+                                      ? 'Queued for 4K. Waiting for its turn on the company computer.'
+                                      : 'Waiting for the company computer’s photo enhancer. Your original is saved.'
+                                    : enhancements[image.id]?.state === 'failed'
+                                      ? 'Enhancement could not finish. Your original is safe. Start the computer tool and retry.'
+                                      : 'Prepare a sharper 4K copy while keeping the original.'}
+                            </p>
+                            {enhancements[image.id]?.state === 'ready' ? (
+                              <button
+                                type="button"
+                                className="mt-2 min-h-[44px] border border-espresso px-3"
+                                disabled={busy}
+                                aria-expanded={reviewImage === image.id}
+                                onClick={() =>
+                                  setReviewImage(reviewImage === image.id ? null : image.id)
+                                }
+                              >
+                                Review 4K photo
+                              </button>
+                            ) : (
+                              !['queued', 'processing'].includes(
+                                enhancements[image.id]?.state ?? '',
+                              ) && (
+                                <button
+                                  type="button"
+                                  className="mt-2 min-h-[44px] border border-espresso px-3"
+                                  disabled={busy}
+                                  onClick={() => {
+                                    void enhance(image.id, 'queue');
+                                  }}
+                                >
+                                  {enhancements[image.id]?.state === 'failed'
+                                    ? 'Retry 4K enhancement'
+                                    : 'Enhance to 4K'}
+                                </button>
+                              )
+                            )}
+                          </>
+                        )}
+                        {reviewImage === image.id && enhancements[image.id]?.state === 'ready' && (
+                          <section
+                            aria-label="Compare original and enhanced photo"
+                            className="mt-3 flex min-w-0 flex-col gap-3"
+                          >
+                            <p>
+                              Compare fabric, colour, stitching and shape. AI estimates detail; use
+                              this copy only if it accurately represents the product.
+                            </p>
+                            <div className="grid min-w-0 gap-3 lg:grid-cols-2">
+                              <figure className="min-w-0">
+                                <img
+                                  src={originalUrl(
+                                    props.productId,
+                                    image.id,
+                                    extFromMime(image.mime),
+                                  )}
+                                  alt="Original uploaded photograph"
+                                  width={768}
+                                  height={576}
+                                  className="aspect-[4/3] w-full object-contain"
+                                />
+                                <figcaption>Original</figcaption>
+                              </figure>
+                              <figure className="min-w-0">
+                                <a
+                                  href={`/api/admin/products/${props.productId}/images/${image.id}/enhancement?preview=1`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <img
+                                    src={`/api/admin/products/${props.productId}/images/${image.id}/enhancement?preview=1`}
+                                    alt="AI-enhanced 4K preview awaiting approval"
+                                    width={768}
+                                    height={576}
+                                    className="aspect-[4/3] w-full object-contain"
+                                  />
+                                </a>
+                                <figcaption>4K preview · tap to inspect full size</figcaption>
+                              </figure>
+                            </div>
+                            <button
+                              type="button"
+                              className="min-h-[44px] border border-espresso px-3 py-2"
+                              disabled={busy}
+                              onClick={() => {
+                                void enhance(image.id, 'apply');
+                              }}
+                            >
+                              Use reviewed 4K photo
+                            </button>
+                          </section>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {props.canWrite && (

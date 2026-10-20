@@ -75,7 +75,8 @@ export function parseImageRequest(path: string): ImageRequest | null {
   if (!/^[0-9]{1,5}$/.test(middle)) return null;
   const width = Number.parseInt(middle, 10);
   const smallest = DERIVATIVE_WIDTHS[0] ?? 320;
-  if (!DERIVATIVE_WIDTHS.includes(width) && !(width > 0 && width < smallest)) return null;
+  if (!DERIVATIVE_WIDTHS.includes(width) && width !== 3840 && !(width > 0 && width < smallest))
+    return null;
 
   const format = normalizeFormat(extension);
   if (format === null) return null;

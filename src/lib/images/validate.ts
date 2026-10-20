@@ -136,7 +136,17 @@ export function checkContentLength(contentLength: number | null): UploadResult |
 export async function validateUpload(
   file: UploadCandidate,
   decode?: DecodeFn,
+  options: { allowEnhancementSource?: boolean } = {},
 ): Promise<UploadResult> {
+  // Only authenticated product uploads opt in. Public enquiry validation stays unchanged.
+  const minWidth = options.allowEnhancementSource ? 256 : UPLOAD_CONSTRAINTS.minWidth;
+  const tooSmall = (): UploadResult =>
+    fail(
+      'TOO_NARROW',
+      options.allowEnhancementSource
+        ? 'For 4K enhancement, use a photo at least 256 pixels wide and 64 pixels high. A larger original gives better results.'
+        : undefined,
+    );
   // 2. Size. Checked from the declared size first, then again from the actual bytes, since
   // a declared size is as trustworthy as a declared type.
   if (file.size !== undefined && file.size > UPLOAD_CONSTRAINTS.maxBytes) return fail('TOO_LARGE');
@@ -158,7 +168,8 @@ export async function validateUpload(
   const header = readHeaderDimensions(bytes, sniffed.type.format);
   if (header === null) return fail('DIMENSIONS_UNREADABLE');
   if (header.width * header.height > UPLOAD_CONSTRAINTS.maxPixels) return fail('TOO_MANY_PIXELS');
-  if (header.width < UPLOAD_CONSTRAINTS.minWidth) return fail('TOO_NARROW');
+  if (header.width < minWidth || (options.allowEnhancementSource && header.height < 64))
+    return tooSmall();
 
   const label = sanitizeFilenameLabel(file.name);
 
@@ -181,7 +192,8 @@ export async function validateUpload(
   // the fact, and the intrinsic width/height stored on the record must be the fact
   // (Requirement 15.10).
   if (decoded.width * decoded.height > UPLOAD_CONSTRAINTS.maxPixels) return fail('TOO_MANY_PIXELS');
-  if (decoded.width < UPLOAD_CONSTRAINTS.minWidth) return fail('TOO_NARROW');
+  if (decoded.width < minWidth || (options.allowEnhancementSource && decoded.height < 64))
+    return tooSmall();
 
   return {
     ok: true,
