@@ -170,7 +170,7 @@ export default function GalleryBoard({
     <section className="ngf-galb" aria-label={`${productName} gallery`}>
       <header className="ngf-galb-head">
         <p className="ngf-galb-eyebrow">Our gallery</p>
-        <h1 className="ngf-galb-title">{productName}</h1>
+        <h2 className="ngf-galb-title">{productName}</h2>
         {intro !== undefined && <p className="ngf-galb-intro">{intro}</p>}
 
         <div className="ngf-galb-tabs" role="tablist" aria-label="Filter photographs">
@@ -257,7 +257,7 @@ export default function GalleryBoard({
       {/* "See it in your space" — the conversion card the reference carries under the grid. */}
       <div className="ngf-galb-cta" data-reveal>
         <div className="ngf-galb-cta-copy">
-          <h2 className="ngf-galb-cta-title">See it in your space</h2>
+          <h3 className="ngf-galb-cta-title">See it in your space</h3>
           <p className="ngf-galb-cta-body">
             Love what you see? Visit our showroom or get in touch for more photos, fabric options,
             and customisations.

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { ADMIN_PAGES, callerAddress, e2eCredentials, signIn } from './helpers';
 
@@ -30,6 +31,12 @@ import { ADMIN_PAGES, callerAddress, e2eCredentials, signIn } from './helpers';
  */
 
 const credentials = e2eCredentials();
+
+/** The API cookie jar does not share Chromium's secure-loopback exception on local HTTP. */
+async function sessionHeaders(page: Page): Promise<{ cookie: string }> {
+  const cookie = (await page.context().cookies()).find((entry) => entry.name === 'ngf_session');
+  return { cookie: cookie ? `ngf_session=${cookie.value}` : '' };
+}
 
 test.describe('the sign-in page', () => {
   test('renders a labelled form and names itself', async ({ page }) => {
@@ -156,7 +163,9 @@ test.describe('a real session', () => {
     const { email, password } = credentials as { email: string; password: string };
     await signIn(page, email, password);
 
-    const session = await page.request.get('/api/admin/session');
+    const session = await page.request.get('/api/admin/session', {
+      headers: await sessionHeaders(page),
+    });
     expect(session.status()).toBe(200);
     const body = (await session.json()) as {
       user?: { email?: string; role?: string };
@@ -184,13 +193,18 @@ test.describe('a real session', () => {
     // what makes `wrangler dev`'s local proxy reset the connection and, often enough, take the whole
     // server down mid-suite. The content-type header is all the media-type check reads.
     const noToken = await page.request.post('/api/admin/rehydrate', {
-      headers: { origin, 'content-type': 'application/json' },
+      headers: { origin, 'content-type': 'application/json', ...(await sessionHeaders(page)) },
     });
     expect(noToken.status()).toBe(403);
     expect(((await noToken.json()) as { error?: string }).error).toBe('CSRF_INVALID');
 
     const wrongToken = await page.request.post('/api/admin/rehydrate', {
-      headers: { origin, 'content-type': 'application/json', 'x-csrf-token': 'not-the-token' },
+      headers: {
+        origin,
+        'content-type': 'application/json',
+        'x-csrf-token': 'not-the-token',
+        ...(await sessionHeaders(page)),
+      },
     });
     expect(wrongToken.status()).toBe(403);
     expect(((await wrongToken.json()) as { error?: string }).error).toBe('CSRF_INVALID');
@@ -227,7 +241,9 @@ test.describe('a real session', () => {
 
     const before = (await page.context().cookies()).find((c) => c.name === 'ngf_session');
     const token = (
-      (await (await page.request.get('/api/admin/session')).json()) as {
+      (await (
+        await page.request.get('/api/admin/session', { headers: await sessionHeaders(page) })
+      ).json()) as {
         csrfToken?: string;
       }
     ).csrfToken;
@@ -237,6 +253,7 @@ test.describe('a real session', () => {
         origin: new URL(String(baseURL)).origin,
         'content-type': 'application/json',
         'x-csrf-token': String(token),
+        ...(await sessionHeaders(page)),
       },
     });
     expect(logout.status()).toBe(204);

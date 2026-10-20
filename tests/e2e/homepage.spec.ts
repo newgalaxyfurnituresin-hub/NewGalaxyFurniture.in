@@ -87,10 +87,12 @@ test('the motion toggle persists a visitor’s choice to reduce motion', async (
   await expect(page.locator('[data-ngf-motion-toggle]')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('the homepage rails render their empty states rather than an empty grid', async ({ page }) => {
+test('empty catalogue surfaces offer a useful message and enquiry action', async ({ page }) => {
   await page.goto('/', { waitUntil: 'load' });
-  // No product is published, so every product surface must say so in words a customer can act on,
-  // and must offer a way to reach the business anyway.
+  // The shared fixture has published sofa/dining products, but only a draft accent chair.
+  // Exercise a genuinely empty category instead of expecting a populated homepage to be empty.
+  await expect(page.locator('a[href="/product/demo-l-shape-sofa"]').first()).toBeVisible();
+  await page.goto('/collection/accent-chairs', { waitUntil: 'load' });
   const empties = page.locator('[data-ngf-empty-state]');
   expect(await empties.count()).toBeGreaterThan(0);
   await expect(empties.first().locator('.ngf-emptystate-heading')).not.toHaveText('');

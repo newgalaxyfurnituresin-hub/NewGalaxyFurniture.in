@@ -90,24 +90,20 @@ const deliveryInformation = safeTextOrUndefined(product.deliveryInformation);
 const categoryLabel = safeTextOrUndefined(categoryName ?? product.category);
 
 /**
- * The trust row: four fixed reassurances shown beneath the conversion controls. They are
- * site-level promises, not per-product facts, so they are the same on every PDP and on the admin
- * preview — an operator approving a photograph sees exactly what a customer will. The "made in"
- * line names the workshop city from site settings rather than a hard-coded string, so a change of
- * address is a settings edit and never a code edit. Each item is decorative reassurance, not a
- * measurement, so it is honest on a product with no specifications.
+ * Useful next steps shared by all categories. Never infer materials, foam, manufacture,
+ * customisation availability or durability from a product's category.
  */
 const madeInCity = safeTextOrUndefined(settings.location.city);
 const trustPoints: { title: string; detail: string; icon: string }[] = [
-  { title: 'Premium Build Quality', detail: 'Sturdy frames, high-density foam', icon: 'quality' },
+  { title: 'Product Details', detail: 'Confirm materials and measurements', icon: 'quality' },
   {
-    title: 'Customisation Available',
-    detail: 'Fabric, size and colour options',
+    title: 'Options on Enquiry',
+    detail: 'Ask which options are available',
     icon: 'customise',
   },
   {
-    title: madeInCity === undefined ? 'Made in our workshop' : `Made in ${madeInCity}`,
-    detail: 'Built to order, not mass-made',
+    title: 'Visit Our Showroom',
+    detail: madeInCity ?? 'Find our address below',
     icon: 'made',
   },
   { title: 'Expert Support', detail: 'Guidance from enquiry to delivery', icon: 'support' },

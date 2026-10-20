@@ -27,12 +27,16 @@
 
 import type { KeyValueStore } from '@/lib/runtime/types';
 import type { z } from 'zod';
+import { readBoundedJson } from '../security/body';
 
 import { ERROR_CODES, errorResponse } from '../errors';
-import { getKV, getPublicConfig } from '@/lib/env';
+import { getD1, getKV, getPublicConfig } from '@/lib/env';
+import { isCompanyAdministrator, isCompanySite } from './company-policy';
+import { findAdminUserById } from './users';
 import { can, type Permission } from './permissions';
 import {
   clearedSessionCookieValue,
+  destroySession,
   readSessionCookie,
   readSession,
   touchSession,
@@ -226,6 +230,22 @@ export async function requireAdmin(
 
   const outcome = await evaluateGuard({ request: context.request, sessions, expectedOrigin });
   if (!outcome.ok) return outcome;
+  if (isCompanySite(expectedOrigin)) {
+    try {
+      const user = await findAdminUserById(getD1(context), outcome.session.userId);
+      if (!isCompanyAdministrator(user) || user?.role !== outcome.session.role) {
+        await destroySession(sessions, outcome.session.id);
+        return {
+          ok: false,
+          response: errorResponse(ERROR_CODES.UNAUTHENTICATED, {
+            headers: { 'set-cookie': clearedSessionCookieValue() },
+          }),
+        };
+      }
+    } catch {
+      return { ok: false, response: errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE) };
+    }
+  }
   if (permission !== undefined && !can(outcome.session.role, permission)) {
     return { ok: false, response: errorResponse(ERROR_CODES.FORBIDDEN) };
   }
@@ -245,7 +265,7 @@ export async function readValidatedJson<T>(
 ): Promise<{ ok: true; value: T } | { ok: false; response: Response }> {
   let raw: unknown;
   try {
-    raw = await request.json();
+    raw = await readBoundedJson(request);
   } catch {
     return {
       ok: false,

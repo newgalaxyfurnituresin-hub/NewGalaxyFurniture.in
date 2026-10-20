@@ -28,6 +28,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { readBoundedJson } from '@/lib/security/body';
 
 import { EVENTS_LIMIT_PER_MINUTE } from '@/lib/auth/rate-limit';
 import { consumeBindingLimit } from '@/lib/auth/rate-limit';
@@ -89,7 +90,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
   let body: unknown;
   try {
-    body = await context.request.json();
+    body = await readBoundedJson(context.request, MAX_BODY_BYTES);
   } catch {
     return accepted();
   }

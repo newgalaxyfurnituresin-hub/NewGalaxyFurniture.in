@@ -38,6 +38,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { readBoundedForm, readBoundedJson } from '@/lib/security/body';
 import type { ObjectBucket } from '@/lib/runtime/types';
 
 import { consumeNamedLimit, hashIdentifier } from '@/lib/auth/rate-limit';
@@ -93,7 +94,7 @@ async function readSubmission(request: Request): Promise<RawSubmission | null> {
   if (contentType.includes('multipart/form-data')) {
     let form: FormData;
     try {
-      form = await request.formData();
+      form = await readBoundedForm(request, MAX_BODY_BYTES);
     } catch {
       return null;
     }
@@ -117,7 +118,7 @@ async function readSubmission(request: Request): Promise<RawSubmission | null> {
   if (contentType.includes('application/json')) {
     let body: unknown;
     try {
-      body = await request.json();
+      body = await readBoundedJson(request, MAX_BODY_BYTES);
     } catch {
       return null;
     }

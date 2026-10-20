@@ -232,9 +232,13 @@ function Chevron(): React.JSX.Element {
 
 export default function MobileNav({ categories, pages }: MobileNavProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
+  const [ready, setReady] = useState(false);
   const panelId = useScopedId('ngf-mobilenav-panel');
   const panelRef = useRef<HTMLDivElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+
+  // A visible server-rendered toggle must not silently swallow a tap before its handler exists.
+  useEffect(() => setReady(true), []);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -265,6 +269,8 @@ export default function MobileNav({ categories, pages }: MobileNavProps): React.
       <button
         type="button"
         onClick={toggle}
+        disabled={!ready}
+        aria-busy={!ready}
         aria-expanded={open}
         aria-controls={panelId}
         className="ngf-mobilenav-toggle"

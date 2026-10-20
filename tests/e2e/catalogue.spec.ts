@@ -89,6 +89,15 @@ for (const slug of CATEGORY_SLUGS) {
       await expect(page.locator('.ngf-catalogue-count')).toContainText('1 product');
       await expect(page.locator('#ngf-category-grid')).toBeVisible();
       await expect(page.locator('[data-product-card]')).toHaveCount(1);
+    } else if (slug === 'mattresses') {
+      // This category has its own editorial landing page and enquiry-led empty state.
+      const empty = page.locator('.ngf-mattress-awaiting');
+      await expect(empty).toContainText('No mattress products are published online yet');
+      await expect(page.locator('[data-product-card]')).toHaveCount(0);
+      await expect(empty.getByRole('link', { name: 'Ask about mattresses' })).toHaveAttribute(
+        'href',
+        /^https:\/\/wa\.me\//,
+      );
     } else {
       // The state the site ships in, still under test: no grid, and words a customer can act on.
       await expect(page.locator('.ngf-catalogue-count')).toContainText('0 products');
@@ -219,9 +228,8 @@ test('the reviews page renders its empty state without inventing a review', asyn
 
 test('the gallery shows every published photograph, each with alt text', async ({ page }) => {
   await page.goto('/gallery', { waitUntil: 'load' });
-  // The gallery renders as a lookbook grid (`.ngf-lookbook`), each tile a `ResponsiveImage`; the
-  // legacy `.ngf-gallerypage` container no longer exists in the markup.
-  const items = page.locator('.ngf-lookbook img');
+  // Each published product has a gallery board, with an image in every photograph tile.
+  const items = page.locator('.ngf-galb-grid img');
   await expect(items).not.toHaveCount(0);
 
   const alts = await items.evaluateAll((nodes) =>

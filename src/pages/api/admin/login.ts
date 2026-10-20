@@ -26,6 +26,8 @@
 
 import type { APIContext } from 'astro';
 import { getAccessConfig } from '@/lib/auth/access';
+import { isCompanySite } from '@/lib/auth/company-policy';
+import { readBoundedJson } from '@/lib/security/body';
 import { z } from 'zod';
 
 import { ERROR_CODES, errorResponse, logServerError, minutesPhrase } from '@/lib/errors';
@@ -116,6 +118,9 @@ export async function POST(context: APIContext): Promise<Response> {
     return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
   }
 
+  // Production must not silently fall back to passwords if Access settings are removed or broken.
+  if (isCompanySite(expectedOrigin)) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
+
   // Guard step 1 applies to login too: a cross-site POST is refused before any
   // storage access and before the response-time floor is engaged.
   if (!checkOrigin(request, expectedOrigin)) {
@@ -132,7 +137,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
   let payload: unknown;
   try {
-    payload = await request.json();
+    payload = await readBoundedJson(request, 8 * 1024);
   } catch {
     return await uniformFailure(startedAt);
   }

@@ -31,7 +31,7 @@ export const EDITORIAL_PAGES = [
 /** The five policy pages. */
 export const POLICY_PAGES = ['/privacy', '/terms', '/shipping', '/returns', '/warranty'] as const;
 
-/** The nine category slugs, which come from `data/categories/` and are not product-dependent. */
+/** Published category slugs from `data/categories/`, independent of product inventory. */
 export const CATEGORY_SLUGS = [
   'sofas',
   'beds',
@@ -42,6 +42,9 @@ export const CATEGORY_SLUGS = [
   'storage-display',
   'office',
   'outdoor',
+  'shoe-stands',
+  'temples',
+  'mattresses',
 ] as const;
 
 /** Every public HTML page the site builds today, in sitemap order. */
@@ -50,6 +53,7 @@ export const PUBLIC_PAGES = [
   '/collection',
   ...CATEGORY_SLUGS.map((slug) => `/collection/${slug}`),
   ...EDITORIAL_PAGES,
+  '/sofa-repair',
   ...POLICY_PAGES,
 ] as const;
 
@@ -78,6 +82,23 @@ export const ADMIN_API_PROBES: readonly {
   { method: 'GET', path: '/api/admin/leads' },
   { method: 'GET', path: '/api/admin/analytics' },
   { method: 'GET', path: '/api/admin/deploy-status' },
+  { method: 'GET', path: '/api/admin/experiences' },
+  { method: 'PATCH', path: '/api/admin/experiences' },
+  { method: 'GET', path: '/api/admin/products/p_probe000001' },
+  { method: 'POST', path: '/api/admin/products/p_probe000001/images' },
+  { method: 'PATCH', path: '/api/admin/products/p_probe000001/images/img_probe000001' },
+  { method: 'DELETE', path: '/api/admin/products/p_probe000001/images/img_probe000001' },
+  { method: 'GET', path: '/api/admin/categories/sofas' },
+  { method: 'PATCH', path: '/api/admin/categories' },
+  { method: 'PATCH', path: '/api/admin/categories/sofas' },
+  { method: 'DELETE', path: '/api/admin/categories/sofas' },
+  { method: 'POST', path: '/api/admin/reviews' },
+  { method: 'GET', path: '/api/admin/reviews/rev_probe000001' },
+  { method: 'PATCH', path: '/api/admin/reviews' },
+  { method: 'PATCH', path: '/api/admin/reviews/rev_probe000001' },
+  { method: 'DELETE', path: '/api/admin/reviews/rev_probe000001' },
+  { method: 'PATCH', path: '/api/admin/leads/lead_probe000001' },
+  { method: 'GET', path: '/api/admin/leads/lead_probe000001/image' },
   { method: 'POST', path: '/api/admin/logout' },
   { method: 'POST', path: '/api/admin/products' },
   { method: 'PATCH', path: '/api/admin/products/p_probe000001' },
@@ -104,6 +125,7 @@ export const ADMIN_PAGES = [
   '/admin/reviews',
   '/admin/leads',
   '/admin/homepage',
+  '/admin/experiences',
   '/admin/content',
   '/admin/analytics',
   '/admin/settings',
@@ -158,7 +180,10 @@ export interface E2ECredentials {
  */
 export function e2eCredentials(): E2ECredentials | null {
   try {
-    const raw = readFileSync(join(process.cwd(), 'test-results', 'e2e-admin.json'), 'utf8');
+    const raw = readFileSync(
+      process.env.E2E_CREDENTIALS_PATH ?? join(process.cwd(), 'test-results', 'e2e-admin.json'),
+      'utf8',
+    );
     const parsed: unknown = JSON.parse(raw);
     if (
       typeof parsed === 'object' &&

@@ -23,6 +23,7 @@
  */
 
 import type { APIContext } from 'astro';
+import { readBoundedForm } from '@/lib/security/body';
 import { productRevisionHeaders } from '@/lib/products/revision';
 import type { ObjectBucket } from '@/lib/runtime/types';
 
@@ -111,7 +112,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
   let files: File[];
   try {
-    const form = await context.request.formData();
+    const form = await readBoundedForm(context.request, 12 * 1024 * 1024);
     files = form.getAll('file').filter((entry): entry is File => entry instanceof File);
   } catch {
     return errorResponse(ERROR_CODES.VALIDATION_FAILED, {

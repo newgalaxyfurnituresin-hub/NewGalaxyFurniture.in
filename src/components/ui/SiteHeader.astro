@@ -264,7 +264,7 @@ const mobilePages = [
         </svg>
       </a>
       <MobileNav
-        client:idle
+        client:idle={{ timeout: 0 }}
         categories={CATEGORY_NAV.map((link) => ({ label: link.label, href: link.href }))}
         pages={mobilePages}
       />

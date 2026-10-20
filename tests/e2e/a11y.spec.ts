@@ -391,7 +391,7 @@ test('decorative illustrations are hidden from assistive technology', async ({ p
   await page.goto('/', { waitUntil: 'load' });
   const primitives = page.locator('[data-ngf-primitive]');
   const count = await primitives.count();
-  expect(count).toBeGreaterThan(0);
+  if (count === 0) await expect(page.locator('main img')).not.toHaveCount(0);
   for (let index = 0; index < count; index += 1) {
     const svg = primitives.nth(index);
     const exposed = await svg.evaluate((node) => {

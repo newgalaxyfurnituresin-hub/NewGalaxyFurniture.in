@@ -85,6 +85,17 @@ const meta = pageMeta(Astro, {
   <ImagePreload slot="head" hint={leadPreload} />
   <div class="ngf-page ngf-gallery-page">
     {
+      hasImages && (
+        <div class="ngf-page-head">
+          <p class="ngf-page-eyebrow">Our gallery</p>
+          <h1>Gallery</h1>
+          <p class="ngf-page-lead">
+            Explore the photographs of each published piece, then ask us about the details.
+          </p>
+        </div>
+      )
+    }
+    {
       !hasImages ? (
         <>
           <div class="ngf-page-head">

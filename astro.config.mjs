@@ -28,9 +28,14 @@ const DEPLOY_TARGET = process.env.DEPLOY_TARGET === 'cloudflare' ? 'cloudflare' 
 const isCloudflare = DEPLOY_TARGET === 'cloudflare';
 const isProductionCloudflare =
   isCloudflare && !process.env.CLOUDFLARE_ENV && !process.env.NGF_PRODUCTS_DIR;
+// Explicit fixture builds need the same public URL pinning as production: the adapter's
+// local preview defaults must not overwrite the URL supplied by the test runner.
+const pinCloudflarePublicConfig =
+  isProductionCloudflare ||
+  (isCloudflare && Boolean(process.env.NGF_PRODUCTS_DIR) && Boolean(process.env.PUBLIC_SITE_URL));
 /** @type {Record<string, unknown>} */
 const productionPublicConfig = {};
-if (isProductionCloudflare) {
+if (pinCloudflarePublicConfig) {
   /** @type {unknown} */
   const wranglerConfig = unstable_readConfig({ config: 'wrangler.toml' }, { hideWarnings: true });
   if (typeof wranglerConfig === 'object' && wranglerConfig !== null && 'vars' in wranglerConfig) {
@@ -140,7 +145,7 @@ export default defineConfig({
   vite: {
     plugins: [
       tailwindcss(),
-      ...(isProductionCloudflare ? [cloudflareBuildEnvironment(productionPublicConfig)] : []),
+      ...(pinCloudflarePublicConfig ? [cloudflareBuildEnvironment(productionPublicConfig)] : []),
     ],
     /**
      * React on the type level, Preact at runtime — the design's public JS budgets (45 kB homepage,

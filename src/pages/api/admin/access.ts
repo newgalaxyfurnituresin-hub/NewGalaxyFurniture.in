@@ -6,6 +6,7 @@ import { findAdminUserWithHash, recordSuccessfulLogin } from '@/lib/auth/users';
 import { consumeLoginAttemptForIp } from '@/lib/auth/rate-limit';
 import { getD1, getKV, getPublicConfig } from '@/lib/env';
 import { ERROR_CODES, errorResponse, logServerError } from '@/lib/errors';
+import { COMPANY_ADMIN_EMAIL, isCompanySite } from '@/lib/auth/company-policy';
 
 export const prerender = false;
 const privateHeaders = { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' };
@@ -32,7 +33,10 @@ async function signIn(context: APIContext, submit: boolean): Promise<Response> {
       context.request.headers.get('cf-access-jwt-assertion') ?? '',
       config,
     );
-    if (!email)
+    if (
+      !email ||
+      (isCompanySite(getPublicConfig(context).siteUrl) && email !== COMPANY_ADMIN_EMAIL)
+    )
       return new Response('Verified email sign-in required.', {
         status: 403,
         headers: privateHeaders,
@@ -46,7 +50,7 @@ async function signIn(context: APIContext, submit: boolean): Promise<Response> {
     if (!submit) {
       // Relative action preserves the validated next query. No assertion or identity is rendered.
       return new Response(
-        '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin sign in</title><main><h1>New Galaxy Furniture admin</h1><p>Your email has been verified.</p><form method="post"><button type="submit">Continue to dashboard</button></form></main></html>',
+        `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin sign in</title><link rel="stylesheet" href="/ngf-admin-access.css"></head><body><main><a class="brand" href="/" aria-label="New Galaxy Furniture home"><img src="/brand/logo-96.webp" width="48" height="48" alt=""><span>New Galaxy Furniture<small>Website manager</small></span></a><div class="verified" aria-hidden="true">✓</div><h1>Your sign-in is verified</h1><p>Continue to your dashboard to manage products, photographs and website content.</p><form method="post"><button type="submit">Continue to dashboard <span aria-hidden="true">→</span></button></form><a class="back" href="/">Back to the website</a><p class="privacy">Administrator access only. Keep your company account secure.</p></main></body></html>`,
         {
           headers: { ...privateHeaders, 'content-type': 'text/html; charset=utf-8' },
         },

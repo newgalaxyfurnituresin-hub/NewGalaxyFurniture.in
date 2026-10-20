@@ -41,9 +41,16 @@ import { defineMiddleware } from 'astro:middleware';
 import { ADMIN_API_LIMIT_PER_MINUTE, consumeBindingLimit } from '@/lib/auth/rate-limit';
 import { ERROR_CODES, errorResponse, minutesPhrase } from '@/lib/errors';
 import { getRedirects } from '@/lib/content/site';
-import { clientIp, getKV } from '@/lib/env';
+import { clientIp, getD1, getKV, getPublicConfig } from '@/lib/env';
+import { isCompanyAdministrator, isCompanySite } from '@/lib/auth/company-policy';
+import { findAdminUserById } from '@/lib/auth/users';
 import { isAdminApiPath, isAdminPagePath, LOGIN_PAGE_PATH } from '@/lib/auth/routes';
-import { readSessionCookie, readSession } from '@/lib/auth/session';
+import {
+  clearedSessionCookieValue,
+  destroySession,
+  readSessionCookie,
+  readSession,
+} from '@/lib/auth/session';
 import { applySecurityHeaders } from '@/lib/security/headers';
 import { canonicalRedirect } from '@/lib/seo/redirects';
 import type { KeyValueStore } from '@/lib/runtime/types';
@@ -109,10 +116,22 @@ async function handle(
   // --- Admin pages ----------------------------------------------------------
   if (!isPublicAdminPage(pathname)) {
     const sessions = readKvOrNull(context, 'SESSIONS');
-    const session =
+    let session =
       sessions === null
         ? null
         : await readSession(sessions, readSessionCookie(context.request.headers.get('cookie')));
+
+    if (session !== null && sessions !== null && isCompanySite(getPublicConfig(context).siteUrl)) {
+      try {
+        const user = await findAdminUserById(getD1(context), session.userId);
+        if (!isCompanyAdministrator(user) || user?.role !== session.role) {
+          await destroySession(sessions, session.id);
+          session = null;
+        }
+      } catch {
+        return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
+      }
+    }
 
     if (session === null) {
       const next_ = `${pathname}${context.url.search}`;
@@ -127,6 +146,7 @@ async function handle(
       );
       redirect.headers.set('x-robots-tag', NOINDEX);
       redirect.headers.set('cache-control', 'no-store');
+      redirect.headers.set('set-cookie', clearedSessionCookieValue());
       return redirect;
     }
     // Handed to the page so `AdminLayout` can bootstrap the CSRF token and the nav

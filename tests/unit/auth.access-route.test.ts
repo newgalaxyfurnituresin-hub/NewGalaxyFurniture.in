@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({
     passwordHash: string;
   } | null,
   configured: true,
+  siteUrl: 'https://site.example.invalid',
   lastLogin: vi.fn(),
 }));
 const sessions = fakeKeyValueStore();
@@ -17,7 +18,7 @@ const rateLimit = fakeKeyValueStore();
 vi.mock('@/lib/env', () => ({
   getD1: () => ({}),
   getKV: (_context: unknown, name: string) => (name === 'SESSIONS' ? sessions : rateLimit),
-  getPublicConfig: () => ({ siteUrl: 'https://site.example.invalid' }),
+  getPublicConfig: () => ({ siteUrl: state.siteUrl }),
 }));
 vi.mock('@/lib/auth/access', async (original) => ({
   ...(await original<object>()),
@@ -55,9 +56,19 @@ beforeEach(() => {
     passwordHash: 'unchanged',
   };
   state.configured = true;
+  state.siteUrl = 'https://site.example.invalid';
   state.lastLogin.mockClear();
 });
 describe('Access to application-session exchange', () => {
+  it('rejects a verified foreign owner on the company deployment before creating a session', async () => {
+    state.siteUrl = 'https://newgalaxyfurniture.in';
+    const result = await GET(context());
+    expect(result.status).toBe(403);
+    expect(result.headers.has('set-cookie')).toBe(false);
+    expect(state.lastLogin).not.toHaveBeenCalled();
+    state.identity = 'newgalaxyfurnitures.in@gmail.com';
+    expect((await GET(context())).status).toBe(200);
+  });
   it('fails closed when unconfigured or identity is unverified', async () => {
     state.configured = false;
     expect((await GET(context())).status).toBe(503);

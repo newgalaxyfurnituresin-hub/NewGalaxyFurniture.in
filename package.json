@@ -32,7 +32,7 @@
     "product:add": "tsx scripts/add-product.ts"
   },
   "dependencies": {
-    "@astrojs/netlify": "8.2.6",
+    "@astrojs/netlify": "8.2.10",
     "@astrojs/react": "6.0.5",
     "@cf-wasm/photon": "0.4.0",
     "@jsquash/avif": "2.1.1",
@@ -75,6 +75,6 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",
-    "wrangler": "4.128.0"
+    "wrangler": "4.151.2"
   }
 }
