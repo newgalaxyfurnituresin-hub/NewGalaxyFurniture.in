@@ -16,22 +16,51 @@
     {
       "alt": "Premium 3+1+1 Sofa Set",
       "altSource": "admin",
-      "derivativeFormats": ["avif", "webp", "jpeg"],
-      "derivativeWidths": [320, 480, 640, 960, 1280],
+      "derivativeFormats": [
+        "webp",
+        "jpeg"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280,
+        1600,
+        2000,
+        3840
+      ],
       "derivativesReady": true,
-      "height": 1070,
-      "id": "img_s8j0brak5e",
-      "key": "products/p_322e7n6mth/img_s8j0brak5e/original.jpg",
-      "lqip": "data:image/webp;base64,UklGRhQEAABXRUJQVlA4TAgEAAAvFwAEEM1VICICHggAENwGAID/y9/3m+73y+f6nzSJWrC21gVWxWaWzDbbxizWss2MDQAGAAAYAAAAAACDbba1dDCpbtNmYdak8e23n+//f/P3f+l/7nMDAAB4IABGkBwAAOefJMnszu3f3T+twgMUAAAAAEABAAAAUAAAAABQAAAAAAAACigAUKDlzt/9zszOTBIPBCiJjgMA4Pzfm9n/sz+XXq6XokopUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASmlzmvTusv9+dmdmIt9/u0FyQCESBEgICYGTIO8CXHhTcajohIAMMAMAiAxkgumId5ftjKL8fLyzLwOHbeLMYk2xTE5CrKDjHACOIg8DPRk9tV4aRuqm9kPtB0vvLv2vjn3ABPN6l8VDMGSMmcOkOujSJ+t9WkaOI0wdksvpeqXU8si5AZFsSj0rQdcB0qBqeTUkA02BYCxIXRKXbLLi5f/867nw8jpDNgrn5FWSTdZN2N7S6y+OVwjMr61yvmov7xIHncq5TgU5AB9kzvGkUyu0XBhOp7hHHffy7/K3n15+3M6dX9/cP1WQQto8DOa8ozLjtktGia0A4AQkRaSYYwzbcN5E/X+yy9O5aTY4Y3v29zv/+wdrBxFP3LEkkW0U0mbtdjwuo/OvDWpmI1lAAUJizCxJpiKtL5fC6cLy6uAS3n4G1y/uj37289z5vvsJk7V5DQdZ79/ff8e4YtJENVAAyH2QX1p39PCHH+KYzL63OXe27WOatlZuavkkZcPrVy0bp2k771Io+DjQMUlvM3s//dbHN1/ly6V0g3aIwEm8fKjPu/PQqp/67QkYJOO0CYuUXYBR6jBr2YqHvVlP7XNvPocDGYfk2l5QK6ZUD2ZEE0abd8vX/nGy2l4IhoRAnCM6aglHyOmBt47d53b8No+UhToFl0dlunZweHGNN7dDYS5mBaxhssDd7Rx2eAP+oD/gTvoD7mRqJnLudSc9IJF3HmUfEaypm3UJIA8wjap0z+pT7u1sPLXx0Maj1D+0cdf/Nz7k5pNXRyo9+UKzyvFBX9KQbUj3eceq9vLw2p33H3ix56293kVpij+haGKsQTzDXEOug7wF1tvycK/vurzc9fGeK5/29G4rJW4nb+b7c0Ddc0HsYgqefRQIAQQZICIEAUSQcSB1yiZFl+WQB1Fezfq6TsuOCyAyhlf2/jFjhO/qmUbO2ElMsJE4sQsORo4o0gmeAjzgCdCENDDaNm/3ikM4Z1565XzTT636el19+zN/ftPzqm1tLrfS2orrqqcPLa+F/FHJTd/el67/li6XQm6l3Kr5pouzoAwo8lDJZtERuaY+S4bYERkiVyRUNESWR1fJEQUiv0ShYqjsiAJhXjaoIQA=",
+      "enhancedFrom": {
+        "height": 1070,
+        "id": "img_s8j0brak5e",
+        "key": "products/p_322e7n6mth/img_s8j0brak5e/original.jpg",
+        "mime": "image/jpeg",
+        "width": 1470
+      },
+      "height": 2795,
+      "id": "img_9fba8059b3",
+      "key": "products/p_322e7n6mth/img_9fba8059b3/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRswAAABXRUJQVlA4IMAAAAAwBQCdASoYABEAPqlEnkqmI6KhsBgIAMAVCWMAnTLQwVvnylv/pDo3yr8OCjaoD5PqiADNocIx8cnn27R+oWoR7Fu8iNe69uD1qhA1bnxxfixmdjGyXb5R+OB+gqU32RkzlW3/rP6tNeRwx+i7SpfZSOs+Y9UCClj3uvKvYz8LANO2cF/my07hALnrI8dXTbMB0BPxBkQiEa8T9RfgtQBFhpjtzNDV50YUcw1Hjwqw81t9p3frOHnQgtS7woOjAAA=",
       "mime": "image/jpeg",
       "order": 0,
-      "width": 1470
+      "width": 3840
     },
     {
       "alt": "Premium 3+1+1 Sofa Set — left angle",
       "altSource": "admin",
-      "derivativeFormats": ["avif", "webp", "jpeg"],
-      "derivativeWidths": [320, 480, 640, 960, 1280],
+      "derivativeFormats": [
+        "avif",
+        "webp",
+        "jpeg"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
       "derivativesReady": true,
       "height": 1071,
       "id": "img_jp7qakvaqj",
@@ -44,8 +73,18 @@
     {
       "alt": "Premium 3+1+1 Sofa Set — right angle",
       "altSource": "admin",
-      "derivativeFormats": ["avif", "webp", "jpeg"],
-      "derivativeWidths": [320, 480, 640, 960, 1280],
+      "derivativeFormats": [
+        "avif",
+        "webp",
+        "jpeg"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
       "derivativesReady": true,
       "height": 1071,
       "id": "img_4s0p5opq3z",
@@ -58,8 +97,18 @@
     {
       "alt": "Premium 3+1+1 Sofa Set — top view",
       "altSource": "admin",
-      "derivativeFormats": ["avif", "webp", "jpeg"],
-      "derivativeWidths": [320, 480, 640, 960, 1280],
+      "derivativeFormats": [
+        "avif",
+        "webp",
+        "jpeg"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
       "derivativesReady": true,
       "height": 1071,
       "id": "img_h0mv17oeuf",
@@ -78,7 +127,7 @@
   "originalPrice": null,
   "price": 41990,
   "priceOnEnquiry": false,
-  "primaryImage": "img_s8j0brak5e",
+  "primaryImage": "img_9fba8059b3",
   "published": true,
   "relatedProductIds": [],
   "seoDescription": "A Premium 3+1+1 Sofa Set with a termite-resistant Neem wood frame, high-density foam and 410 GSM water-resistant fabric, in multiple fabrics and colours.",
@@ -87,8 +136,13 @@
   "slug": "brown-sofa",
   "status": "PUBLISHED",
   "stockStatus": "IN_STOCK",
-  "tags": ["Brown Sofa", "3+1+1 Sofa", "Sofa Set", "Sofa"],
+  "tags": [
+    "Brown Sofa",
+    "3+1+1 Sofa",
+    "Sofa Set",
+    "Sofa"
+  ],
   "trending": false,
-  "updatedAt": "2026-09-20T12:12:56.676Z",
+  "updatedAt": "2026-10-20T08:52:44.311Z",
   "variants": []
 }
