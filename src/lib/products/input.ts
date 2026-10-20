@@ -156,7 +156,12 @@ export const ProductPatchInput = z
 
 export type ProductPatchInputValue = z.infer<typeof ProductPatchInput>;
 
-export const ProductDeleteInput = z.object({ confirmSlug: z.string().min(1) }).strict();
+export const ProductDeleteInput = z
+  .object({
+    confirmSku: z.string().trim().min(1).max(32),
+    expectedUpdatedAt: z.string().datetime(),
+  })
+  .strict();
 
 export const ProductTransitionInput = z
   .object({

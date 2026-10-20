@@ -13,7 +13,7 @@
  *    refused with `CONFIRMATION_REQUIRED` and the proposed slug, and nothing is written.
  *    Only `confirmSlugChange: true` performs the rename, which then writes the new file,
  *    deletes the old, and records the 301 in one commit (12.11, 12.12).
- * 3. **It never deletes on a bare request.** The caller must name the product's slug
+ * 3. **It never deletes on a bare request.** The caller must confirm the product's SKU
  *    (12.7).
  *
  * Concurrent saves to the same product are serialised by the KV write lock, so the common
@@ -173,21 +173,27 @@ export async function DELETE(context: APIContext): Promise<Response> {
       const resolved = await resolveProduct({ drafts, client }, id);
       if (resolved === null) return errorResponse(ERROR_CODES.NOT_FOUND);
 
-      if (body.value.confirmSlug !== resolved.product.slug) {
+      if (body.value.confirmSku !== resolved.product.sku) {
         return errorResponse(ERROR_CODES.CONFIRMATION_REQUIRED, {
           fields: {
-            confirmSlug: [
-              `Type the product's web address (${resolved.product.slug}) to confirm deletion.`,
-            ],
+            confirmSku: ['Enter this product’s exact SKU to confirm deletion.'],
           },
         });
       }
 
-      await deleteProductState({ drafts, client, product: resolved.product, actor });
-      // 204, so the client cannot mistake an empty body for a record.
-      return new Response(null, {
-        status: 204,
-        headers: { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' },
+      if (body.value.expectedUpdatedAt !== resolved.product.updatedAt) {
+        return errorResponse(ERROR_CODES.CONFLICT, {
+          message: 'This product changed. Review it again before deleting.',
+        });
+      }
+
+      const deletedAt = new Date().toISOString();
+      const result = await deleteProductState({ drafts, client, product: resolved.product, actor });
+      return jsonResponse({
+        deleted: true,
+        deletedAt,
+        commitSha: result.commitSha,
+        deployTriggered: result.deployTriggered,
       });
     });
   } catch (error) {

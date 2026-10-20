@@ -45,6 +45,8 @@ import { fieldIssues, groupFor, labelFor, publishBlockers } from '@/lib/products
 import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
 import ImageManager from './ImageManager';
 import PublishPanel from './PublishPanel';
+import PublicationProgress from './PublicationProgress';
+import type { PendingPublication } from '@/lib/admin/publication';
 import type { Product, StockStatusValue } from '@/schemas/product';
 import { advanceProductRevision } from '@/lib/products/revision';
 
@@ -123,6 +125,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   const saving = useRef(false);
   const [hasEdits, setHasEdits] = useState(false);
   const [imageBusy, setImageBusy] = useState(false);
+  const [deleted, setDeleted] = useState<PendingPublication | null>(null);
 
   const localErrors = useMemo(() => {
     const found = fieldIssues(draft);
@@ -255,6 +258,22 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   );
 
   const errorEntries = Object.entries(errors);
+
+  if (deleted !== null)
+    return (
+      <section className="flex flex-col gap-4" aria-label="Product deleted">
+        <h2 className="text-body font-medium" aria-live="polite">
+          Product deleted from admin
+        </h2>
+        <p>
+          We are checking its removal from the public website. This item can no longer be edited.
+        </p>
+        <PublicationProgress productId={draft.id} pending={deleted} />
+        <a href="/admin/products" className="inline-flex min-h-[44px] items-center underline">
+          Back to products
+        </a>
+      </section>
+    );
 
   return (
     <form
@@ -887,6 +906,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               canDelete={props.canDelete}
               disabled={hasEdits || imageBusy || save.kind === 'saving'}
               onProduct={(next) => setDraft(next)}
+              onDeleted={setDeleted}
             />
           </Wide>
         </FormSection>

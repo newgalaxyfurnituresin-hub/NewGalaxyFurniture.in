@@ -24,6 +24,7 @@ import type { Product, ProductStatusValue } from '@/schemas/product';
 import type { Role } from '@/lib/auth/permissions';
 import PublicationProgress, { rememberPublication } from './PublicationProgress';
 import type { PendingPublication } from '@/lib/admin/publication';
+import ProductDeletion from './ProductDeletion';
 
 export interface PublishPanelProps {
   product: Product;
@@ -34,6 +35,7 @@ export interface PublishPanelProps {
   canDelete: boolean;
   disabled?: boolean;
   onProduct: (product: Product) => void;
+  onDeleted?: (pending: PendingPublication) => void;
 }
 
 const STATUS_LABELS: Record<ProductStatusValue, string> = {
@@ -62,7 +64,6 @@ type Phase =
 
 export default function PublishPanel(props: PublishPanelProps): ReactElement {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
-  const [confirmDelete, setConfirmDelete] = useState('');
   const [pending, setPending] = useState<PendingPublication | null>(null);
 
   // The role is not read from the session here: the panel is told what the operator may do,
@@ -123,19 +124,6 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
     }
     window.location.assign(`/admin/products/${result.value.id}?duplicated=1`);
   }, [props.product.id, props.product.status]);
-
-  const remove = useCallback(async () => {
-    setPhase({ kind: 'working', to: props.product.status });
-    const result = await adminFetch<undefined>(`/api/admin/products/${props.product.id}`, {
-      method: 'DELETE',
-      body: { confirmSlug: confirmDelete },
-    });
-    if (!result.ok) {
-      setPhase({ kind: 'error', message: result.error.message });
-      return;
-    }
-    window.location.assign('/admin/products?deleted=1');
-  }, [confirmDelete, props.product.id, props.product.status]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -225,32 +213,11 @@ export default function PublishPanel(props: PublishPanelProps): ReactElement {
         )}
 
         {props.canDelete && (
-          <div className="flex flex-col gap-2">
-            <label htmlFor="confirm-delete" className="text-small font-medium text-espresso">
-              Delete this product
-            </label>
-            <p className="text-small text-walnut">
-              Type its web address <code>{props.product.slug}</code> to confirm. This removes the
-              page, the listing, the search entry and the sitemap entry at the next build.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <input
-                id="confirm-delete"
-                type="text"
-                value={confirmDelete}
-                onChange={(event) => setConfirmDelete(event.target.value)}
-                className="min-h-[44px] border border-taupe px-3 py-2"
-              />
-              <button
-                type="button"
-                disabled={confirmDelete !== props.product.slug || props.disabled === true}
-                onClick={() => void remove()}
-                className="min-h-[44px] border border-espresso px-4 py-2 text-espresso disabled:opacity-50"
-              >
-                Delete permanently
-              </button>
-            </div>
-          </div>
+          <ProductDeletion
+            product={props.product}
+            disabled={props.disabled === true || phase.kind === 'working'}
+            onDeleted={props.onDeleted}
+          />
         )}
       </div>
     </div>
