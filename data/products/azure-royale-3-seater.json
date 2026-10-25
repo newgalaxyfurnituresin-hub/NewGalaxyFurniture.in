@@ -21,29 +21,6 @@
   "id": "p_ey8ddqoy3w",
   "images": [
     {
-      "alt": "Azure Royale 3-Seater — photograph 1",
-      "altSource": "admin",
-      "derivativeFormats": [
-        "webp"
-      ],
-      "derivativeWidths": [
-        320,
-        480,
-        640,
-        960,
-        1280
-      ],
-      "derivativesReady": true,
-      "filename": "WhatsApp Image 2026-10-25 at 2.23.51 AM (1).jpeg",
-      "height": 1024,
-      "id": "img_bqi9pzu4hk",
-      "key": "products/p_ey8ddqoy3w/img_bqi9pzu4hk/original.jpg",
-      "lqip": "data:image/webp;base64,UklGRtAAAABXRUJQVlA4IMQAAAAwBQCdASoYABAAPqVCm0imI6KhMAgAwBSJbACdMoRwNsA/ACsAG+AK8uG3vTiA0utmIAD+3dTb5anUk5H49tKI8+h3ltFrUJU6r0/GPX84l8CjoMtYZzHVIBTiHpN7xhsSXY76n10vFh71y2I77+BloB4uIzHojmE9cLKHfj/hLcM0O6TU3TUo7wIRaD0EcjeAvjiIZB+Pc2kwqDjOZOs3FdHYTOYjCH1w6lLb4EJ8sqxa2lB5KyzGMFFBo/18CSBSPAAA",
-      "mime": "image/jpeg",
-      "order": 0,
-      "width": 1536
-    },
-    {
       "alt": "Azure Royale 3-Seater — photograph 2",
       "altSource": "admin",
       "derivativeFormats": [
@@ -64,7 +41,7 @@
       "key": "products/p_ey8ddqoy3w/img_w0gmb2dewu/original.jpg",
       "lqip": "data:image/webp;base64,UklGRvIAAABXRUJQVlA4IOYAAACQBACdASoYAA0APqVCm0imI6KhMAgAwBSJbACdMoMYGWgAW7NCGOtZqLYh+HwA/uW6sqVGsPk2CezXEGG6eD8e4SyG43r5jutdv5STwXf+mnLdi8lphlFL7wBkT8BBJ/ka3i89/s1SeLaX7tMDf+JHzOPEfi5cyofQ9sPsZcu+E/iNhIms08lozlNVUOhuBL22JpJIiRDO2lTNOu8q9/zjOlv8Sx75+1703xHJNNgPWaeeNbHI9oSoE9qaBuechrtsN+xKJRcjfu3nu/Mv+9l/0L4y4rf8m4rOx/n/rKHX8zoDnAAAAA==",
       "mime": "image/jpeg",
-      "order": 1,
+      "order": 0,
       "width": 1600
     }
   ],
@@ -76,7 +53,7 @@
   "originalPrice": 38499,
   "price": 32499,
   "priceOnEnquiry": false,
-  "primaryImage": "img_bqi9pzu4hk",
+  "primaryImage": "img_w0gmb2dewu",
   "published": false,
   "relatedProductIds": [],
   "shortDescription": "Luxury 3-Seater Sofa with solid Neem wood frame, Duroflex 40-density cushions, 5-year cushion warranty & water-resistant, washable suede upholstery. Available in multiple colours and customisable sizes. Enquire Now!",
@@ -92,6 +69,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-25T16:55:31.907Z",
+  "updatedAt": "2026-10-25T16:55:35.785Z",
   "variants": []
 }
