@@ -21,7 +21,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DragEvent, ReactElement } from 'react';
 
 import { adminFetch } from '@/lib/admin/client';
-import { uploadPhotos, type PhotoRejection } from '@/lib/admin/upload-photos';
+import {
+  completePhotoUpload,
+  uploadPhotos,
+  type PendingPhotos,
+  type PhotoRejection,
+} from '@/lib/admin/upload-photos';
 import { originalUrl, derivativeUrl, extFromMime } from '@/lib/images/srcset';
 import type { ProductImageValue } from '@/schemas/product';
 import type { ProductRevision } from '@/lib/products/revision';
@@ -33,6 +38,11 @@ export interface ImageManagerProps {
   primaryImage: string | null;
   canWrite: boolean;
   onBusyChange?: (busy: boolean) => void;
+  onPreparedPhoto?: (
+    image: ProductImageValue,
+    colorName?: string,
+    revision?: ProductRevision,
+  ) => void;
   onChange: (
     images: ProductImageValue[],
     primaryImage: string | null,
@@ -62,11 +72,14 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   const [dragOver, setDragOver] = useState(false);
   const [enhancements, setEnhancements] = useState<Record<string, EnhancementStatus>>({});
   const [computerOnline, setComputerOnline] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const [reviewImage, setReviewImage] = useState<string | null>(null);
   const imageIds = props.images.map((image) => image.id).join(',');
   const dragFrom = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const working = useRef(false);
+  const currentProps = useRef(props);
+  currentProps.current = props;
   const begin = (): boolean => {
     if (working.current) return false;
     working.current = true;
@@ -80,6 +93,57 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   useEffect(() => {
     props.onBusyChange?.(busy);
   }, [busy, props.onBusyChange]);
+
+  useEffect(() => {
+    if (!props.canWrite) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async (): Promise<void> => {
+      if (!working.current && !document.hidden) {
+        const result = await adminFetch<PendingPhotos>(
+          `/api/admin/products/${props.productId}/photo-uploads`,
+        );
+        if (!cancelled && result.ok) {
+          setPendingCount(result.value.uploads.filter((job) => job.state !== 'failed').length);
+          for (const job of result.value.uploads) {
+            if (working.current || cancelled) break;
+            if (job.state === 'failed') {
+              setMessage(
+                `${job.filename}: preparation failed. Re-export the photo and upload it again.`,
+              );
+              continue;
+            }
+            if (job.state !== 'ready' || !begin()) continue;
+            try {
+              const prepared = await completePhotoUpload(props.productId, job.imageId);
+              if (!cancelled && prepared.ok) {
+                for (const image of prepared.value.images)
+                  currentProps.current.onPreparedPhoto?.(
+                    image,
+                    prepared.value.colorName,
+                    prepared.revision,
+                  );
+                setMessage(
+                  'Prepared photo added. Smaller sizes are ready; photos below 4K can now be enhanced.',
+                );
+              } else if (!cancelled && !prepared.ok) setMessage(prepared.error.message);
+            } finally {
+              finish();
+            }
+          }
+        }
+      }
+      if (!cancelled)
+        timer = setTimeout(() => {
+          void poll();
+        }, 15000);
+    };
+    void poll();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [props.productId, props.canWrite]);
 
   useEffect(() => {
     if (!props.canWrite || !imageIds) return;
@@ -162,7 +226,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         });
         setRejected(result.rejected);
         setMessage(
-          `${result.added} of ${list.length} photos added.${result.rejected.length ? ' Check the file messages below.' : ''} ${result.added ? 'Add a photo description below. Smaller sizes and 4K copies are prepared in the background.' : ''}`,
+          `${result.added} of ${list.length} photos added.${result.pending ? ` ${result.pending} waiting for the company photo tool. Keep the computer on; prepared photos appear here automatically.` : ''}${result.rejected.length ? ' Check the file messages below.' : ''} ${result.added ? 'Check the photo descriptions below. Smaller sizes are ready and 4K copies can be prepared in the background.' : ''}`,
         );
       } finally {
         finish();
@@ -334,6 +398,12 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
       )}
 
       <div aria-live="polite" className="break-words text-small">
+        {pendingCount > 0 && (
+          <p>
+            {pendingCount} photo(s) being prepared. Keep the company computer and its photo tool
+            running. This page checks automatically.
+          </p>
+        )}
         {message !== null && <p>{message}</p>}
         {rejected.length > 0 && (
           <ul className="mt-2 flex flex-col gap-1">

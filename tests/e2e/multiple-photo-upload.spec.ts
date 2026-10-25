@@ -2,6 +2,58 @@ import { expect, test } from '@playwright/test';
 import { demoSofa } from '../fixtures/products';
 test.skip(process.env.NGF_COLOR_HARNESS !== '1', 'Uses the isolated local admin fixture.');
 
+test('private preparation resumes after the company computer reconnects', async ({ page }) => {
+  let mode = 'empty';
+  await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
+    if (route.request().method() === 'POST') {
+      mode = 'queued';
+      await route.fulfill({
+        status: 202,
+        json: { uploadId: 'img_pending001', images: [], rejected: [] },
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      json: {
+        computerOnline: mode === 'ready',
+        uploads:
+          mode === 'empty'
+            ? []
+            : [{ imageId: 'img_pending001', filename: 'photo.jpg', colorName: '', state: mode }],
+      },
+    });
+  });
+  await page.route('**/photo-uploads/img_pending001', async (route) => {
+    mode = 'empty';
+    await route.fulfill({
+      status: 200,
+      json: {
+        images: [{ ...demoSofa.images[0], id: 'img_pending001', order: 1 }],
+        rejected: [],
+        colorName: '',
+      },
+    });
+  });
+  await page.goto('/admin/products/edit?reset=1');
+  await page.getByLabel('Product photographs', { exact: true }).setInputFiles({
+    name: 'photo.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('local mock'),
+  });
+  await expect(
+    page.getByText('1 waiting for the company photo tool.', { exact: false }),
+  ).toBeVisible();
+  mode = 'ready';
+  await page.reload();
+  await expect(page.getByText('Prepared photo added.', { exact: false })).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'Images', exact: true })
+      .getByRole('button', { name: 'Remove', exact: true }),
+  ).toHaveCount(2);
+});
+
 for (const width of [375, 768, 1440]) {
   test(`multiple photo uploads and partial recovery at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
@@ -9,7 +61,11 @@ for (const width of [375, 768, 1440]) {
     let uploads = 0;
     let active = 0;
     let maximum = 0;
-    await page.route('**/api/admin/products/p_device0001/images', async (route) => {
+    await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ status: 200, json: { computerOnline: true, uploads: [] } });
+        return;
+      }
       active++;
       maximum = Math.max(maximum, active);
       const body = route.request().postDataBuffer()!.toString('latin1');
@@ -56,9 +112,13 @@ for (const width of [375, 768, 1440]) {
       page.getByText('2 of 2 photograph(s) added for Walnut brown.', { exact: false }),
     ).toBeVisible();
     // A failing photo must not remove an earlier confirmed upload or start later files.
-    await page.unroute('**/api/admin/products/p_device0001/images');
+    await page.unroute('**/api/admin/products/p_device0001/photo-uploads');
     let recoveryCalls = 0;
-    await page.route('**/api/admin/products/p_device0001/images', async (route) => {
+    await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ status: 200, json: { computerOnline: true, uploads: [] } });
+        return;
+      }
       recoveryCalls++;
       if (recoveryCalls === 1)
         await route.fulfill({

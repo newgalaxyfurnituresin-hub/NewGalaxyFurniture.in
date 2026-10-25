@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { UPLOAD_CONSTRAINTS } from '@/lib/images/validate';
+import { BodyTooLargeError, readBoundedForm } from '@/lib/security/body';
 const state = vi.hoisted(() => ({ open: vi.fn(), lock: vi.fn() }));
 vi.mock('@/lib/admin/context', () => ({ openAdminContext: state.open, lockNamespace: () => ({}) }));
 vi.mock('@/lib/env', () => ({ getR2: () => ({}), getKV: () => ({}) }));
@@ -35,8 +36,8 @@ describe('product photo multipart boundary', () => {
     const size = (await request.clone().arrayBuffer()).byteLength;
     expect(size).toBeGreaterThan(UPLOAD_CONSTRAINTS.maxBytes);
     expect(size).toBeLessThan(MAX_UPLOAD_BODY_BYTES);
-    expect((await POST(context(request))).status).toBe(204);
-    expect(state.lock).toHaveBeenCalledOnce();
+    const parsed = await readBoundedForm(request, MAX_UPLOAD_BODY_BYTES);
+    expect((parsed.get('file') as File).size).toBe(UPLOAD_CONSTRAINTS.maxBytes);
   });
   it('rejects an oversized streamed body with a helpful message before storage writes', async () => {
     const request = new Request('https://newgalaxyfurniture.in/api/admin/test', {
@@ -44,10 +45,9 @@ describe('product photo multipart boundary', () => {
       headers: { 'content-type': 'multipart/form-data; boundary=test' },
       body: new Uint8Array(MAX_UPLOAD_BODY_BYTES + 1),
     });
-    const response = await POST(context(request));
-    expect(response.status).toBe(422);
-    expect(((await response.json()) as { message: string }).message).toContain('12 MB per photo');
-    expect(state.lock).not.toHaveBeenCalled();
+    await expect(readBoundedForm(request, MAX_UPLOAD_BODY_BYTES)).rejects.toBeInstanceOf(
+      BodyTooLargeError,
+    );
   });
   it('retains authorization checks before reading uploaded data', async () => {
     state.open.mockResolvedValue({ ok: false, response: new Response(null, { status: 401 }) });

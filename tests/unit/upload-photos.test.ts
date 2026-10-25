@@ -31,6 +31,43 @@ const input = (files: File[]) => ({
 });
 
 describe('multiple admin photo uploads', () => {
+  it('keeps an offline-computer upload pending without claiming it was added', async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({ uploadId: 'img_pending001', images: [], rejected: [] }, { status: 202 }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          computerOnline: false,
+          uploads: [{ imageId: 'img_pending001', state: 'queued' }],
+        }),
+      );
+    vi.stubGlobal('fetch', request);
+    const options = input([photo('pending.jpg')]);
+    const result = await uploadPhotos(options);
+    expect(result).toEqual({ added: 0, pending: 1, rejected: [], stopped: false });
+    expect(options.onAccepted).not.toHaveBeenCalled();
+  });
+  it('attaches a staged image only after the trusted processor marks it ready', async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({ uploadId: 'img_pending001', images: [], rejected: [] }, { status: 202 }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          computerOnline: true,
+          uploads: [{ imageId: 'img_pending001', state: 'ready' }],
+        }),
+      )
+      .mockResolvedValueOnce(accepted());
+    vi.stubGlobal('fetch', request);
+    const options = input([photo('ready.jpg')]);
+    expect((await uploadPhotos(options)).added).toBe(1);
+    expect(request.mock.calls[2]?.[0]).toContain('/photo-uploads/img_pending001');
+    expect(options.onAccepted).toHaveBeenCalledOnce();
+  });
   it('sends a selection larger than 12 MB as separate, serialized requests with colour and revision data', async () => {
     let active = 0;
     let maximum = 0;
@@ -55,7 +92,7 @@ describe('multiple admin photo uploads', () => {
     };
     const pending = uploadPhotos(options);
     await vi.runAllTimersAsync();
-    expect(await pending).toEqual({ added: 3, rejected: [], stopped: false });
+    expect(await pending).toEqual({ added: 3, pending: 0, rejected: [], stopped: false });
     expect(maximum).toBe(1);
     expect(request).toHaveBeenCalledTimes(3);
     expect(starts[1]! - starts[0]!).toBeGreaterThanOrEqual(2600);

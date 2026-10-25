@@ -107,9 +107,9 @@ describe('the failure-mode table', () => {
   });
 
   it('9. a rejected upload names the reason per file and leaves the batch unaffected', () => {
-    const endpoint = source('src/pages/api/admin/products/[id]/images/index.ts');
+    const endpoint = source('src/pages/api/admin/products/[id]/photo-uploads.ts');
+    expect(endpoint).toContain('validation.error.message');
     expect(endpoint).toContain('rejected');
-    expect(endpoint).toContain('accepted');
     const manager = source('src/components/admin/ImageManager.tsx');
     expect(manager).toContain('rejected.length > 0');
   });

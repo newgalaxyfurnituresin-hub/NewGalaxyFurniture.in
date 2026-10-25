@@ -1,4 +1,4 @@
-import { adminFetch } from './client';
+import { adminFetch, type ApiResult } from './client';
 import type { ProductRevision } from '@/lib/products/revision';
 import type { ProductImageValue } from '@/schemas/product';
 
@@ -11,6 +11,54 @@ export interface PhotoRejection {
 interface PhotoResponse {
   images: ProductImageValue[];
   rejected: PhotoRejection[];
+  uploadId?: string;
+}
+export interface PendingPhoto {
+  imageId: string;
+  filename: string;
+  colorName: string;
+  state: string;
+}
+export interface PendingPhotos {
+  computerOnline: boolean;
+  uploads: PendingPhoto[];
+}
+export const completePhotoUpload = (
+  productId: string,
+  imageId: string,
+): Promise<ApiResult<PhotoResponse & { colorName?: string }>> =>
+  adminFetch(`/api/admin/products/${productId}/photo-uploads/${imageId}`, {
+    method: 'POST',
+    body: {},
+  });
+async function waitForPhoto(
+  productId: string,
+  imageId: string,
+  progress: (message: string) => void,
+): Promise<ApiResult<PhotoResponse> | null> {
+  for (let attempt = 0; attempt < 45; attempt++) {
+    const result = await adminFetch<PendingPhotos>(
+      `/api/admin/products/${productId}/photo-uploads`,
+    );
+    if (!result.ok) return result;
+    const job = result.value.uploads.find((upload) => upload.imageId === imageId);
+    if (job?.state === 'ready') return await completePhotoUpload(productId, imageId);
+    if (job?.state === 'failed')
+      return {
+        ok: false,
+        error: {
+          status: 422,
+          code: 'VALIDATION_FAILED',
+          message: 'This photo could not be decoded safely. Re-export it and upload it again.',
+        },
+      };
+    if (!result.value.computerOnline) return null;
+    progress(
+      'Photo received privately. The company computer is validating it and preparing smaller sizes. Keep this page open.',
+    );
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  return null;
 }
 
 /** One photo per request bounds multipart size, decoded pixels and Worker CPU per upload. */
@@ -21,13 +69,14 @@ export async function uploadPhotos(input: {
   colorName?: string;
   onProgress: (message: string) => void;
   onAccepted: (images: ProductImageValue[], revision?: ProductRevision) => void;
-}): Promise<{ added: number; rejected: PhotoRejection[]; stopped: boolean }> {
+}): Promise<{ added: number; pending: number; rejected: PhotoRejection[]; stopped: boolean }> {
   const rejected: PhotoRejection[] = [];
   let added = 0;
+  let pending = 0;
   let previousFinished = 0;
   let stopped = false;
   for (const [index, file] of input.files.entries()) {
-    if (input.existingCount + added >= 20) {
+    if (input.existingCount + added + pending >= 20) {
       rejected.push({
         filename: file.name,
         code: 'TOO_MANY_IMAGES',
@@ -55,11 +104,19 @@ export async function uploadPhotos(input: {
     const form = new FormData();
     form.append('file', file);
     if (input.colorName) form.append('colorName', input.colorName.trim());
-    const result = await adminFetch<PhotoResponse>(
-      `/api/admin/products/${input.productId}/images`,
+    let result = await adminFetch<PhotoResponse>(
+      `/api/admin/products/${input.productId}/photo-uploads`,
       { method: 'POST', formData: form },
     );
     previousFinished = Date.now();
+    if (result.ok && result.value.uploadId) {
+      const prepared = await waitForPhoto(input.productId, result.value.uploadId, input.onProgress);
+      if (prepared === null) {
+        pending++;
+        continue;
+      }
+      result = prepared;
+    }
     if (!result.ok) {
       const uncertain = result.error.status === 0 || result.error.status >= 500;
       const detail =
@@ -92,5 +149,5 @@ export async function uploadPhotos(input: {
       input.onAccepted(result.value.images, result.revision);
     }
   }
-  return { added, rejected, stopped };
+  return { added, pending, rejected, stopped };
 }

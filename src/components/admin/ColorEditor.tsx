@@ -44,7 +44,7 @@ export default function ColorEditor({
         onAccepted: (images, revision) => onPhotos?.(color.id, images, revision),
       });
       setMessage(
-        `${result.added} of ${list.length} photograph(s) added for ${color.name}. ${result.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} ${result.added ? 'Photos below 4K enter the existing enhancement queue. Save your colour choices, then review the enhanced copies in Images.' : ''}`,
+        `${result.added} of ${list.length} photograph(s) added for ${color.name}. ${result.pending ? `${result.pending} waiting for the company photo tool. Keep the computer on; prepared photos appear in Images automatically.` : ''} ${result.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} ${result.added ? 'Photos below 4K enter the existing enhancement queue. Save your colour choices, then review the enhanced copies in Images.' : ''}`,
       );
     } finally {
       working.current = false;

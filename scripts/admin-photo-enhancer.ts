@@ -5,6 +5,7 @@ import { access, mkdir, open, readFile, unlink, writeFile } from 'node:fs/promis
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { processUploadQueue } from './prepare-uploaded-photo';
 import { z } from 'zod';
 import { enhancePhoto, LOCAL_ROOT } from './enhance-photos';
 import {
@@ -286,6 +287,13 @@ async function main(): Promise<void> {
         }
         const latest = z.array(z.string()).safeParse(await readKey(ENHANCEMENT_POINTER));
         const keys = new Set(latest.success ? latest.data : []);
+        await processUploadQueue(
+          api,
+          readKey,
+          writeKey,
+          upload,
+          Date.now() - lastList > 5 * 60_000,
+        );
         if (Date.now() - lastList > 5 * 60_000) {
           for (const key of await listedKeys()) keys.add(key);
           lastList = Date.now();

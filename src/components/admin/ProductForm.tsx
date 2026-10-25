@@ -866,6 +866,28 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               primaryImage={draft.primaryImage ?? null}
               canWrite={props.canWrite && !colorBusy}
               onBusyChange={setImageBusy}
+              onPreparedPhoto={(image, colorName, revision) =>
+                setDraft((current) => ({
+                  ...current,
+                  images: current.images.some((entry) => entry.id === image.id)
+                    ? current.images
+                    : [...current.images, { ...image, order: current.images.length }],
+                  primaryImage: current.primaryImage ?? image.id,
+                  updatedAt: advanceProductRevision(current.updatedAt, revision),
+                  ...(current.colorOptions
+                    ? {
+                        colorOptions: current.colorOptions.map((color) =>
+                          color.name === colorName
+                            ? {
+                                ...color,
+                                imageIds: [...new Set([...(color.imageIds ?? []), image.id])],
+                              }
+                            : color,
+                        ),
+                      }
+                    : {}),
+                }))
+              }
               onChange={(images, primaryImage, revision) =>
                 setDraft((current) => ({
                   ...current,
