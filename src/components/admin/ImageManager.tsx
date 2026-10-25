@@ -31,6 +31,7 @@ import { originalUrl, derivativeUrl, extFromMime } from '@/lib/images/srcset';
 import type { ProductImageValue } from '@/schemas/product';
 import type { ProductRevision } from '@/lib/products/revision';
 import { DropZoneGlyph } from '@/components/ui/EmptyState';
+import PhotoUploadPicker from './PhotoUploadPicker';
 
 export interface ImageManagerProps {
   productId: string;
@@ -81,7 +82,6 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   const [reviewImage, setReviewImage] = useState<string | null>(null);
   const imageIds = props.images.map((image) => image.id).join(',');
   const dragFrom = useRef<number | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const working = useRef(false);
   const currentProps = useRef(props);
   currentProps.current = props;
@@ -239,7 +239,6 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         );
       } finally {
         finish();
-        if (inputRef.current) inputRef.current.value = '';
       }
     },
     [props],
@@ -344,7 +343,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4" aria-busy={busy}>
       {props.canWrite && (
         <div
           onDragOver={(event) => {
@@ -366,8 +365,8 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
           {props.images.length === 0 && <DropZoneGlyph />}
           <p className="text-body text-espresso">
             {props.images.length === 0
-              ? 'No photographs yet — drop images here'
-              : 'Drop more images here'}
+              ? 'Add your product photographs'
+              : 'Add more product photographs'}
           </p>
           <p className="max-w-[46ch] text-small text-walnut">
             JPEG, PNG, WebP or AVIF. At least 256 pixels wide and 64 pixels high, up to 12 MB each.
@@ -381,28 +380,12 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
             resolution is preserved; only published product photos are public. AI enhancement is not
             enabled.
           </p>
-          <input
-            ref={inputRef}
-            id="image-upload"
-            type="file"
-            aria-label="Product photographs"
-            tabIndex={-1}
-            multiple
-            accept="image/jpeg,image/png,image/webp,image/avif"
-            className="sr-only"
-            onChange={(event) => {
-              if (event.target.files !== null) void upload(event.target.files);
-              event.target.value = '';
-            }}
-          />
-          <button
-            type="button"
+          <PhotoUploadPicker
+            label="Product photographs"
+            buttonLabel="Choose files"
             disabled={busy}
-            onClick={() => inputRef.current?.click()}
-            className="min-h-[44px] border border-espresso px-4 py-2 text-espresso disabled:opacity-60"
-          >
-            Choose files
-          </button>
+            onFiles={(files) => void upload(files)}
+          />
         </div>
       )}
 
@@ -448,7 +431,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                     if (dragFrom.current !== null) move(dragFrom.current, index);
                     dragFrom.current = null;
                   }}
-                  className="grid gap-3 border border-taupe bg-white p-3 md:grid-cols-[96px_1fr_auto]"
+                  className="ngf-admin-photo-row"
                 >
                   <div className="relative">
                     <img
@@ -472,7 +455,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  <div className="flex min-w-0 flex-col gap-2 break-words">
                     <label
                       htmlFor={`alt-${image.id}`}
                       className="text-small font-medium text-espresso"
@@ -604,7 +587,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                   </div>
 
                   {props.canWrite && (
-                    <div className="flex flex-col gap-1">
+                    <div className="ngf-admin-photo-actions">
                       <span className="text-small text-walnut">Position {index + 1}</span>
                       <button
                         type="button"

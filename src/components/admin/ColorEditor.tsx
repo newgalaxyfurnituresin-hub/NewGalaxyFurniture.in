@@ -5,6 +5,7 @@ import { stockLabel } from '@/lib/products/labels';
 import { uploadPhotos } from '@/lib/admin/upload-photos';
 import { derivativeUrl } from '@/lib/images/srcset';
 import type { ProductRevision } from '@/lib/products/revision';
+import PhotoUploadPicker from './PhotoUploadPicker';
 
 export default function ColorEditor({
   product,
@@ -27,7 +28,7 @@ export default function ColorEditor({
   const options = colorOptionsOf(product);
   const update = (index: number, patch: Partial<ColorOption>): void =>
     onChange(options.map((option, i) => (i === index ? { ...option, ...patch } : option)));
-  async function upload(color: ColorOption, files: FileList | null): Promise<void> {
+  async function upload(color: ColorOption, files: File[]): Promise<void> {
     if (!files?.length || working.current || disabled || !canUpload) return;
     working.current = true;
     setBusy(true);
@@ -138,20 +139,19 @@ export default function ColorEditor({
               never recolours an image.
             </p>
             {canUpload ? (
-              <label className="mt-3 flex flex-col gap-2 text-small">
-                Upload photos for {option.name || `colour ${index + 1}`}
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp,image/avif"
+              <div className="mt-3">
+                <PhotoUploadPicker
+                  label={`Upload photos for ${option.name || `colour ${index + 1}`}`}
+                  buttonLabel={`Choose photos for ${option.name || `colour ${index + 1}`}`}
                   disabled={disabled || busy || !option.name.trim()}
-                  onChange={(event) => {
-                    void upload(option, event.target.files);
-                    event.target.value = '';
-                  }}
-                  className="min-h-[44px] w-full min-w-0 border border-taupe p-2"
+                  onFiles={(files) => void upload(option, files)}
                 />
-              </label>
+                {!option.name.trim() && (
+                  <p className="mt-2 text-small text-walnut">
+                    Enter a colour name to add its photos.
+                  </p>
+                )}
+              </div>
             ) : (
               <p className="mt-2 text-small">
                 Create the draft first, then upload this colour’s photos here.
