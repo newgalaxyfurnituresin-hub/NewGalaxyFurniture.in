@@ -42,6 +42,30 @@
       "mime": "image/jpeg",
       "order": 0,
       "width": 1536
+    },
+    {
+      "alt": "Azure Royale 3-Seater — photograph 2",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280,
+        1600
+      ],
+      "derivativesReady": true,
+      "filename": "WhatsApp Image 2026-10-25 at 2.23.51 AM.jpeg",
+      "height": 900,
+      "id": "img_w0gmb2dewu",
+      "key": "products/p_ey8ddqoy3w/img_w0gmb2dewu/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRvIAAABXRUJQVlA4IOYAAACQBACdASoYAA0APqVCm0imI6KhMAgAwBSJbACdMoMYGWgAW7NCGOtZqLYh+HwA/uW6sqVGsPk2CezXEGG6eD8e4SyG43r5jutdv5STwXf+mnLdi8lphlFL7wBkT8BBJ/ka3i89/s1SeLaX7tMDf+JHzOPEfi5cyofQ9sPsZcu+E/iNhIms08lozlNVUOhuBL22JpJIiRDO2lTNOu8q9/zjOlv8Sx75+1703xHJNNgPWaeeNbHI9oSoE9qaBuechrtsN+xKJRcjfu3nu/Mv+9l/0L4y4rf8m4rOx/n/rKHX8zoDnAAAAA==",
+      "mime": "image/jpeg",
+      "order": 1,
+      "width": 1600
     }
   ],
   "keywords": [],
@@ -68,6 +92,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-25T16:53:32.215Z",
+  "updatedAt": "2026-10-25T16:53:44.316Z",
   "variants": []
 }
