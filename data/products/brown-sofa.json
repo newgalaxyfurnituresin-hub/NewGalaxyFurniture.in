@@ -144,32 +144,6 @@
       "mime": "image/jpeg",
       "order": 3,
       "width": 3840
-    },
-    {
-      "alt": "Premium 3+1+1 Sofa Set — photograph 5",
-      "altSource": "admin",
-      "derivativeFormats": [
-        "webp",
-        "jpeg"
-      ],
-      "derivativeWidths": [
-        320,
-        480,
-        640,
-        960,
-        1280,
-        1600,
-        2000
-      ],
-      "derivativesReady": true,
-      "filename": "codex-upload-verification-4k.jpg",
-      "height": 2800,
-      "id": "img_kq3092ixnh",
-      "key": "products/p_322e7n6mth/img_kq3092ixnh/original.jpg",
-      "lqip": "data:image/webp;base64,UklGRvYAAABXRUJQVlA4IOoAAAAQBQCdASoYABIAPqlMoEwmJCMiKAgAwBUJZQCsAYvgXGQ4ssPt+gUY+Aw+rCSJK5GoAP7yhlP7xanEwcXkT/KM12m5VReFc7/FUHpf2tgPR/iz3D8QNQMv7x6I591STSS5/qFRsZEN1cpRX7eFeLgbrWPSQx+k+8T2SQvqYgMtZ9Oh3pTKknprgI4Qr9ZntxNju05I4gDeRBjGeCdj4GjkVccF+mKPmKEwQd72CCu58rr4W6t7Ea35sVGcaaS9qayxw1fpUcKKs7wNXYA9BCeTWwkt865SK1+XpJl4Xd3iHZiZulpBHyltGAA=",
-      "mime": "image/jpeg",
-      "order": 4,
-      "width": 3840
     }
   ],
   "keywords": [],
@@ -196,6 +170,6 @@
     "Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-25T14:01:57.130Z",
+  "updatedAt": "2026-10-25T14:02:48.176Z",
   "variants": []
 }
