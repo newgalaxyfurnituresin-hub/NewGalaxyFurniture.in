@@ -551,6 +551,30 @@ describe('the state â†’ repository mapping', () => {
     expect(after.odd).toEqual([1, 2]);
   });
 
+  it('removes a stored primary designation after the last photograph is removed', async () => {
+    const draft = product({
+      status: 'DRAFT',
+      published: false,
+      images: [],
+      primaryImage: undefined,
+    });
+    const path = productContentPath(draft.slug)!;
+    stub.clobber(
+      path,
+      serializeContentJson({ ...draft, primaryImage: 'img_deleted001', legacyId: 'keep-this' }),
+    );
+    await saveProductState({
+      drafts,
+      client,
+      product: draft,
+      from: 'DRAFT',
+      actor: owner,
+      action: 'remove image',
+    });
+    expect(stub.readJson(path)!.primaryImage).toBeUndefined();
+    expect(stub.readJson(path)!.legacyId).toBe('keep-this');
+  });
+
   it('removes the file and the draft on delete, and always rebuilds', async () => {
     const draft = product({ status: 'DRAFT', published: false, stockStatus: 'IN_STOCK' });
     await saveProductState({

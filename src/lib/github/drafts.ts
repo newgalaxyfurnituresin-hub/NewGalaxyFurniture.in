@@ -229,6 +229,8 @@ export async function saveProductState(input: SaveProductInput): Promise<SavePro
   // product is the patch, not the whole document: keys it does not carry — including keys
   // no schema declares — are copied through from the stored file.
   const merged = applyFieldPatch(existing?.value ?? {}, { ...product });
+  // The image list is authoritative: dropping its last image also clears the stored designation.
+  if (product.primaryImage === undefined) delete merged.primaryImage;
   const message = buildCommitMessage({
     scope: input.scope ?? 'product',
     action: input.action,
