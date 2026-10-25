@@ -49,6 +49,21 @@
       "mime": "image/jpeg",
       "order": 1,
       "width": 1536
+    },
+    {
+      "alt": "",
+      "altSource": "admin",
+      "derivativeFormats": [],
+      "derivativeWidths": [],
+      "derivativesReady": false,
+      "filename": "WhatsApp Image 2026-10-25 at 2.23.51 AM.jpeg",
+      "height": 900,
+      "id": "img_46dnffk1yg",
+      "key": "products/p_ey8ddqoy3w/img_46dnffk1yg/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRtoDAABXRUJQVlA4TM4DAAAvF0ADEM1VICICHggAENsIAIBbe02Sbt+u/abNavumbdbtv2+21zFQ9jzDjAEAwL/BADYAAAAAMMDzAGA1OmpsprN/W/Ff7axb+k0uSZKmSdNdcw0AAIAHAgAEtwEAcP53f/ef+79+7z+f/7WNJiyBllGaALDBDAAAmw4KCrQMYMDAGBsMFRSjBaAAFKBUqwyqraZNf78li/9r/pv7z13eAwHcopMBADj/851z733b2lJpkuBfAgEAAAAAAAAAAAAAAAAAAAAAAAAApgpJaUCrFNa/tTfvvXvvOSeyenq8fT6llY8NIFdDpUOFUEmr9yki6LVeXUcjgHyNGAHxMSK/3jYz6W4ONj9oiKxKm8lkrjRsmF8C6BSR5JmOKz5kJtXLQzu7JjEQyZzzqYiJpCG0Jf3Aw0IqgV0gthEwqdJLVv/H3w0JNOY+oLDhUBHPpTTkrbvEK9dWSzTlVBTBfyHjQPUTLnCzlP+vDMKEe2cX7eszLxfdOVjAd69Swq7tl8UpIfQjG4eAR8KFHTQT5RJTwzTDNVKt0K9LhguE9gdJPL7KHC4qBzekd9u/uPyczWI8lP/xDheLuhR431PVq+OqkqBwFgUrmXF1TVFRMa95psCnURDiyJUIu0VhlX6coN7i/OTiydMu8XjMXzRPQhMKlJ55PWUx5fIwfI0icPR6ObeQW5noBZCEI9gfCQybZNi0q4NLTAsb29JOVa+YdWlZTmQ+YZDBzWFKDCSZk1C4S5VMrMbwe7nYJZQ5DQAh3VXsbzNezMUhZrda1zBptW9+ebk8Wj5urzHCRKcpogmGi2AidBCkJOVuxm4t/6vnEPZA9wCA0mjIqmZas9WZ7dYj0D98YdHov67/bq3Utf1EioNhYtcqLlmmLqjBio2clUywA0AjWlEwvDjVnUY9R685JFjBQe83+sr3f/zFucNjq7tTF82mOrTVozojCjVnCwDNMTKP1G6tOkWIR5OVmc+//pTfv5POpmyW2UKhUccIjz25J9KzSXotz7ABaLSicEmeZcjPfa+wD+Pi71kh5vSrjfzpqfbt4ezjuuVXFrZ3pESTwDj7wO2gFCI5NAc1A4COqSkvMvLyVHDy9mjlb5No/Q12Xy9+3v/ce2us7yNTOnzuT73vE6erzuVdNMJZGm389zFTdqagjmlVgjKFSA1Guf54MejknVV9f/nr83O9s51NsTf2Y6M9YodvIHwcn+THpwWRCOvA5Ry9+7GcAdKa5fJ+NFoOR1zK1tvv+x93ta+PjTe/ssBGKN9V98PbVp2Om0zxn7kRzzQZTc1MaA==",
+      "mime": "image/jpeg",
+      "order": 2,
+      "width": 1600
     }
   ],
   "keywords": [],
@@ -75,6 +90,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-25T09:42:36.726Z",
+  "updatedAt": "2026-10-25T10:20:24.118Z",
   "variants": []
 }
