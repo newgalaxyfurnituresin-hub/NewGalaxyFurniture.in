@@ -21,6 +21,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DragEvent, ReactElement } from 'react';
 
 import { adminFetch } from '@/lib/admin/client';
+import { uploadPhotos, type PhotoRejection } from '@/lib/admin/upload-photos';
 import { originalUrl, derivativeUrl, extFromMime } from '@/lib/images/srcset';
 import type { ProductImageValue } from '@/schemas/product';
 import type { ProductRevision } from '@/lib/products/revision';
@@ -37,17 +38,6 @@ export interface ImageManagerProps {
     primaryImage: string | null,
     revision?: ProductRevision,
   ) => void;
-}
-
-interface Rejection {
-  filename: string;
-  code: string;
-  message: string;
-}
-
-interface UploadResponse {
-  images: ProductImageValue[];
-  rejected: Rejection[];
 }
 
 interface EnhancementStatus {
@@ -67,7 +57,7 @@ function thumbnailFor(productId: string, image: ProductImageValue): string {
 
 export default function ImageManager(props: ImageManagerProps): ReactElement {
   const [busy, setBusy] = useState(false);
-  const [rejected, setRejected] = useState<Rejection[]>([]);
+  const [rejected, setRejected] = useState<PhotoRejection[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [enhancements, setEnhancements] = useState<Record<string, EnhancementStatus>>({});
@@ -158,36 +148,26 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
       setMessage(`Uploading ${String(list.length)} file${list.length === 1 ? '' : 's'}…`);
       setRejected([]);
 
-      const form = new FormData();
-      for (const file of list) form.append('file', file);
-
-      const result = await adminFetch<UploadResponse>(
-        `/api/admin/products/${props.productId}/images`,
-        { method: 'POST', formData: form },
-      );
-      finish();
-
-      if (!result.ok) {
-        // A 422 whose body carries per-file reasons still arrives as a failure envelope; the
-        // per-file detail is more useful than the summary, so it is preferred when present.
-        setMessage(result.error.message);
-        return;
+      let next = [...props.images];
+      try {
+        const result = await uploadPhotos({
+          productId: props.productId,
+          files: list,
+          existingCount: props.images.length,
+          onProgress: setMessage,
+          onAccepted: (accepted, revision) => {
+            next = [...next, ...accepted].map((image, index) => ({ ...image, order: index }));
+            props.onChange(next, props.primaryImage ?? next[0]?.id ?? null, revision);
+          },
+        });
+        setRejected(result.rejected);
+        setMessage(
+          `${result.added} of ${list.length} photos added.${result.rejected.length ? ' Check the file messages below.' : ''} ${result.added ? 'Add a photo description below. Smaller sizes and 4K copies are prepared in the background.' : ''}`,
+        );
+      } finally {
+        finish();
+        if (inputRef.current) inputRef.current.value = '';
       }
-
-      setRejected(result.value.rejected);
-      const accepted = result.value.images;
-      if (accepted.length > 0) {
-        const next = [...props.images, ...accepted].map((image, index) => ({
-          ...image,
-          order: index,
-        }));
-        props.onChange(next, props.primaryImage ?? next[0]?.id ?? null, result.revision);
-      }
-      setMessage(
-        accepted.length === 0
-          ? 'No files were accepted.'
-          : `${String(accepted.length)} image${accepted.length === 1 ? '' : 's'} added. Add a photo description below. Smaller sizes are prepared in the background.`,
-      );
     },
     [props],
   );
@@ -321,6 +301,9 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
             Up to 20 images per product.
           </p>
           <p className="max-w-[52ch] text-small text-walnut">
+            Select several photos together. They upload one at a time, with progress shown below.
+          </p>
+          <p className="max-w-[52ch] text-small text-walnut">
             New photos below 4K are queued for AI enhancement automatically. Keep the company
             computer’s photo enhancer running, then review and apply the 4K copy here. Your original
             is always preserved.
@@ -350,7 +333,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         </div>
       )}
 
-      <div aria-live="polite" className="text-small">
+      <div aria-live="polite" className="break-words text-small">
         {message !== null && <p>{message}</p>}
         {rejected.length > 0 && (
           <ul className="mt-2 flex flex-col gap-1">

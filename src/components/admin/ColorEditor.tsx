@@ -2,7 +2,7 @@ import { useRef, useState, type ReactElement } from 'react';
 import type { Product, ProductImageValue, StockStatusValue } from '@/schemas/product';
 import { colorOptionsOf, imagesForColor, type ColorOption } from '@/lib/products/colors';
 import { stockLabel } from '@/lib/products/labels';
-import { adminFetch } from '@/lib/admin/client';
+import { uploadPhotos } from '@/lib/admin/upload-photos';
 import { derivativeUrl } from '@/lib/images/srcset';
 import type { ProductRevision } from '@/lib/products/revision';
 
@@ -33,21 +33,18 @@ export default function ColorEditor({
     setBusy(true);
     onBusyChange?.(true);
     setMessage(`Uploading photographs for ${color.name}…`);
+    const list = [...files];
     try {
-      const form = new FormData();
-      for (const file of files) form.append('file', file);
-      form.append('colorName', color.name.trim());
-      const result = await adminFetch<{
-        images: ProductImageValue[];
-        rejected: { filename: string; message: string }[];
-      }>(`/api/admin/products/${product.id}/images`, { method: 'POST', formData: form });
-      if (!result.ok) {
-        setMessage(result.error.message);
-        return;
-      }
-      if (result.value.images.length) onPhotos?.(color.id, result.value.images, result.revision);
+      const result = await uploadPhotos({
+        productId: product.id,
+        files: list,
+        existingCount: product.images.length,
+        colorName: color.name,
+        onProgress: setMessage,
+        onAccepted: (images, revision) => onPhotos?.(color.id, images, revision),
+      });
       setMessage(
-        `${result.value.images.length} photograph(s) added for ${color.name}. ${result.value.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} Photos below 4K enter the existing enhancement queue. Save your colour choices, then review the enhanced copies in Images.`,
+        `${result.added} of ${list.length} photograph(s) added for ${color.name}. ${result.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} ${result.added ? 'Photos below 4K enter the existing enhancement queue. Save your colour choices, then review the enhanced copies in Images.' : ''}`,
       );
     } finally {
       working.current = false;
@@ -66,7 +63,7 @@ export default function ColorEditor({
         1. Name the colour. 2. Upload its real product photos or choose them below. 3. Save.
         Customers will see only that colour’s photos when they select it.
       </p>
-      <p role="status" aria-live="polite" className="text-small">
+      <p role="status" aria-live="polite" className="break-words text-small">
         {message}
       </p>
       {options.length === 0 && (

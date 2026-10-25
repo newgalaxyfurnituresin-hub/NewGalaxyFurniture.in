@@ -23,12 +23,12 @@
  */
 
 import type { APIContext } from 'astro';
-import { readBoundedForm } from '@/lib/security/body';
+import { BodyTooLargeError, readBoundedForm } from '@/lib/security/body';
 import { productRevisionHeaders } from '@/lib/products/revision';
 import type { ObjectBucket } from '@/lib/runtime/types';
 
 import { buildLqip, generateDerivatives, sanitizeOriginal } from '@/lib/images/derivatives';
-import { checkContentLength, generateImageId, validateUpload } from '@/lib/images/validate';
+import { generateImageId, UPLOAD_CONSTRAINTS, validateUpload } from '@/lib/images/validate';
 import { consumeNamedLimit } from '@/lib/auth/rate-limit';
 import { createWorkerCodec } from '@/lib/images/codec-photon';
 import {
@@ -54,6 +54,8 @@ import { enhancementKey, queueEnhancement, wakeEnhancements } from '@/lib/images
 export const prerender = false;
 
 export const MAX_IMAGES_PER_PRODUCT = 20;
+// The per-file limit excludes multipart boundaries, filenames and the optional colour field.
+export const MAX_UPLOAD_BODY_BYTES = UPLOAD_CONSTRAINTS.maxBytes + 64 * 1024;
 
 interface AcceptedUpload {
   record: ProductImageValue;
@@ -72,11 +74,10 @@ export async function POST(context: APIContext): Promise<Response> {
 
   // 1. Refuse an oversized body before reading it.
   const declared = Number.parseInt(context.request.headers.get('content-length') ?? '', 10);
-  const tooLarge = checkContentLength(Number.isFinite(declared) ? declared : null);
-  if (tooLarge !== null && !tooLarge.ok) {
+  if (Number.isFinite(declared) && declared > MAX_UPLOAD_BODY_BYTES) {
     return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
-      message: tooLarge.error.message,
-      fields: { files: [tooLarge.error.message] },
+      message: 'The photo upload is too large. Upload photos separately, up to 12 MB per photo.',
+      fields: { files: ['Upload photos separately, up to 12 MB per photo.'] },
     });
   }
 
@@ -114,7 +115,7 @@ export async function POST(context: APIContext): Promise<Response> {
   let files: File[];
   let colorName = '';
   try {
-    const form = await readBoundedForm(context.request, 12 * 1024 * 1024);
+    const form = await readBoundedForm(context.request, MAX_UPLOAD_BODY_BYTES);
     const colorValue = form.get('colorName');
     if (
       colorValue !== null &&
@@ -125,7 +126,13 @@ export async function POST(context: APIContext): Promise<Response> {
       });
     colorName = typeof colorValue === 'string' ? colorValue.trim() : '';
     files = form.getAll('file').filter((entry): entry is File => entry instanceof File);
-  } catch {
+  } catch (error) {
+    logServerError('images: multipart upload unreadable', error);
+    if (error instanceof BodyTooLargeError)
+      return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
+        message: 'The photo upload is too large. Upload photos separately, up to 12 MB per photo.',
+        fields: { files: ['Upload photos separately, up to 12 MB per photo.'] },
+      });
     return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
       message: 'The upload could not be read. Try again.',
       fields: { files: ['The upload could not be read.'] },
