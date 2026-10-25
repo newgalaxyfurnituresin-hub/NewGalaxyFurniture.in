@@ -23,6 +23,17 @@ import { getR2 } from '@/lib/env';
 import { IMAGE_CACHE_CONTROL } from '@/lib/images/srcset';
 import { keyCandidates, parseImageRequest } from '@/lib/images/delivery';
 import { logServerError } from '@/lib/errors';
+import { getCatalogue } from '@/lib/content/catalogue';
+let publishedImages: Promise<Map<string, Set<string>>> | undefined;
+async function publicMedia(): Promise<Map<string, Set<string>>> {
+  publishedImages ??= getCatalogue().then(
+    (products) =>
+      new Map(
+        products.map((product) => [product.id, new Set(product.images.map((image) => image.id))]),
+      ),
+  );
+  return await publishedImages;
+}
 
 export const prerender = false;
 
@@ -37,6 +48,18 @@ function notFound(): Response {
 export async function GET(context: APIContext): Promise<Response> {
   const request = parseImageRequest(context.params.path ?? '');
   if (request === null) return notFound();
+  // Knowing a draft's random image URL is not permission to see it.
+  const published = await publicMedia();
+  if (!published.get(request.productId)?.has(request.imageId)) {
+    return new Response(null, {
+      status: 307,
+      headers: {
+        location: `/api/admin/products/${request.productId}/media/${(context.params.path ?? '').split('/').at(-1) ?? ''}`,
+        'cache-control': 'private, no-store',
+        'x-robots-tag': 'noindex, nofollow',
+      },
+    });
+  }
 
   let bucket;
   try {

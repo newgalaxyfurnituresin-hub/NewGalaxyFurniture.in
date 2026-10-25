@@ -53,11 +53,11 @@ import {
 } from '@/lib/errors';
 import { generateLeadId, insertLead, type NewLead } from '@/lib/leads/store';
 import { getCatalogue } from '@/lib/content/catalogue';
-import { getD1, getKV, getPublicConfig, getR2, optionalConfig } from '@/lib/env';
+import { getD1, getImages, getKV, getPublicConfig, getR2, optionalConfig } from '@/lib/env';
 import { LeadSchema, fieldErrorsOf } from '@/schemas/lead';
 import { checkTraps, scoreSpam } from '@/lib/leads/spam';
 import { resolveProductReference } from '@/lib/leads/resolve';
-import { storeEnquiryImage } from '@/lib/leads/image';
+import { storeEnquiryImage, storeHostedEnquiryImage } from '@/lib/leads/image';
 
 export const prerender = false;
 
@@ -275,7 +275,10 @@ export async function POST(context: APIContext): Promise<Response> {
       return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
     }
     try {
-      const stored = await storeEnquiryImage(bucket, createWorkerCodec(), id, submission.image);
+      const service = getImages(context);
+      const stored = service
+        ? await storeHostedEnquiryImage(bucket, service, id, submission.image)
+        : await storeEnquiryImage(bucket, createWorkerCodec(), id, submission.image);
       if (!stored.ok) {
         return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
           fields: { image: [stored.error.message] },

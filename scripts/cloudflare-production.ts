@@ -12,6 +12,7 @@ const REPOSITORY = 'newgalaxyfurnituresin-hub/NewGalaxyFurniture.in';
 const SITE = 'https://newgalaxyfurniture.in';
 
 export interface ProductionConfig {
+  images?: { binding?: string };
   routes?: { pattern?: string; custom_domain?: boolean; zone_id?: string }[];
   name?: string;
   account_id?: string;
@@ -31,6 +32,7 @@ export function validateCompanyConfig(value: unknown, configPath: string): void 
   const refuse = (condition: boolean, reason: string): void => {
     if (!condition) throw new Error(`Production configuration refused: ${reason}`);
   };
+  refuse(config.images?.binding === 'IMAGES', 'hosted image processing binding');
   refuse(
     config.name === 'newgalaxyfurniture' && config.account_id === ACCOUNT,
     'company Worker identity',

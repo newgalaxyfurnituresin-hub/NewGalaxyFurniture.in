@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { demoSofa } from '../fixtures/products';
 test.skip(process.env.NGF_COLOR_HARNESS !== '1', 'Uses the isolated local admin fixture.');
 
-test('private preparation resumes after the company computer reconnects', async ({ page }) => {
+test('private online preparation resumes after a service interruption', async ({ page }) => {
   let mode = 'empty';
   await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
     if (route.request().method() === 'POST') {
@@ -41,9 +41,7 @@ test('private preparation resumes after the company computer reconnects', async 
     mimeType: 'image/jpeg',
     buffer: Buffer.from('local mock'),
   });
-  await expect(
-    page.getByText('1 waiting for the company photo tool.', { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText('1 being prepared securely online', { exact: false })).toBeVisible();
   mode = 'ready';
   await page.reload();
   await expect(page.getByText('Prepared photo added.', { exact: false })).toBeVisible();

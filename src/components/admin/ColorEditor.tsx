@@ -44,7 +44,7 @@ export default function ColorEditor({
         onAccepted: (images, revision) => onPhotos?.(color.id, images, revision),
       });
       setMessage(
-        `${result.added} of ${list.length} photograph(s) added for ${color.name}. ${result.pending ? `${result.pending} waiting for the company photo tool. Keep the computer on; prepared photos appear in Images automatically.` : ''} ${result.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} ${result.added ? 'Photos below 4K enter the existing enhancement queue. Save your colour choices, then review the enhanced copies in Images.' : ''}`,
+        `${result.added} of ${list.length} photograph(s) added for ${color.name}. ${result.pending ? `${result.pending} being prepared securely online. Prepared photos appear in Images automatically.` : ''} ${result.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} ${result.added ? 'Save your colour choices. Original resolution is preserved; photographs stay private until the product is published.' : ''}`,
       );
     } finally {
       working.current = false;
@@ -193,7 +193,10 @@ export default function ColorEditor({
                         }
                       />
                       <img
-                        src={derivativeUrl(product.id, image.id, 320, 'webp')}
+                        src={derivativeUrl(product.id, image.id, 320, 'webp').replace(
+                          `/img/${product.id}/`,
+                          `/api/admin/products/${product.id}/media/`,
+                        )}
                         width="72"
                         height="56"
                         alt={image.alt || `Product photo ${imageIndex + 1}`}

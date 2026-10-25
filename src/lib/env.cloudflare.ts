@@ -35,6 +35,7 @@
  * under a Cloudflare env and exist only so a shared call site type-checks on both targets.
  */
 
+import type { HostedImageService } from '@/lib/images/hosted';
 import { env as cloudflareEnv } from 'cloudflare:workers';
 
 import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-types';
@@ -80,6 +81,7 @@ export type SecretName =
  * fails at the specific binding that is missing, with a stable code, rather than at a type cast.
  */
 interface WorkerEnv {
+  IMAGES?: HostedImageService;
   // Bindings
   SESSIONS?: KVNamespace;
   DRAFTS?: KVNamespace;
@@ -190,6 +192,13 @@ export function getR2(_context?: RuntimeCarrier): ObjectBucket {
     'add a [[r2_buckets]] entry bound as MEDIA to wrangler.toml',
   );
   return createCloudflareObjectBucket(bucket);
+}
+export function getImages(_context?: RuntimeCarrier): HostedImageService {
+  return requireBinding(
+    'IMAGES',
+    workerEnv().IMAGES,
+    'configure the company hosted Images binding',
+  );
 }
 
 /* -------------------------------------------------------------------------- */

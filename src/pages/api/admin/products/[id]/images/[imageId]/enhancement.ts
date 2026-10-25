@@ -17,7 +17,6 @@ import {
   ENHANCEMENT_TTL,
   enhancedRecord,
   enhancementKey,
-  queueEnhancement,
   readEnhancement,
 } from '@/lib/images/enhancement';
 import { originalKey } from '@/lib/images/srcset';
@@ -93,8 +92,10 @@ export async function POST(context: APIContext): Promise<Response> {
       const image = product.images.find((entry) => entry.id === imageId);
       if (!image) return errorResponse(ERROR_CODES.NOT_FOUND);
       if (body.value.action === 'queue') {
-        const queued = await queueEnhancement(drafts, productId, image);
-        return jsonResponse({ state: queued?.state ?? '4k' });
+        return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE, {
+          message:
+            'Automatic cloud AI enhancement is not configured. Photo uploads and online optimization work normally at the original resolution.',
+        });
       }
       if (!job || job.state !== 'ready' || !job.result)
         return errorResponse(ERROR_CODES.VALIDATION_FAILED, {

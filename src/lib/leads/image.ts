@@ -31,6 +31,7 @@ import { putImageObject } from '@/lib/images/store';
 import { validateUpload, type UploadCandidate, type UploadError } from '@/lib/images/validate';
 import type { ImageCodec, RawImage } from '@/lib/images/codec';
 import type { ObjectBucket } from '@/lib/runtime/types';
+import { hostedOriginal, type HostedImageService } from '@/lib/images/hosted';
 
 /**
  * The prefix quarantined enquiry attachments live under.
@@ -96,4 +97,21 @@ export async function storeEnquiryImage(
   });
 
   return { ok: true, key, bytes: sanitized.bytes.length };
+}
+
+/** Full hosted decoding and metadata removal; no operator computer handles customer photographs. */
+export async function storeHostedEnquiryImage(
+  bucket: ObjectBucket,
+  service: HostedImageService,
+  leadId: string,
+  file: UploadCandidate,
+): Promise<EnquiryImageResult> {
+  const validation = await validateUpload(file);
+  if (!validation.ok) return { ok: false, error: validation.error };
+  const original = await hostedOriginal(service, validation.image.bytes, 800);
+  const key = quarantineKey(leadId, 'jpg');
+  await bucket.put(key, original.bytes, {
+    httpMetadata: { contentType: 'image/jpeg', cacheControl: 'private, no-store' },
+  });
+  return { ok: true, key, bytes: original.bytes.byteLength };
 }

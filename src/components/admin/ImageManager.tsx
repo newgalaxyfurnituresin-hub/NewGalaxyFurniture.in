@@ -60,9 +60,15 @@ interface EnhancementStatus {
 function thumbnailFor(productId: string, image: ProductImageValue): string {
   if (image.derivativesReady === true && (image.derivativeWidths ?? []).length > 0) {
     const width = [...(image.derivativeWidths ?? [])].sort((a, b) => a - b)[0] ?? 320;
-    return derivativeUrl(productId, image.id, width, 'webp');
+    return derivativeUrl(productId, image.id, width, 'webp').replace(
+      `/img/${productId}/`,
+      `/api/admin/products/${productId}/media/`,
+    );
   }
-  return originalUrl(productId, image.id, extFromMime(image.mime));
+  return originalUrl(productId, image.id, extFromMime(image.mime)).replace(
+    `/img/${productId}/`,
+    `/api/admin/products/${productId}/media/`,
+  );
 }
 
 export default function ImageManager(props: ImageManagerProps): ReactElement {
@@ -71,7 +77,6 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
   const [message, setMessage] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [enhancements, setEnhancements] = useState<Record<string, EnhancementStatus>>({});
-  const [computerOnline, setComputerOnline] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewImage, setReviewImage] = useState<string | null>(null);
   const imageIds = props.images.map((image) => image.id).join(',');
@@ -113,7 +118,12 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
               );
               continue;
             }
-            if (job.state !== 'ready' || !begin()) continue;
+            if (
+              !['ready', 'queued', 'processing'].includes(job.state) ||
+              !result.value.computerOnline ||
+              !begin()
+            )
+              continue;
             try {
               const prepared = await completePhotoUpload(props.productId, job.imageId);
               if (!cancelled && prepared.ok) {
@@ -124,7 +134,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                     prepared.revision,
                   );
                 setMessage(
-                  'Prepared photo added. Smaller sizes are ready; photos below 4K can now be enhanced.',
+                  'Prepared photo added. Smaller sizes are ready and original resolution is preserved.',
                 );
               } else if (!cancelled && !prepared.ok) setMessage(prepared.error.message);
             } finally {
@@ -158,7 +168,6 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
           setEnhancements(
             Object.fromEntries(result.value.images.map((image) => [image.imageId, image])),
           );
-          setComputerOnline(result.value.computerOnline);
         }
       }
       if (!cancelled)
@@ -200,7 +209,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         [imageId]: { imageId, state: result.value.state ?? 'queued', queuedAt: Date.now() },
       }));
       setMessage(
-        'Photo queued for 4K enhancement. Keep the company computer’s photo enhancer running.',
+        'Automatic cloud AI enhancement is not configured. Original resolution is preserved.',
       );
     }
   };
@@ -226,7 +235,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         });
         setRejected(result.rejected);
         setMessage(
-          `${result.added} of ${list.length} photos added.${result.pending ? ` ${result.pending} waiting for the company photo tool. Keep the computer on; prepared photos appear here automatically.` : ''}${result.rejected.length ? ' Check the file messages below.' : ''} ${result.added ? 'Check the photo descriptions below. Smaller sizes are ready and 4K copies can be prepared in the background.' : ''}`,
+          `${result.added} of ${list.length} photos added.${result.pending ? ` ${result.pending} being prepared securely online; prepared photos appear here automatically.` : ''}${result.rejected.length ? ' Check the file messages below.' : ''} ${result.added ? 'Check the photo descriptions below. Original resolution is preserved and smaller sizes are ready.' : ''}`,
         );
       } finally {
         finish();
@@ -368,9 +377,9 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
             Select several photos together. They upload one at a time, with progress shown below.
           </p>
           <p className="max-w-[52ch] text-small text-walnut">
-            New photos below 4K are queued for AI enhancement automatically. Keep the company
-            computer’s photo enhancer running, then review and apply the 4K copy here. Your original
-            is always preserved.
+            Photos are prepared securely online. No personal computer needs to stay on. Original
+            resolution is preserved; only published product photos are public. AI enhancement is not
+            enabled.
           </p>
           <input
             ref={inputRef}
@@ -400,8 +409,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
       <div aria-live="polite" className="break-words text-small">
         {pendingCount > 0 && (
           <p>
-            {pendingCount} photo(s) being prepared. Keep the company computer and its photo tool
-            running. This page checks automatically.
+            {pendingCount} photo(s) being prepared securely online. This page checks automatically.
           </p>
         )}
         {message !== null && <p>{message}</p>}
@@ -509,15 +517,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                             <p>
                               {enhancements[image.id]?.state === 'ready'
                                 ? 'Your 4K copy is ready to review.'
-                                : enhancements[image.id]?.state === 'processing'
-                                  ? 'Enhancing to 4K… Processing usually takes 30–90 seconds, plus transfer time. You can keep editing.'
-                                  : enhancements[image.id]?.state === 'queued'
-                                    ? computerOnline
-                                      ? 'Queued for 4K. Waiting for its turn on the company computer.'
-                                      : 'Waiting for the company computer’s photo enhancer. Your original is saved.'
-                                    : enhancements[image.id]?.state === 'failed'
-                                      ? 'Enhancement could not finish. Your original is safe. Start the computer tool and retry.'
-                                      : 'Prepare a sharper 4K copy while keeping the original.'}
+                                : 'Original-resolution photo. Automatic cloud AI enhancement is not enabled.'}
                             </p>
                             {enhancements[image.id]?.state === 'ready' ? (
                               <button
@@ -538,14 +538,9 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                                 <button
                                   type="button"
                                   className="mt-2 min-h-[44px] border border-espresso px-3"
-                                  disabled={busy}
-                                  onClick={() => {
-                                    void enhance(image.id, 'queue');
-                                  }}
+                                  disabled
                                 >
-                                  {enhancements[image.id]?.state === 'failed'
-                                    ? 'Retry 4K enhancement'
-                                    : 'Enhance to 4K'}
+                                  Cloud AI enhancement not configured
                                 </button>
                               )
                             )}

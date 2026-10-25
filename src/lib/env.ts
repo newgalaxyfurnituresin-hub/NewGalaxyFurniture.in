@@ -24,6 +24,7 @@
  * accessors no longer depend on it.
  */
 
+import type { HostedImageService } from '@/lib/images/hosted';
 import { createBlobKeyValueStore } from '@/lib/runtime/blob-kv';
 import { createBlobObjectBucket } from '@/lib/runtime/blob-bucket';
 import { createNeonDatabase } from '@/lib/runtime/neon';
@@ -102,6 +103,10 @@ export class EnvError extends Error {
  */
 export interface RuntimeCarrier {
   locals?: unknown;
+}
+/** The retained Netlify target uses its native codec; hosted Images is a Cloudflare binding. */
+export function getImages(_context?: RuntimeCarrier): HostedImageService | null {
+  return null;
 }
 
 /* -------------------------------------------------------------------------- */

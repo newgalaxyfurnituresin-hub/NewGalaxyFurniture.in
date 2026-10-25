@@ -3,18 +3,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import sharp from 'sharp';
 import { demoSofa } from '../fixtures/products';
 import { fakeKeyValueStore, fakeObjectBucket } from '../fixtures/runtime';
-import { prepareUploadedPhoto } from '../../scripts/prepare-uploaded-photo';
+import { hostedImageFixture } from '../fixtures/hosted-images';
+import { prepareHostedPhoto } from '@/lib/images/hosted';
 import { readUploadJob, uploadJobKey } from '@/lib/images/upload-jobs';
 import { parseImageRequest } from '@/lib/images/delivery';
+import { enhancementKey } from '@/lib/images/enhancement';
 const state = vi.hoisted(() => ({
   open: vi.fn(),
   resolve: vi.fn(),
   save: vi.fn(),
   bucket: vi.fn(),
   store: vi.fn(),
+  images: vi.fn(),
 }));
 vi.mock('@/lib/admin/context', () => ({ openAdminContext: state.open, lockNamespace: () => ({}) }));
-vi.mock('@/lib/env', () => ({ getR2: state.bucket, getKV: state.store }));
+vi.mock('@/lib/env', () => ({ getR2: state.bucket, getKV: state.store, getImages: state.images }));
 vi.mock('@/lib/auth/rate-limit', () => ({ consumeNamedLimit: async () => ({ allowed: true }) }));
 vi.mock('@/lib/github/drafts', () => ({
   resolveProduct: state.resolve,
@@ -43,6 +46,7 @@ beforeEach(() => {
   });
   state.bucket.mockReturnValue(bucket);
   state.store.mockReturnValue(store);
+  state.images.mockReturnValue(hostedImageFixture());
   state.resolve.mockImplementation(async () => ({ product: structuredClone(product) }));
   state.save.mockImplementation(async (input: { product: typeof product }) => {
     product = structuredClone(input.product);
@@ -69,12 +73,7 @@ async function staged() {
   return { job, bytes };
 }
 async function ready() {
-  const { job, bytes } = await staged();
-  const prepared = await prepareUploadedPhoto(job, bytes, async (key, data, contentType) => {
-    await bucket.put(key, new Uint8Array(data), { httpMetadata: { contentType } });
-  });
-  await store.put(uploadJobKey(product.id, job.imageId), JSON.stringify(prepared));
-  return prepared;
+  return (await staged()).job;
 }
 describe('private free-plan image processing', () => {
   it('keeps unvalidated bytes private and out of the product', async () => {
@@ -86,7 +85,7 @@ describe('private free-plan image processing', () => {
     expect(product.images).toHaveLength(before);
     expect(state.save).not.toHaveBeenCalled();
   });
-  it('fully decodes and strips EXIF locally, generates derivatives and promotes exactly once', async () => {
+  it('fully decodes and strips EXIF through the hosted protocol and promotes exactly once', async () => {
     const before = product.images.length;
     const job = await ready();
     const original = await bucket.get(job.result!.key);
@@ -107,23 +106,34 @@ describe('private free-plan image processing', () => {
     expect((await finish(request())).status).toBe(200);
     expect(product.images).toHaveLength(before + 1);
     expect(state.save).toHaveBeenCalledOnce();
-    expect(await store.get(`enhance:${product.id}:${job.imageId}`, 'json')).toBeDefined();
+    expect(await store.get(enhancementKey(product.id, job.imageId), 'json')).toBeNull();
   });
-  it('refuses promotion before trusted preparation', async () => {
+  it('resumes an earlier private queued upload through the hosted processor', async () => {
     const { job } = await staged();
+    await store.put(
+      uploadJobKey(product.id, job.imageId),
+      JSON.stringify({ ...job, state: 'queued', result: undefined }),
+    );
     expect(
       (
         await finish(
           ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId),
         )
       ).status,
-    ).toBe(422);
-    expect(state.save).not.toHaveBeenCalled();
+    ).toBe(200);
+    expect(state.save).toHaveBeenCalledOnce();
   });
   it('rejects corrupt pixels without exposing an image record', async () => {
     const { job, bytes } = await staged();
     const write = vi.fn();
-    await expect(prepareUploadedPhoto(job, bytes.subarray(0, 40), write)).rejects.toThrow();
+    await expect(
+      prepareHostedPhoto(
+        hostedImageFixture(),
+        { ...bucket, put: write },
+        job,
+        bytes.subarray(0, 40),
+      ),
+    ).rejects.toThrow();
     expect(write).not.toHaveBeenCalled();
     expect(state.save).not.toHaveBeenCalled();
   });

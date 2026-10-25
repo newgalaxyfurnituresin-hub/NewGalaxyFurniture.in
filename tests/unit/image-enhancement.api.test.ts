@@ -87,8 +87,8 @@ describe('admin enhancement operations', () => {
     expect(state.resolve).not.toHaveBeenCalled();
     expect(state.save).not.toHaveBeenCalled();
   });
-  it('queues an image without altering the product', async () => {
-    expect((await POST(ctx())).status).toBe(200);
+  it('does not queue private images to a local computer when cloud AI is unconfigured', async () => {
+    expect((await POST(ctx())).status).toBe(503);
     expect(state.save).not.toHaveBeenCalled();
   });
   it('does not apply an unready job', async () => {

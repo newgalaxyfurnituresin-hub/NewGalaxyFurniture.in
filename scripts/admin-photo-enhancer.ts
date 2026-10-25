@@ -5,7 +5,6 @@ import { access, mkdir, open, readFile, unlink, writeFile } from 'node:fs/promis
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { processUploadQueue } from './prepare-uploaded-photo';
 import { z } from 'zod';
 import { enhancePhoto, LOCAL_ROOT } from './enhance-photos';
 import {
@@ -229,9 +228,9 @@ async function listedKeys(): Promise<string[]> {
 }
 
 async function main(): Promise<void> {
-  if (process.argv[2] === '--help') {
+  if (process.argv[2] !== '--manual-local') {
     console.log(
-      'Run without arguments to watch company admin uploads, or --once for one queue sweep.',
+      'Uploads run online. Local watching is disabled. --manual-local is only for an explicitly requested offline review.',
     );
     return;
   }
@@ -287,13 +286,6 @@ async function main(): Promise<void> {
         }
         const latest = z.array(z.string()).safeParse(await readKey(ENHANCEMENT_POINTER));
         const keys = new Set(latest.success ? latest.data : []);
-        await processUploadQueue(
-          api,
-          readKey,
-          writeKey,
-          upload,
-          Date.now() - lastList > 5 * 60_000,
-        );
         if (Date.now() - lastList > 5 * 60_000) {
           for (const key of await listedKeys()) keys.add(key);
           lastList = Date.now();
@@ -319,14 +311,14 @@ async function main(): Promise<void> {
           } else if (['ready', 'applied'].includes(job.state)) finished.add(key);
         }
       } catch (error) {
-        if (process.argv[2] === '--once') throw error;
+        if (process.argv.includes('--once')) throw error;
         console.error(
           error instanceof Error ? error.message : 'Photo queue connection interrupted.',
         );
         console.error('The processor will reconnect in one minute. Original photos are safe.');
         retryDelay = 60;
       }
-      if (process.argv[2] === '--once') break;
+      if (process.argv.includes('--once')) break;
       for (let second = 0; second < retryDelay && !stopping; second++) {
         try {
           await access(stopPath);

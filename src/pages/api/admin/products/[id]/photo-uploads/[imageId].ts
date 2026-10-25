@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { lockNamespace, openAdminContext } from '@/lib/admin/context';
-import { getR2 } from '@/lib/env';
+import { getImages, getR2 } from '@/lib/env';
+import { prepareHostedPhoto } from '@/lib/images/hosted';
 import {
   ERROR_CODES,
   errorResponse,
@@ -12,8 +13,12 @@ import { resolveProduct, saveProductState } from '@/lib/github/drafts';
 import { withProductLock } from '@/lib/github/client';
 import { validateProduct } from '@/lib/products/input';
 import { productRevisionHeaders } from '@/lib/products/revision';
-import { readUploadJob, uploadJobKey, UPLOAD_JOB_TTL } from '@/lib/images/upload-jobs';
-import { queueEnhancement } from '@/lib/images/enhancement';
+import {
+  readUploadJob,
+  uploadJobKey,
+  uploadIndexKey,
+  UPLOAD_JOB_TTL,
+} from '@/lib/images/upload-jobs';
 export const prerender = false;
 export async function POST(context: APIContext): Promise<Response> {
   const opened = await openAdminContext(context, 'product.write');
@@ -25,8 +30,22 @@ export async function POST(context: APIContext): Promise<Response> {
     return await withProductLock(lockNamespace(context), productId, async () => {
       const resolved = await resolveProduct({ drafts, client }, productId);
       if (!resolved) return errorResponse(ERROR_CODES.NOT_FOUND);
-      const job = await readUploadJob(drafts, productId, imageId);
+      let job = await readUploadJob(drafts, productId, imageId);
       if (!job) return errorResponse(ERROR_CODES.NOT_FOUND);
+      if (job.state === 'queued' || job.state === 'processing') {
+        const source = await getR2(context).get(job.sourceKey);
+        const service = getImages(context);
+        if (!source || !service) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
+        job = await prepareHostedPhoto(
+          service,
+          getR2(context),
+          job,
+          new Uint8Array(await source.arrayBuffer()),
+        );
+        await drafts.put(uploadJobKey(productId, imageId), JSON.stringify(job), {
+          expirationTtl: UPLOAD_JOB_TTL,
+        });
+      }
       const product = resolved.product;
       const existing = product.images.find((image) => image.id === imageId);
       if (existing) {
@@ -99,11 +118,13 @@ export async function POST(context: APIContext): Promise<Response> {
         JSON.stringify({ ...job, state: 'applied', updatedAt: Date.now() }),
         { expirationTtl: UPLOAD_JOB_TTL },
       );
-      try {
-        await queueEnhancement(drafts, productId, added);
-      } catch (error) {
-        logServerError('photo uploads: enhancement queue deferred', error);
-      }
+      const index = await drafts.get(uploadIndexKey(productId), 'json');
+      if (Array.isArray(index))
+        await drafts.put(
+          uploadIndexKey(productId),
+          JSON.stringify(index.filter((value) => typeof value === 'string' && value !== imageId)),
+          { expirationTtl: UPLOAD_JOB_TTL },
+        );
       return jsonResponse(
         { images: [added], rejected: [], colorName: job.colorName },
         { headers: productRevisionHeaders(product.updatedAt, candidate.product.updatedAt) },

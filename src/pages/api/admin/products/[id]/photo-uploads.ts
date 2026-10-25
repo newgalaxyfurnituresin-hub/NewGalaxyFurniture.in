@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { openAdminContext } from '@/lib/admin/context';
-import { getR2 } from '@/lib/env';
+import { getImages, getR2 } from '@/lib/env';
+import { prepareHostedPhoto } from '@/lib/images/hosted';
 import {
   ERROR_CODES,
   errorResponse,
@@ -13,13 +14,11 @@ import { consumeNamedLimit } from '@/lib/auth/rate-limit';
 import { getKV } from '@/lib/env';
 import { BodyTooLargeError, readBoundedForm } from '@/lib/security/body';
 import { generateImageId, validateUpload } from '@/lib/images/validate';
-import { ENHANCEMENT_HEARTBEAT } from '@/lib/images/enhancement';
 import {
   listUploadJobs,
   quarantineKey,
   uploadJobKey,
   uploadIndexKey,
-  UPLOAD_JOB_POINTER,
   UPLOAD_JOB_TTL,
   type UploadJobValue,
 } from '@/lib/images/upload-jobs';
@@ -34,12 +33,9 @@ export async function GET(context: APIContext): Promise<Response> {
     if (!(await resolveProduct({ drafts, client }, productId)))
       return errorResponse(ERROR_CODES.NOT_FOUND);
     const jobs = await listUploadJobs(drafts, productId);
-    const heartbeat = (await drafts.get(ENHANCEMENT_HEARTBEAT, 'json')) as {
-      lastSeen?: number;
-    } | null;
     return jsonResponse({
-      computerOnline:
-        typeof heartbeat?.lastSeen === 'number' && Date.now() - heartbeat.lastSeen < 10 * 60_000,
+      computerOnline: true,
+      processorOnline: true,
       uploads: jobs.map((job) => ({
         imageId: job.imageId,
         filename: job.filename,
@@ -120,18 +116,26 @@ export async function POST(context: APIContext): Promise<Response> {
       ),
       { expirationTtl: UPLOAD_JOB_TTL },
     );
-    const pointer = await drafts.get(UPLOAD_JOB_POINTER, 'json');
-    const previous = Array.isArray(pointer)
-      ? pointer.filter(
-          (entry): entry is string =>
-            typeof entry === 'string' && entry.startsWith('photo-upload:'),
-        )
-      : [];
-    await drafts.put(
-      UPLOAD_JOB_POINTER,
-      JSON.stringify([...new Set([key, ...previous])].slice(0, 80)),
-      { expirationTtl: UPLOAD_JOB_TTL },
-    );
+    try {
+      const service = getImages(context);
+      if (!service) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
+      const prepared = await prepareHostedPhoto(
+        service,
+        getR2(context),
+        job,
+        validation.image.bytes,
+      );
+      await drafts.put(key, JSON.stringify(prepared), { expirationTtl: UPLOAD_JOB_TTL });
+    } catch (error) {
+      logServerError('photo uploads: online preparation failed', error);
+      await drafts.put(key, JSON.stringify({ ...job, state: 'failed', updatedAt: Date.now() }), {
+        expirationTtl: UPLOAD_JOB_TTL,
+      });
+      return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
+        message:
+          'Online photo preparation is unavailable or the image could not be decoded. Your upload stays private. Try a JPEG photo, or try again later.',
+      });
+    }
     return jsonResponse({ uploadId: imageId, images: [], rejected: [] }, { status: 202 });
   } catch (error) {
     logServerError('photo uploads: staging failed', error);

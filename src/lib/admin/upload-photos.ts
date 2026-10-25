@@ -42,7 +42,8 @@ async function waitForPhoto(
     );
     if (!result.ok) return result;
     const job = result.value.uploads.find((upload) => upload.imageId === imageId);
-    if (job?.state === 'ready') return await completePhotoUpload(productId, imageId);
+    if (job && ['ready', 'queued', 'processing'].includes(job.state) && result.value.computerOnline)
+      return await completePhotoUpload(productId, imageId);
     if (job?.state === 'failed')
       return {
         ok: false,
@@ -53,9 +54,7 @@ async function waitForPhoto(
         },
       };
     if (!result.value.computerOnline) return null;
-    progress(
-      'Photo received privately. The company computer is validating it and preparing smaller sizes. Keep this page open.',
-    );
+    progress('Photo received privately. Preparing it securely online. Keep this page open.');
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   return null;
