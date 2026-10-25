@@ -34,6 +34,21 @@
       "mime": "image/jpeg",
       "order": 0,
       "width": 1536
+    },
+    {
+      "alt": "",
+      "altSource": "admin",
+      "derivativeFormats": [],
+      "derivativeWidths": [],
+      "derivativesReady": false,
+      "filename": "WhatsApp Image 2026-10-25 at 2.23.51 AM (1).jpeg",
+      "height": 1024,
+      "id": "img_e5wrygfcv5",
+      "key": "products/p_ey8ddqoy3w/img_e5wrygfcv5/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRlYEAABXRUJQVlA4TEoEAAAvF8ADEM1VICICHgiAFiQFAIA///2/M7M3M3dtq929003XlqPbU1vbqVICFxJEIh0nAQg6RwAAAAEAAAhAAJDDoigt9m6durnudkc7dtrZ/fPnz7wPAADggQAo0W0AAJz/vffu/v3Lb/Lz260V7bau0k7WrjrdUApmldKNGQAzUwAGAAMwAAAYRgvoGEA3Y4NBFbqxpmGSjmS6ZL+RJr/pT+7uPBDALkgKAIDz//739s3uzLytZl1X2yUFlgAgIBAAAAAAAAAAAAAAAAAAKHcEAQSIdEirrSvbtbtXs2ZmZ+bNvP+L/BR96X58dYozzWOl40wjZ+P8s/nnwuvrK4f54ss3DLW70k6ff1t7+vXkzet61d+o5c6FmCOxUlnQsAG24FFjJ5gux5O1s8RNjQYYztDEaSskF1ApMqEWyHXSPEuNjaIYjkchRXiIM/ynOCKcjgwRaUVqyqEFC04NsAegnanopUmkRq4nRhBJlBJH0LBSASNgwSzBCiIoCiAaBe9NQnJqpOFIGDgjnCfYNrNowBu1IikIdrY1/Q6t0QA+ErBEIDAyBwoEgMrYA/jLQDJSjTQYuIM5SNSf+yJjxHKpBHKuVI1EqAYpX1nKqAQ1CQWCAxiAAwizWjzmahSInEBAuaHTl7z6IEn8/7V9GoSca+GR89E0I2ExmGn6C3V/vvp1p+mVmh93m2+lmnvT9eUAhWpOkgktAAhYTMAr97JGMrlXRuu7OITO0kql3pq53WQpdnbP8UtXSi0bWqbFcFLr5xdTd7NYKiGEoQAgsWzpxWl2VIiA6tWP2pONO13RxFDAtcZs83fWrmSdk+xuJe9U8vvH/uEPz4lzkPWlPZZvDm+HNBzmzsLA1mKQg7PZWS6Lh/rGdSX8p4fOPp+SwSTVdkomJjP2Mc7HsBCiue5s4jiLjoOw/nlLo0eHx9ufVrbW6cJ/13Kl5pP9p8TScq2NrVTE8u3h28+99x8Hex+O99///fY2/Ppu9OVy+OlKOinS6e9Ln/Vty57Go3Qyezp/vD3Z+qWLe0zs+ckS0ZChlWEfvFiHz76Hq7fBTN0X+r2Tfa0VX46Wn78/ywGGMw0eNyd3ca4dCkZW5iDRtT4sld761tBIknxq5knTBzsvBu9W/d2Xgw+r4PPz0cGFqBZO2/l6LHFdoFigVikuBUH6Aw96L9e6srPkyFJXlYNGG3fnWd3702Vr7u7R4vbZys83DzfvH6w/3N/sl35/vHmQThSzgomJtChqEZkayqqvhl1xnUObTfMxFItqa/J64rC7eLMzu305tX+RbbZtvN1N23+L5un5pfojjgCChXGZj74IDb/3Vdcc6y8H3XVZ3ZJ3W7p6+qt79S9uGHv1/9xvPqzXL5zaE95cQnshkhy1QyZto3fssOWFB17oyL4jT/f89gl12177jo57vebtz/T58Xy1fq4bj71WoXrevUpsEEWRiQg0SmKJAQA=",
+      "mime": "image/jpeg",
+      "order": 1,
+      "width": 1536
     }
   ],
   "keywords": [],
@@ -60,6 +75,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-25T09:28:04.019Z",
+  "updatedAt": "2026-10-25T09:42:36.726Z",
   "variants": []
 }
