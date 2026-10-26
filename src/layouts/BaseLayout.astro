@@ -1,4 +1,5 @@
 ---
+import SiteIcons from '@/components/ui/SiteIcons.astro';
 /**
  * The public page shell.
  *
@@ -100,6 +101,7 @@ const telHref = primary === undefined ? '#' : buildTelUrl(primary.e164);
 <html lang="en-IN" data-motion="auto">
   <head>
     <meta charset="utf-8" />
+    <SiteIcons />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {
       /*
