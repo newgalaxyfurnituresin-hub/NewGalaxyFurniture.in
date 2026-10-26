@@ -7,6 +7,7 @@ import {
   readLocalRecovery,
   recoveryStorageKey,
   restoreEditorPatch,
+  serializeEditorPatch,
 } from '@/lib/admin/editor-recovery';
 import { EditorDraftInput, EDITOR_DRAFT_TTL_SECONDS } from '@/lib/products/editor-drafts';
 const mocks = vi.hoisted(() => ({ guard: vi.fn(), kv: vi.fn() }));
@@ -44,6 +45,24 @@ beforeEach(() => {
   mocks.guard.mockResolvedValue({ ok: true, session: { userId: 'owner-a' } });
 });
 describe('private editor recovery', () => {
+  it('compares validated colour fields independently of object key order', () => {
+    const first = {
+      colorOptions: [
+        { id: 'col_12345678', name: 'Brown', stockStatus: 'IN_STOCK' as const, imageIds: [] },
+      ],
+      dimensions: { widthCm: 0, depthCm: 1 },
+    };
+    const second = {
+      dimensions: { depthCm: 1, widthCm: 0 },
+      colorOptions: [
+        { imageIds: [], stockStatus: 'IN_STOCK' as const, name: 'Brown', id: 'col_12345678' },
+      ],
+    };
+    expect(serializeEditorPatch(first)).toBe(serializeEditorPatch(second));
+    expect(serializeEditorPatch({ tags: ['one', 'two'] })).not.toBe(
+      serializeEditorPatch({ tags: ['two', 'one'] }),
+    );
+  });
   it('accepts incomplete details but forbids identity, image bytes and publishing', () => {
     expect(EditorDraftInput.safeParse(payload).success).toBe(true);
     for (const field of ['id', 'status', 'images', 'sku', 'published']) {

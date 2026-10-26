@@ -3,6 +3,7 @@ import type { Product } from '@/schemas/product';
 import { adminFetch } from '@/lib/admin/client';
 import {
   recoveryStorageKey,
+  serializeEditorPatch,
   readLocalRecovery,
   restoreEditorPatch,
   type LocalEditorDraft,
@@ -82,9 +83,9 @@ export function useProductRecovery(options: {
           if (
             local &&
             (local.dirty ||
-              JSON.stringify(current.current.patch) !== JSON.stringify(local.patch)) &&
+              serializeEditorPatch(current.current.patch) !== serializeEditorPatch(local.patch)) &&
             local.revision !== cloud.revision &&
-            JSON.stringify(local.patch) !== JSON.stringify(cloud.patch)
+            serializeEditorPatch(local.patch) !== serializeEditorPatch(cloud.patch)
           ) {
             cloudConflict.current = true;
             setMessage(
@@ -92,12 +93,12 @@ export function useProductRecovery(options: {
             );
           } else {
             revision.current = cloud.revision;
-            synced.current = local?.dirty ? '' : JSON.stringify(cloud.patch);
+            synced.current = local?.dirty ? '' : serializeEditorPatch(cloud.patch);
             if (
               (!local && !current.current.hasEdits) ||
               (local &&
                 !local.dirty &&
-                JSON.stringify(current.current.patch) === JSON.stringify(local.patch))
+                serializeEditorPatch(current.current.patch) === serializeEditorPatch(local.patch))
             ) {
               if (options.mode === 'create' || cloud.baseUpdatedAt === options.product.updatedAt) {
                 current.current.restore(
@@ -126,7 +127,7 @@ export function useProductRecovery(options: {
       patch: value.patch,
       revision: revision.current ?? '',
       savedAt: Date.now(),
-      dirty: JSON.stringify(value.patch) !== synced.current,
+      dirty: serializeEditorPatch(value.patch) !== synced.current,
     };
     try {
       localStorage.setItem(key, JSON.stringify(record));
@@ -139,13 +140,24 @@ export function useProductRecovery(options: {
   useLayoutEffect(() => {
     if (!options.hasEdits || !key) return;
     persist();
-    if (!cloudConflict.current && !stale)
+    if (
+      !cloudConflict.current &&
+      !stale &&
+      ready &&
+      serializeEditorPatch(options.patch) === synced.current
+    ) {
+      setMessage(
+        localSafe.current
+          ? 'Draft saved online and on this device. Not published.'
+          : 'Draft saved online. Device storage is unavailable. Not published.',
+      );
+    } else if (!cloudConflict.current && !stale)
       setMessage(
         localSafe.current
           ? 'Draft saved on this device. Waiting to save online…'
           : 'Device storage unavailable. Keep this tab open until the online draft is saved.',
       );
-  }, [options.patch, options.hasEdits, key, persist, stale]);
+  }, [options.patch, options.hasEdits, key, persist, stale, ready]);
 
   useEffect(() => {
     if (!key) return;
@@ -170,7 +182,7 @@ export function useProductRecovery(options: {
   useEffect(() => {
     if (!ready || !key || !options.hasEdits || options.paused || stale || cloudConflict.current)
       return;
-    const serialized = JSON.stringify(options.patch);
+    const serialized = serializeEditorPatch(options.patch);
     if (serialized === synced.current) return;
     let cancelled = false;
     const timer = setTimeout(
@@ -199,9 +211,11 @@ export function useProductRecovery(options: {
             synced.current = serialized;
             persist();
             setMessage(
-              localSafe.current
-                ? 'Draft saved online and on this device. Not published.'
-                : 'Draft saved online. Device storage is unavailable. Not published.',
+              serializeEditorPatch(current.current.patch) !== serialized
+                ? 'Newer details are waiting to save online. Keep editing; your device copy is preserved where storage is available.'
+                : localSafe.current
+                  ? 'Draft saved online and on this device. Not published.'
+                  : 'Draft saved online. Device storage is unavailable. Not published.',
             );
           } else if (result.error.code === 'CONFLICT') {
             cloudConflict.current = true;
@@ -268,7 +282,7 @@ export function useProductRecovery(options: {
         cloudConflict.current = false;
         failures.current = 0;
       } else cloudConflict.current = true;
-      synced.current = JSON.stringify(current.current.patch);
+      synced.current = serializeEditorPatch(current.current.patch);
       setMessage(
         cleared.ok
           ? ''

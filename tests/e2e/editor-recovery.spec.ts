@@ -26,7 +26,9 @@ for (const width of [375, 768, 1024, 1440]) {
         cloud = {
           scope: body.scope,
           baseUpdatedAt: body.baseUpdatedAt,
-          patch: body.patch,
+          patch: Object.fromEntries(
+            Object.entries(body.patch as Record<string, unknown>).reverse(),
+          ),
           revision: crypto.randomUUID(),
           savedAt: Date.now(),
         };
@@ -54,6 +56,10 @@ for (const width of [375, 768, 1024, 1440]) {
     await page.reload();
     await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue(
       'Tablet unfinished furniture',
+    );
+    await expect(page.getByRole('region', { name: 'Draft recovery' })).toContainText(
+      'saved online',
+      { timeout: 15000 },
     );
     offline = true;
     await page
@@ -158,4 +164,58 @@ test('an offline-only new draft can be resumed from Products', async ({ page }) 
   await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue(
     'Device-only recovery check',
   );
+});
+
+test('typing while an online save is pending queues the newer details', async ({ page }) => {
+  let release: (() => void) | undefined;
+  let writes = 0;
+  const names: string[] = [];
+  await page.route('**/api/admin/editor-drafts**', async (route) => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      await route.fulfill({ json: { draft: null } });
+      return;
+    }
+    const body = request.postDataJSON() as {
+      scope: string;
+      baseUpdatedAt: string;
+      patch: { name: string };
+    };
+    names.push(body.patch.name);
+    if (++writes === 1)
+      await new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    await route.fulfill({
+      json: {
+        draft: {
+          scope: body.scope,
+          baseUpdatedAt: body.baseUpdatedAt,
+          patch: body.patch,
+          revision: String(writes),
+          savedAt: Date.now(),
+        },
+      },
+    });
+  });
+  await page.goto('/admin/products/new?recovery=1');
+  await page
+    .getByRole('textbox', { name: 'Product name', exact: true })
+    .fill('First unfinished name');
+  await expect(page.getByRole('region', { name: 'Draft recovery' })).toContainText(
+    'Saving online',
+    { timeout: 15000 },
+  );
+  await page
+    .getByRole('textbox', { name: 'Product name', exact: true })
+    .fill('Newest unfinished name');
+  await expect.poll(() => release !== undefined).toBe(true);
+  release!();
+  await expect(page.getByRole('region', { name: 'Draft recovery' })).toContainText(
+    'Newer details are waiting',
+  );
+  await expect(page.getByRole('region', { name: 'Draft recovery' })).toContainText('saved online', {
+    timeout: 15000,
+  });
+  expect(names).toEqual(['First unfinished name', 'Newest unfinished name']);
 });

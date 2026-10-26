@@ -12,6 +12,17 @@ export interface LocalEditorDraft extends EditorDraft {
   dirty: boolean;
   completedId?: string;
 }
+/** Object key order can change during server validation; array order is meaningful. */
+export function serializeEditorPatch(patch: EditorPatch): string {
+  return JSON.stringify(patch, (_key, value: unknown) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.fromEntries(
+        Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+      );
+    }
+    return value;
+  });
+}
 export function recoveryStorageKey(owner: string, scope: string): string {
   return `ngf:editor-recovery:${owner}:${scope}`;
 }
