@@ -20,6 +20,7 @@
  * Requirements: 10.2, 10.5, 24.8, 26.3.
  */
 import '@/styles/global.css';
+import SiteIcons from '@/components/ui/SiteIcons.astro';
 import { getAccessConfig, safeAdminNext } from '@/lib/auth/access';
 
 export const prerender = false;
@@ -38,6 +39,7 @@ const emailSignIn = getAccessConfig(Astro) !== null;
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <SiteIcons />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Sign in — New Galaxy Furniture admin</title>

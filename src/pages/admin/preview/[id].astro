@@ -20,6 +20,7 @@
  * Requirements: 12.4, 12.9, 12.10, 23.15.
  */
 import ProductDetail from '@/components/product/ProductDetail.astro';
+import SiteIcons from '@/components/ui/SiteIcons.astro';
 import { createGitHubClient } from '@/lib/github/factory';
 import { getKV } from '@/lib/env';
 import { getPublishedCategories } from '@/lib/content/catalogue';
@@ -71,6 +72,7 @@ const meta = pageMeta(Astro, {
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <SiteIcons />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content={meta.robots} />
     <title>{meta.title}</title>
