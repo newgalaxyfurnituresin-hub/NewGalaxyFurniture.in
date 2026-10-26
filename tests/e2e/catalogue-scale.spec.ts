@@ -168,6 +168,9 @@ for (const width of [375, 768, 1024, 1440]) {
     await expect(
       page.getByRole('heading', { name: 'No products match these filters', exact: true }),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
+    await expect(page.getByRole('searchbox', { name: 'Search', exact: true })).toHaveValue('');
+    await expect(page.getByText('1000 of 1000 products', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

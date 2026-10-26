@@ -133,11 +133,12 @@ export default function ProductTable(props: ProductTableProps): ReactElement {
             type="search"
             className="min-h-[44px] border border-taupe px-3 py-2"
             placeholder="Name, SKU or category"
+            value={query.q ?? ''}
             onChange={(event) => {
-              const value = event.target.value.trim();
+              const value = event.target.value;
               setQuery((current) => {
                 const next = { ...current, page: 1 };
-                if (value === '') delete next.q;
+                if (value.trim() === '') delete next.q;
                 else next.q = value;
                 return next;
               });
