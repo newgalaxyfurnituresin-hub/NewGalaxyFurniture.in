@@ -5,18 +5,19 @@ These are the **Cloudflare D1** schema migrations for New Galaxy Furniture, boun
 migrations and predate the Netlify work; `db/schema.sql` is the PostgreSQL/Neon translation of this
 exact schema, kept in sync for the Netlify deployment.
 
-> **Status: not yet applied.** Nothing in this directory has been applied to a real D1 database. The
-> Cloudflare target is wired and builds, but applying migrations to a remote D1 database and
-> provisioning an admin account are manual steps that require a Cloudflare account and are listed
-> below. Cloudflare preview/local resources are treated as **empty**; no production data is migrated.
+The company production database is `ngf-content`. The existing administrator, lead and analytics
+schema is in use. Migration `0004_runtime_kv.sql` adds private runtime storage without altering those
+tables. For the verified KV-to-D1 copy procedure and safety checks, see
+`docs/LOGIN-STORAGE-2026-10-26.md`; source KV namespaces are preserved.
 
 ## Files (applied in filename order by `wrangler d1 migrations apply`)
 
-| File              | Tables                          | Notes                                                                                                               |
-| ----------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `0001_admin.sql`  | `admin_users`, `login_attempts` | Credentials + login-abuse state. `LOWER(email)` unique index; `login_attempts.key` is a hash, never a raw email/IP. |
-| `0002_leads.sql`  | `leads`                         | Enquiry personal data; `status, created_at DESC` and `created_at DESC` indexes.                                     |
-| `0003_events.sql` | `event_daily`, `search_queries` | Daily analytics aggregates only (no per-visitor rows); composite PKs are the upsert targets.                        |
+| File                  | Tables                          | Notes                                                                                                               |
+| --------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `0001_admin.sql`      | `admin_users`, `login_attempts` | Credentials + login-abuse state. `LOWER(email)` unique index; `login_attempts.key` is a hash, never a raw email/IP. |
+| `0002_leads.sql`      | `leads`                         | Enquiry personal data; `status, created_at DESC` and `created_at DESC` indexes.                                     |
+| `0003_events.sql`     | `event_daily`, `search_queries` | Daily analytics aggregates only (no per-visitor rows); composite PKs are the upsert targets.                        |
+| `0004_runtime_kv.sql` | `runtime_kv`                    | Namespace-isolated private sessions, draft state and rate counters with expiry.                                     |
 
 Every statement is `CREATE TABLE/INDEX IF NOT EXISTS`, so the set is idempotent and safe to re-run.
 

@@ -42,6 +42,7 @@ import type { D1Database, KVNamespace, R2Bucket } from '@cloudflare/workers-type
 
 import { createD1Database } from '@/lib/runtime/d1';
 import { createCloudflareKeyValueStore } from '@/lib/runtime/kv';
+import { createD1KeyValueStore } from '@/lib/runtime/d1-kv';
 import { createCloudflareObjectBucket } from '@/lib/runtime/r2';
 import type { KeyValueStore, ObjectBucket, SqlDatabase } from '@/lib/runtime/types';
 import { normalise as normaliseSiteUrl } from '@/lib/seo/site-url';
@@ -175,6 +176,7 @@ export function getKV(
   name: 'SESSIONS' | 'DRAFTS' | 'RATELIMIT',
 ): KeyValueStore {
   const env = workerEnv();
+  if (env.RUNTIME_KV_BACKEND === 'd1') return createD1KeyValueStore(getD1(_context), name);
   const namespace = requireBinding(
     name,
     env[name],

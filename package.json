@@ -21,7 +21,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "e2e:prepare": "tsx scripts/prepare-e2e.ts && wrangler d1 execute DB --local --file migrations/0001_admin.sql && wrangler d1 execute DB --local --file migrations/0002_leads.sql && wrangler d1 execute DB --local --file migrations/0003_events.sql && wrangler d1 execute DB --local --file .e2e/seed-admin.sql",
+    "e2e:prepare": "tsx scripts/prepare-e2e.ts && wrangler d1 execute DB --local --file migrations/0001_admin.sql && wrangler d1 execute DB --local --file migrations/0002_leads.sql && wrangler d1 execute DB --local --file migrations/0003_events.sql && wrangler d1 execute DB --local --file migrations/0004_runtime_kv.sql && wrangler d1 execute DB --local --file .e2e/seed-admin.sql",
     "e2e:serve": "wrangler dev --local --port 8788 --var PUBLIC_SITE_URL:http://localhost:8788",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "images:migrate": "tsx scripts/migrate-images-to-blobs.ts",

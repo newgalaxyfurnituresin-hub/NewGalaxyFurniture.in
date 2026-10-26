@@ -258,13 +258,22 @@ export function useProductRecovery(options: {
       } catch {
         /* The confirmed server save still succeeded. */
       }
-      await adminFetch('/api/admin/editor-drafts', {
+      const cleared = await adminFetch('/api/admin/editor-drafts', {
         method: 'DELETE',
         timeoutMs: 10000,
         body: { scope, revision: revision.current },
       });
+      if (cleared.ok) {
+        revision.current = null;
+        cloudConflict.current = false;
+        failures.current = 0;
+      } else cloudConflict.current = true;
       synced.current = JSON.stringify(current.current.patch);
-      setMessage('');
+      setMessage(
+        cleared.ok
+          ? ''
+          : 'The product save is separate from recovery storage. The online recovery copy could not be cleared; your saved product is unchanged.',
+      );
       setStale(null);
     },
     [key, scope],

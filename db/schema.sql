@@ -90,3 +90,11 @@ CREATE TABLE IF NOT EXISTS search_queries (
 
 CREATE INDEX IF NOT EXISTS event_daily_day_type ON event_daily (day, type);
 CREATE INDEX IF NOT EXISTS search_queries_day ON search_queries (day);
+
+CREATE TABLE IF NOT EXISTS runtime_kv (
+  namespace TEXT NOT NULL,
+  entry_key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  expires_at BIGINT,
+  PRIMARY KEY (namespace, entry_key)
+);

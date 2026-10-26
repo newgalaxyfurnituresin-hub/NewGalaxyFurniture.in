@@ -133,6 +133,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   const [imageBusy, setImageBusy] = useState(false);
   const [colorBusy, setColorBusy] = useState(false);
   const [deleted, setDeleted] = useState<PendingPublication | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const recoveryPatch = useMemo(() => patchFrom(draft), [draft]);
   const restoreDraft = useCallback((product: Product) => {
     setDraft(product);
@@ -182,6 +183,28 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
 
   const readOnly = !props.canWrite;
   const fieldsDisabled = readOnly || save.kind === 'saving';
+  const discardDetails = async (): Promise<void> => {
+    if (saving.current || imageBusy || colorBusy) return;
+    saving.current = true;
+    setConfirmDiscard(false);
+    setSave({ kind: 'saving' });
+    try {
+      const latest =
+        props.mode === 'edit'
+          ? await adminFetch<{ product: Product }>(`/api/admin/products/${draft.id}`)
+          : { ok: true as const, value: { product: props.product } };
+      if (!latest.ok) {
+        setSave({ kind: 'failed', message: latest.error.message });
+        return;
+      }
+      await recovery.clear();
+      setHasEdits(false);
+      setDraft(latest.value.product);
+      setSave({ kind: 'idle' });
+    } finally {
+      saving.current = false;
+    }
+  };
 
   const subcategoryOptions = useMemo(() => {
     const category = props.categories.find((entry) => entry.slug === draft.category);
@@ -332,6 +355,44 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           <p className="mt-1 text-walnut">
             This does not publish changes. Use Save when the details are ready.
           </p>
+          {hasEdits && !fieldsDisabled && (
+            <div className="mt-2">
+              {confirmDiscard ? (
+                <>
+                  <p>
+                    Discard these unfinished details and return to the saved product? Uploaded
+                    photographs stay on the product.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      className="min-h-[44px] border border-espresso px-3"
+                      onClick={() => {
+                        void discardDetails();
+                      }}
+                    >
+                      Discard unfinished details
+                    </button>
+                    <button
+                      type="button"
+                      className="min-h-[44px] border border-taupe px-3"
+                      onClick={() => setConfirmDiscard(false)}
+                    >
+                      Keep editing
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="min-h-[44px] underline"
+                  onClick={() => setConfirmDiscard(true)}
+                >
+                  Discard recovery draft…
+                </button>
+              )}
+            </div>
+          )}
           {recovery.stale && (
             <div className="mt-3">
               <p>
@@ -350,9 +411,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
                   type="button"
                   className="min-h-[44px] border border-taupe px-3"
                   onClick={() => {
-                    setHasEdits(false);
-                    setDraft(props.product);
-                    void recovery.clear();
+                    void discardDetails();
                   }}
                 >
                   Use saved product instead

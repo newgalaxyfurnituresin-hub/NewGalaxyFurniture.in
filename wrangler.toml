@@ -15,10 +15,9 @@
 # AI and deployment-status integrations remain unset without valid credentials.
 # Preview IDs are deliberately invalid until company preview resources are provisioned.
 #
-# NOTE ON RATE LIMITING: unlike the original Cloudflare design, the current application collapses the
-# per-minute ceilings into KV counters (`consumeBindingLimit` in src/lib/auth/rate-limit.ts), so
-# there are intentionally NO [[ratelimits]] bindings here. The RATELIMIT KV namespace covers every
-# window.
+# Private key/value records use D1's runtime_kv table to avoid Workers KV's daily
+# free-write ceiling. The existing KV bindings are retained intact for recovery;
+# RUNTIME_KV_BACKEND selects the indexed SQL adapter. All rate controls remain active.
 
 name = "newgalaxyfurniture"
 account_id = "202e4307d4836b9170f546dbea1783d4"
@@ -70,6 +69,7 @@ mode = "smart"
 # --- Public (non-secret) variables ------------------------------------------
 # These are printed on the site itself, so they are configuration, not secrets.
 [vars]
+RUNTIME_KV_BACKEND = "d1"
 PUBLIC_SITE_URL = "https://newgalaxyfurniture.in"
 GITHUB_REPO = "newgalaxyfurnituresin-hub/NewGalaxyFurniture.in"
 GITHUB_BRANCH = "main"

@@ -23,6 +23,15 @@ describe('Cloudflare configuration boundary', () => {
     );
   });
 
+  it('selects the private SQL store without accessing exhausted KV bindings', async () => {
+    runtime.RUNTIME_KV_BACKEND = 'd1';
+    const first = vi.fn().mockResolvedValue({ value: 'stored-session' });
+    runtime.DB = { prepare: vi.fn().mockReturnValue({ bind: vi.fn().mockReturnValue({ first }) }) };
+    const { getKV } = await import('@/lib/env.cloudflare');
+    expect(await getKV({}, 'SESSIONS').get('session:test')).toBe('stored-session');
+    expect(first).toHaveBeenCalledOnce();
+  });
+
   it('reads secrets from runtime bindings and rejects blank runtime values', async () => {
     vi.stubEnv('GITHUB_TOKEN', 'synthetic-build-only-secret');
     runtime.GITHUB_TOKEN = ' synthetic-runtime-only-secret ';

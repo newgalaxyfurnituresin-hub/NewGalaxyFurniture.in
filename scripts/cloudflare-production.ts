@@ -52,6 +52,7 @@ export function validateCompanyConfig(value: unknown, configPath: string): void 
     'company content repository',
   );
   refuse(config.vars?.PUBLIC_SITE_URL === SITE, 'production canonical URL');
+  refuse(config.vars?.RUNTIME_KV_BACKEND === 'd1', 'quota-safe private runtime storage');
   refuse(
     Array.isArray(config.assets?.run_worker_first) &&
       config.assets.run_worker_first.length === 1 &&

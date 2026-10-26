@@ -39,7 +39,7 @@
 import { defineMiddleware } from 'astro:middleware';
 
 import { ADMIN_API_LIMIT_PER_MINUTE, consumeBindingLimit } from '@/lib/auth/rate-limit';
-import { ERROR_CODES, errorResponse, minutesPhrase } from '@/lib/errors';
+import { ERROR_CODES, errorResponse, minutesPhrase, logServerError } from '@/lib/errors';
 import { getRedirects } from '@/lib/content/site';
 import { clientIp, getD1, getKV, getPublicConfig } from '@/lib/env';
 import { isCompanyAdministrator, isCompanySite } from '@/lib/auth/company-policy';
@@ -178,5 +178,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (target !== null) return applySecurityHeaders(context.redirect(target, 301));
   }
 
-  return applySecurityHeaders(await handle(context, next));
+  try {
+    return applySecurityHeaders(await handle(context, next));
+  } catch (error) {
+    logServerError('request: runtime dependency unavailable', error);
+    return applySecurityHeaders(
+      errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE, {
+        status: 503,
+        message:
+          'The service is temporarily unavailable. Keep this page open to preserve any unfinished work. Please try again shortly.',
+        headers: { 'retry-after': '60' },
+      }),
+    );
+  }
 });

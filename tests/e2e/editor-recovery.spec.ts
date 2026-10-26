@@ -79,6 +79,13 @@ test('existing product restores tags and colours, then clears recovery after Sav
     const request = route.request();
     if (request.method() === 'POST') {
       const body = request.postDataJSON() as Record<string, unknown>;
+      if (body.expectedRevision !== (cloud?.revision ?? null)) {
+        await route.fulfill({
+          status: 409,
+          json: { error: 'CONFLICT', message: 'Recovery revision mismatch.' },
+        });
+        return;
+      }
       cloud = { ...body, revision: crypto.randomUUID(), savedAt: Date.now() };
     }
     if (request.method() === 'DELETE') {
@@ -113,6 +120,9 @@ test('existing product restores tags and colours, then clears recovery after Sav
       .getByRole('group', { name: 'Colour 1', exact: true })
       .getByLabel('Colour name', { exact: true }),
   ).toHaveValue('Brown');
+  await expect(page.getByRole('region', { name: 'Draft recovery' })).toContainText('saved online', {
+    timeout: 15000,
+  });
   // An unfinished colour needs a photo before canonical Save. Remove only this local fixture colour.
   await page.getByRole('button', { name: 'Remove colour 1', exact: true }).click();
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -123,6 +133,18 @@ test('existing product restores tags and colours, then clears recovery after Sav
       Object.keys(localStorage).filter((key) => key.startsWith('ngf:editor-recovery:')),
     ),
   ).toEqual([]);
+  await page
+    .getByRole('textbox', { name: 'Product name', exact: true })
+    .fill('Another unfinished detail');
+  await expect(page.getByRole('region', { name: 'Draft recovery' })).toContainText('saved online', {
+    timeout: 15000,
+  });
+  await page.getByRole('button', { name: 'Discard recovery draft…', exact: true }).click();
+  await page.getByRole('button', { name: 'Discard unfinished details', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue(
+    'Recovered tablet sofa',
+  );
+  expect(cloud).toBeNull();
 });
 
 test('an offline-only new draft can be resumed from Products', async ({ page }) => {
