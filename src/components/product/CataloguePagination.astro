@@ -1,0 +1,39 @@
+---
+import { CATALOGUE_PAGE_SIZE } from '@/lib/products/catalogue-page';
+interface Props {
+  total: number;
+  page?: number;
+  scope?: string;
+  gridId: string;
+}
+const { total, page = 1, scope = 'all', gridId } = Astro.props;
+const pages = Math.ceil(total / CATALOGUE_PAGE_SIZE);
+const first = scope === 'all' ? '/collection' : `/collection/${scope}`;
+---
+
+{
+  pages > 1 && (
+    <nav
+      id={`${gridId}-pagination`}
+      aria-label="Browse product pages"
+      class="mt-6 flex flex-wrap items-center gap-4"
+    >
+      {page > 1 && (
+        <a
+          class="ngf-btn ngf-btn-secondary"
+          href={page === 2 ? first : `/browse/${scope}/${page - 1}`}
+        >
+          Previous products
+        </a>
+      )}
+      <span>
+        Page {page} of {pages}
+      </span>
+      {page < pages && (
+        <a class="ngf-btn ngf-btn-secondary" href={`/browse/${scope}/${page + 1}`}>
+          Next products
+        </a>
+      )}
+    </nav>
+  )
+}

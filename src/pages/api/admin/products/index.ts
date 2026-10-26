@@ -29,6 +29,7 @@ import { openAdminContext } from '@/lib/admin/context';
 import { pageOfProducts, parseProductQuery } from '@/lib/products/query';
 import { readValidatedJson } from '@/lib/auth/guard';
 import { listProductSummariesWithRepositoryFallback, saveProductState } from '@/lib/github/drafts';
+import { getAdminCatalogueSnapshot } from '@/lib/content/admin-catalogue';
 
 export const prerender = false;
 
@@ -37,12 +38,17 @@ export async function GET(context: APIContext): Promise<Response> {
   if (!opened.ok) return opened.response;
 
   try {
+    let pendingSync = 0;
     const summaries = await listProductSummariesWithRepositoryFallback({
+      snapshot: getAdminCatalogueSnapshot,
+      onSyncPending: (remaining) => {
+        pendingSync = remaining;
+      },
       drafts: opened.context.drafts,
       client: opened.context.client,
     });
     const page = pageOfProducts(summaries, parseProductQuery(context.url.searchParams));
-    return jsonResponse(page);
+    return jsonResponse({ ...page, pendingSync });
   } catch (error) {
     logServerError('products: list failed', error);
     return toClientErrorResponse(error);

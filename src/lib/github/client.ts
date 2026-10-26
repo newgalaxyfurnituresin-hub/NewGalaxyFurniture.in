@@ -231,6 +231,31 @@ export class GitHubContentClient {
     if (status !== 200) this.fail(`list data/${directory}`, status);
     if (!Array.isArray(json)) this.fail(`list data/${directory}`, status);
 
+    // Contents responses stop at 1,000 entries. Walk non-recursive Git trees instead
+    // at that boundary; never silently hide products beyond the first directory page.
+    if (json.length >= 1000) {
+      let treeRef = this.branch;
+      for (const segment of ['data', directory, null]) {
+        const tree = await this.request(
+          'GET',
+          `/repos/${this.repo}/git/trees/${encodeURIComponent(treeRef)}`,
+        );
+        const value = tree.json as {
+          truncated?: boolean;
+          tree?: { path?: string; type?: string; sha?: string }[];
+        };
+        if (tree.status !== 200 || value.truncated || !Array.isArray(value.tree))
+          this.fail(`list tree data/${directory}`, tree.status);
+        if (segment === null)
+          return value.tree
+            .filter((entry) => entry.type === 'blob' && /^[a-z0-9-]+\.json$/.test(entry.path ?? ''))
+            .map((entry) => entry.path!.slice(0, -5));
+        const child = value.tree.find((entry) => entry.type === 'tree' && entry.path === segment);
+        if (!child?.sha) this.fail(`list tree data/${directory}`, 404);
+        treeRef = child.sha;
+      }
+    }
+
     const names: string[] = [];
     for (const entry of json as { name?: unknown; type?: unknown }[]) {
       if (entry.type !== 'file' || typeof entry.name !== 'string') continue;

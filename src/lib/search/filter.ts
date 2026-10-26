@@ -269,8 +269,16 @@ export function facetCounts(
 
   const multi = (dimension: MultiDimension, label?: (value: string) => string): FacetOption[] => {
     const selectedKeys = new Set(state[dimension].map(facetKey));
+    // Count each dimension in one pass. Re-filtering the full catalogue for every
+    // distinct material, colour or tag becomes quadratic as inventory grows.
+    const counts = new Map<string, number>();
+    for (const doc of filter(docs, { ...state, [dimension]: [] })) {
+      for (const key of new Set(valuesOf(doc, dimension).map(facetKey))) {
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+    }
     return vocabulary[dimension].map((value) => {
-      const count = countWith({ [dimension]: [value] });
+      const count = counts.get(facetKey(value)) ?? 0;
       return {
         value,
         label: label === undefined ? value : label(value),

@@ -134,6 +134,9 @@ export function heroSlidesFrom(products: readonly Product[]): HeroSlide[] {
         ? { srcset: buildSrcSet(ref, heroWidths(primary.width)), sizes: pickSizes('hero') }
         : {}),
     });
+    // A hero introduces the range; it must not grow a slide and a control for
+    // every catalogue item. The complete catalogue remains available below.
+    if (slides.length >= 5) break;
   }
 
   return slides;

@@ -18,11 +18,12 @@
  * Requirements: 10.17, 12.2, 24.5, 26.14.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { formatINR, PRICE_ON_ENQUIRY_LABEL } from '@/lib/money';
-import { pageOfProducts, type ProductQuery } from '@/lib/products/query';
+import { pageOfProducts, type ProductQuery, type ProductPage } from '@/lib/products/query';
+import { adminFetch } from '@/lib/admin/client';
 import { derivativeUrl } from '@/lib/images/srcset';
 import type { ProductStatusValue } from '@/schemas/product';
 import type { ProductSummary } from '@/lib/products/index-store';
@@ -32,6 +33,8 @@ export interface ProductTableProps {
   summaries: readonly ProductSummary[];
   categories: readonly { slug: string; name: string }[];
   canWrite: boolean;
+  initialPage?: ProductPage;
+  totalProducts?: number;
 }
 
 const STATUS_LABELS: Record<ProductStatusValue, string> = {
@@ -67,11 +70,40 @@ function thumbnail(summary: ProductSummary): string | null {
 
 export default function ProductTable(props: ProductTableProps): ReactElement {
   const [query, setQuery] = useState<ProductQuery>({ status: 'ALL', page: 1 });
-
-  const page = useMemo(() => pageOfProducts(props.summaries, query), [props.summaries, query]);
+  const localPage = useMemo(() => pageOfProducts(props.summaries, query), [props.summaries, query]);
+  const [remotePage, setRemotePage] = useState(props.initialPage);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [syncAttempt, setSyncAttempt] = useState(0);
+  const page = props.initialPage ? (remotePage ?? props.initialPage) : localPage;
+  useEffect(() => {
+    if (!props.initialPage) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) params.set(key, String(value));
+    setBusy(true);
+    setError('');
+    const timer = setTimeout(
+      () => {
+        void adminFetch<ProductPage>(`/api/admin/products?${params}`, {
+          signal: controller.signal,
+        }).then((result) => {
+          if (controller.signal.aborted) return;
+          setBusy(false);
+          if (result.ok) setRemotePage(result.value);
+          else setError(result.error.message);
+        });
+      },
+      (remotePage?.pendingSync ?? 0) > 0 ? 1100 : 200,
+    );
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, props.initialPage, syncAttempt]);
   const filtered = query.status !== 'ALL' || query.category !== undefined || query.q !== undefined;
 
-  if (props.summaries.length === 0) {
+  if (props.summaries.length === 0 && page.total === 0 && !(page.pendingSync ?? 0)) {
     return (
       <EmptyState
         heading="No products yet"
@@ -164,9 +196,28 @@ export default function ProductTable(props: ProductTableProps): ReactElement {
         </div>
 
         <p className="text-small text-walnut" aria-live="polite">
-          {page.total} of {props.summaries.length} product{props.summaries.length === 1 ? '' : 's'}
+          {busy
+            ? 'Loading products…'
+            : `${page.total} of ${Math.max(props.totalProducts ?? props.summaries.length, page.total + (page.pendingSync ?? 0))} products`}
         </p>
       </div>
+      {(page.pendingSync ?? 0) > 0 && (
+        <p role="status" className="border border-taupe p-3 text-small">
+          {page.pendingSync} products are still syncing from the repository. The counts below cover
+          the products loaded so far.
+          <button
+            type="button"
+            className="ml-3 min-h-[44px] underline"
+            disabled={busy}
+            onClick={() => setSyncAttempt((value) => value + 1)}
+          >
+            Sync more products
+          </button>
+        </p>
+      )}
+      {error && (
+        <p role="alert">{error} Your previous results are preserved. Change a filter to retry.</p>
+      )}
 
       {page.items.length === 0 ? (
         <EmptyState
@@ -331,7 +382,7 @@ export default function ProductTable(props: ProductTableProps): ReactElement {
         <nav aria-label="Pages" className="flex items-center gap-3">
           <button
             type="button"
-            disabled={page.page <= 1}
+            disabled={busy || page.page <= 1}
             onClick={() => setQuery((current) => ({ ...current, page: page.page - 1 }))}
             className="min-h-[44px] border border-taupe px-3 disabled:opacity-40"
           >
@@ -342,7 +393,7 @@ export default function ProductTable(props: ProductTableProps): ReactElement {
           </span>
           <button
             type="button"
-            disabled={page.page >= page.pageCount}
+            disabled={busy || page.page >= page.pageCount}
             onClick={() => setQuery((current) => ({ ...current, page: page.page + 1 }))}
             className="min-h-[44px] border border-taupe px-3 disabled:opacity-40"
           >

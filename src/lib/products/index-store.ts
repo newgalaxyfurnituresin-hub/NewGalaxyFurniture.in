@@ -98,7 +98,8 @@ export function summarize(product: Product): ProductSummary {
             alt: primary.alt,
             width: primary.width,
             height: primary.height,
-            ...(primary.lqip === undefined ? {} : { lqip: primary.lqip }),
+            // The admin uses a small protected thumbnail, not an inline LQIP.
+            // Keeping image data out makes the shared index far smaller at 1,000 rows.
             derivativesReady: primary.derivativesReady === true,
           },
     aiAssisted: product.aiAssisted,

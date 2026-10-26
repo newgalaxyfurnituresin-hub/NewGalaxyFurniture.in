@@ -30,6 +30,8 @@ import FilterPanel from '@/components/product/FilterPanel';
 import SortControl from '@/components/product/SortControl';
 import type { PriceBandFilter } from '@/lib/money';
 import { applyResults } from '@/lib/search/apply-view';
+import { loadResultCards } from '@/lib/search/load-cards';
+import { cataloguePage } from '@/lib/products/catalogue-page';
 import {
   clearFilters,
   facetCounts,
@@ -59,6 +61,7 @@ export interface CatalogueControlsProps {
   gridId: string;
   /** The id of the server-rendered no-match composition this island toggles. */
   noMatchId: string;
+  initialPage?: number;
 }
 
 export default function CatalogueControls({
@@ -68,12 +71,17 @@ export default function CatalogueControls({
   scopeCategory,
   gridId,
   noMatchId,
+  initialPage = 1,
 }: CatalogueControlsProps): React.JSX.Element {
   const [docs, setDocs] = useState<SearchDoc[] | null>(null);
   const [index, setIndex] = useState<MiniSearch<SearchDoc> | null>(null);
   const [state, setState] = useState<FilterState>(() => neutralState());
   const [shown, setShown] = useState<number | null>(null);
   const loading = useRef(false);
+  const [pageNumber, setPageNumber] = useState(initialPage);
+  const [pageBusy, setPageBusy] = useState(false);
+  const [pageError, setPageError] = useState('');
+  const [retry, setRetry] = useState(0);
 
   /* --- 1. Load the index when the browser is idle ------------------------ */
   useEffect(() => {
@@ -124,6 +132,7 @@ export default function CatalogueControls({
   useEffect(() => {
     if (docs === null) return;
     const onPopState = (): void => {
+      setPageNumber(1);
       setState(parseFilters(window.location.search, vocabulary));
     };
     window.addEventListener('popstate', onPopState);
@@ -154,15 +163,44 @@ export default function CatalogueControls({
     if (results === null) return;
     const grid = document.getElementById(gridId);
     if (grid === null) return;
-    const count = applyResults(
-      grid,
-      results.map((doc) => doc.i),
-    );
-    setShown(count);
-
-    const noMatch = document.getElementById(noMatchId);
-    if (noMatch !== null) noMatch.hidden = count > 0;
-  }, [results, gridId, noMatchId]);
+    const controller = new AbortController();
+    const slugs = cataloguePage(results, pageNumber).items.map((doc) => doc.i);
+    setPageBusy(true);
+    setPageError('');
+    void loadResultCards(grid, slugs, indexUrl, controller.signal)
+      .then(() => {
+        if (controller.signal.aborted) return;
+        applyResults(grid, slugs);
+        const items = new Map(
+          [...grid.querySelectorAll<HTMLElement>('[data-product-card]')].map((card) => [
+            card.dataset.slug,
+            card.parentElement!,
+          ]),
+        );
+        // Keep keyboard/screen-reader order identical to the selected visual sort,
+        // regardless of the order parallel card downloads completed.
+        for (const slug of slugs) {
+          const item = items.get(slug);
+          if (item) grid.append(item);
+        }
+        for (const item of [...grid.children]) {
+          if (item instanceof HTMLElement && item.hidden) item.remove();
+        }
+        setShown(slugs.length);
+        const noMatch = document.getElementById(noMatchId);
+        if (noMatch !== null) noMatch.hidden = results.length > 0;
+        const fallback = document.getElementById(`${gridId}-pagination`);
+        if (fallback) fallback.hidden = true;
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setPageError('These products could not load. Your previous page is still available.');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPageBusy(false);
+      });
+    return () => controller.abort();
+  }, [results, gridId, noMatchId, pageNumber, indexUrl, retry]);
 
   const facets = useMemo(
     () => (docs === null ? null : facetCounts(docs, state, categoryNames)),
@@ -171,6 +209,7 @@ export default function CatalogueControls({
 
   /* --- 4. Every state change writes the URL ------------------------------- */
   const commit = useCallback((next: FilterState) => {
+    setPageNumber(1);
     setState(next);
     const search = serializeFiltersAsSearch(next);
     window.history.pushState(null, '', `${window.location.pathname}${search}`);
@@ -236,6 +275,45 @@ export default function CatalogueControls({
               isNeutral(state) ? '' : ' for the current filters'
             }.`}
       </p>
+      {results !== null && results.length > 0 && (
+        <nav aria-label="Product pages" className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className="min-h-[44px] border border-taupe px-4 py-2 disabled:opacity-50"
+            disabled={pageBusy || pageNumber <= 1}
+            onClick={() => setPageNumber((page) => page - 1)}
+          >
+            Previous products
+          </button>
+          <p role="status" aria-live="polite" className="text-small">
+            {pageBusy
+              ? 'Loading products…'
+              : pageError
+                ? 'Previous products preserved'
+                : `Page ${cataloguePage(results, pageNumber).page} of ${cataloguePage(results, pageNumber).pageCount} · ${results.length} products`}
+          </p>
+          <button
+            type="button"
+            className="min-h-[44px] border border-taupe px-4 py-2 disabled:opacity-50"
+            disabled={pageBusy || pageNumber >= cataloguePage(results, pageNumber).pageCount}
+            onClick={() => setPageNumber((page) => page + 1)}
+          >
+            Next products
+          </button>
+        </nav>
+      )}
+      {pageError && (
+        <p role="alert">
+          {pageError}{' '}
+          <button
+            type="button"
+            className="min-h-[44px] underline"
+            onClick={() => setRetry((value) => value + 1)}
+          >
+            Retry loading products
+          </button>
+        </p>
+      )}
     </div>
   );
 }

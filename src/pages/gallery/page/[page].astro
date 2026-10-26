@@ -1,0 +1,15 @@
+---
+import type { GetStaticPaths } from 'astro';
+import GalleryPage from '@/components/gallery/GalleryPage.astro';
+import { getCatalogue } from '@/lib/content/catalogue';
+import { GALLERY_PAGE_SIZE } from '@/lib/products/catalogue-page';
+export const getStaticPaths: GetStaticPaths = async () => {
+  const products = (await getCatalogue()).filter((product) => product.images.length > 0);
+  return Array.from(
+    { length: Math.max(0, Math.ceil(products.length / GALLERY_PAGE_SIZE) - 1) },
+    (_, index) => ({ params: { page: String(index + 2) } }),
+  );
+};
+---
+
+<GalleryPage page={Number(Astro.params.page)} />

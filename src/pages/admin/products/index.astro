@@ -14,6 +14,8 @@ import { createGitHubClient } from '@/lib/github/factory';
 import { getKV } from '@/lib/env';
 import { getPublishedCategories } from '@/lib/content/catalogue';
 import { listProductSummariesWithRepositoryFallback } from '@/lib/github/drafts';
+import { getAdminCatalogueSnapshot } from '@/lib/content/admin-catalogue';
+import { pageOfProducts } from '@/lib/products/query';
 import { type ProductSummary } from '@/lib/products/index-store';
 
 export const prerender = false;
@@ -23,11 +25,16 @@ const role = session?.role ?? 'viewer';
 const canWrite = can(role, 'product.write');
 
 let summaries: ProductSummary[] = [];
+let pendingSync = 0;
 let unavailable: string | null = null;
 try {
   // KV index first, repository rebuild as a fallback when it is empty, so the list reflects
   // the committed/public catalogue even in an environment whose cache was never populated.
   summaries = await listProductSummariesWithRepositoryFallback({
+    snapshot: getAdminCatalogueSnapshot,
+    onSyncPending: (remaining) => {
+      pendingSync = remaining;
+    },
     drafts: getKV(Astro, 'DRAFTS'),
     client: createGitHubClient(Astro),
   });
@@ -72,7 +79,14 @@ const deleted = Astro.url.searchParams.get('deleted') === '1';
 
   {
     unavailable === null ? (
-      <ProductTable client:load summaries={summaries} categories={categories} canWrite={canWrite} />
+      <ProductTable
+        client:load
+        summaries={pageOfProducts(summaries, { status: 'ALL', page: 1 }).items}
+        initialPage={{ ...pageOfProducts(summaries, { status: 'ALL', page: 1 }), pendingSync }}
+        totalProducts={summaries.length}
+        categories={categories}
+        canWrite={canWrite}
+      />
     ) : (
       <p class="border border-espresso bg-white px-4 py-3 text-body">{unavailable}</p>
     )

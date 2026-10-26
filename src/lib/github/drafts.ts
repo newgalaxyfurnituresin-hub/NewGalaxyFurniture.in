@@ -312,6 +312,8 @@ export interface RehydrateResult {
   indexed: number;
   draftsRestored: number;
   skipped: string[];
+  nextOffset?: number;
+  remaining?: number;
 }
 
 /**
@@ -327,12 +329,15 @@ export async function rehydrateFromRepository(deps: {
   client: GitHubContentClient;
   /** Slugs to rebuild from, from a directory listing. */
   slugs: readonly string[];
+  offset?: number;
 }): Promise<RehydrateResult> {
-  const index: ProductIndex = {};
+  const offset = Math.max(0, Math.floor(deps.offset ?? 0));
+  const index: ProductIndex = offset === 0 ? {} : await readProductIndex(deps.drafts);
   const skipped: string[] = [];
   let draftsRestored = 0;
 
-  for (const slug of deps.slugs) {
+  const batch = deps.slugs.slice(offset, offset + 20);
+  for (const slug of batch) {
     const path = productContentPath(slug);
     if (path === null) {
       skipped.push(slug);
@@ -364,7 +369,15 @@ export async function rehydrateFromRepository(deps: {
   }
 
   await writeProductIndex(deps.drafts, index);
-  return { indexed: Object.keys(index).length, draftsRestored, skipped };
+  const nextOffset = offset + batch.length;
+  return {
+    indexed: Object.keys(index).length,
+    draftsRestored,
+    skipped,
+    ...(nextOffset < deps.slugs.length
+      ? { nextOffset, remaining: deps.slugs.length - nextOffset }
+      : {}),
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -409,15 +422,50 @@ export async function rehydrateFromRepository(deps: {
 export async function listProductSummariesWithRepositoryFallback(deps: {
   drafts: KeyValueStore;
   client: GitHubContentClient;
+  snapshot?: () => Promise<readonly ProductSummary[]>;
+  onSyncPending?: (remaining: number) => void;
 }): Promise<ProductSummary[]> {
   const index = await readProductIndex(deps.drafts);
   const existing = Object.values(index);
+
+  if (deps.snapshot) {
+    try {
+      const slugs = await deps.client.listProductSlugs();
+      const present = new Set(slugs);
+      const known = new Set(existing.map((summary) => summary.slug));
+      let changed = false;
+      for (const summary of await deps.snapshot()) {
+        if (present.has(summary.slug) && !known.has(summary.slug) && !index[summary.id]) {
+          index[summary.id] = summary;
+          known.add(summary.slug);
+          changed = true;
+        }
+      }
+      const missing = slugs.filter((slug) => !known.has(slug));
+      deps.onSyncPending?.(Math.max(0, missing.length - 20));
+      if (missing.length)
+        return Object.values(
+          await reconcileMissingProducts({
+            ...deps,
+            index,
+            missingSlugs: missing.slice(0, 20),
+          }),
+        );
+      if (changed) await writeProductIndex(deps.drafts, index);
+      return Object.values(index);
+    } catch (error) {
+      if (existing.length === 0) throw error;
+      logServerError('[drafts] catalogue reconciliation deferred', error);
+      return existing;
+    }
+  }
 
   if (existing.length === 0) {
     // The cache is empty. Rebuild it fully from the repository before concluding the catalogue
     // is empty. A repository failure here propagates — see the header.
     const slugs = await deps.client.listProductSlugs();
     if (slugs.length === 0) return [];
+    deps.onSyncPending?.(Math.max(0, slugs.length - 20));
     await rehydrateFromRepository({ drafts: deps.drafts, client: deps.client, slugs });
     return await listProductSummaries(deps.drafts);
   }
@@ -428,13 +476,14 @@ export async function listProductSummariesWithRepositoryFallback(deps: {
     const repoSlugs = await deps.client.listProductSlugs();
     const known = new Set(existing.map((summary) => summary.slug));
     const missing = repoSlugs.filter((slug) => !known.has(slug));
+    deps.onSyncPending?.(Math.max(0, missing.length - 20));
     if (missing.length === 0) return existing;
 
     const reconciled = await reconcileMissingProducts({
       drafts: deps.drafts,
       client: deps.client,
       index,
-      missingSlugs: missing,
+      missingSlugs: missing.slice(0, 20),
     });
     return Object.values(reconciled);
   } catch (error) {

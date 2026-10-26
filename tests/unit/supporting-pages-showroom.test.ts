@@ -23,7 +23,7 @@ const read = (rel: string): string =>
 
 const ABOUT = read('src/pages/about.astro');
 const WORKSHOP = read('src/pages/workshop.astro');
-const GALLERY = read('src/pages/gallery.astro');
+const GALLERY = read('src/components/gallery/GalleryPage.astro');
 const REVIEWS = read('src/pages/reviews.astro');
 const CONTACT = read('src/pages/contact.astro');
 

@@ -34,6 +34,8 @@ import { primaryImageOf } from '@/schemas/product';
 import { itemListJsonLd } from '@/lib/seo/jsonld';
 import { pageMeta, siteOrigin } from '@/lib/seo/page';
 import { getSearchIndexUrl } from '@/lib/search/index-asset';
+import { CATALOGUE_PAGE_SIZE } from '@/lib/products/catalogue-page';
+import CataloguePagination from '@/components/product/CataloguePagination.astro';
 
 const products = await getCatalogue();
 const categories = await getPublishedCategories();
@@ -74,7 +76,9 @@ const meta = pageMeta(Astro, {
     'Every piece in the New Galaxy Furniture catalogue — sofas, beds, dining, chairs, tables, storage, office, and outdoor furniture.',
   jsonLd: [
     itemListJsonLd(
-      products.map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
+      products
+        .slice(0, CATALOGUE_PAGE_SIZE)
+        .map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
       siteOrigin(Astro),
       { name: 'New Galaxy Furniture collection' },
     ),
@@ -179,7 +183,7 @@ const meta = pageMeta(Astro, {
               data-motion-group
               data-motion-cards
             >
-              {products.map((product, position) => (
+              {products.slice(0, CATALOGUE_PAGE_SIZE).map((product, position) => (
                 <li>
                   <ProductCard
                     product={product}
@@ -190,6 +194,7 @@ const meta = pageMeta(Astro, {
                 </li>
               ))}
             </ul>
+            <CataloguePagination total={count} gridId="ngf-collection-grid" />
             {/*
               The no-filter-match state (Requirement 3.17). Server-rendered and hidden; the island
               reveals it when a filter combination returns nothing, and the clear control inside

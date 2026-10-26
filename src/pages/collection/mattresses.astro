@@ -3,6 +3,8 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import EditorialPhoto from '@/components/experiences/EditorialPhoto.astro';
 import CategoryIllustration from '@/components/motion/CategoryIllustration.astro';
 import ProductCard from '@/components/product/ProductCard.astro';
+import { CATALOGUE_PAGE_SIZE } from '@/lib/products/catalogue-page';
+import CataloguePagination from '@/components/product/CataloguePagination.astro';
 import CatalogueControls from '@/components/product/CatalogueControls';
 import QuickEnquireHost from '@/components/forms/QuickEnquireHost.astro';
 import ImagePreload from '@/components/ui/ImagePreload.astro';
@@ -40,7 +42,9 @@ const meta = pageMeta(Astro, {
       origin,
     ),
     itemListJsonLd(
-      products.map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
+      products
+        .slice(0, CATALOGUE_PAGE_SIZE)
+        .map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
       origin,
       { name: 'Mattresses' },
     ),
@@ -149,12 +153,17 @@ const guidance = [
             noMatchId="ngf-mattress-nomatch"
           />
           <ul class="ngf-grid ngf-mattress-grid" id="ngf-mattress-grid">
-            {products.map((product) => (
+            {products.slice(0, CATALOGUE_PAGE_SIZE).map((product) => (
               <li>
                 <ProductCard product={product} categoryName="Mattresses" />
               </li>
             ))}
           </ul>
+          <CataloguePagination
+            total={products.length}
+            scope="mattresses"
+            gridId="ngf-mattress-grid"
+          />
           <div id="ngf-mattress-nomatch" class="ngf-exp-empty" hidden>
             <>
               <h3>A different combination might be the one.</h3>

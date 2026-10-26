@@ -19,6 +19,9 @@
  */
 
 import { getCatalogue } from '@/lib/content/catalogue';
+import { getSiteSettings } from '@/lib/content/site';
+import productCardSource from '@/components/product/ProductCard.astro?raw';
+import responsiveImageSource from '@/components/ui/ResponsiveImage.astro?raw';
 import { assertSearchIndexBudget } from './budget';
 import type { BudgetReport } from './budget';
 import {
@@ -41,10 +44,20 @@ export interface SearchIndexAsset {
 let memo: Promise<SearchIndexAsset> | null = null;
 
 async function build(): Promise<SearchIndexAsset> {
-  const docs = buildSearchIndex(await getCatalogue());
+  const products = await getCatalogue();
+  const docs = buildSearchIndex(products);
   const serialized = serializeSearchIndex(docs);
   const budget = assertSearchIndexBudget(serialized, docs.length);
-  const hash = searchIndexHash(serialized);
+  // Cards share this versioned namespace. Invalidate it for template/contact
+  // changes and product edits not represented by search fields (alt text,
+  // secondary photos), as well as ordinary price/name/category changes.
+  const hash = searchIndexHash(
+    serialized +
+      productCardSource +
+      responsiveImageSource +
+      JSON.stringify(getSiteSettings()) +
+      JSON.stringify(products.map((product) => [product.id, product.updatedAt])),
+  );
   return { docs, serialized, hash, path: searchIndexPath(hash), budget };
 }
 

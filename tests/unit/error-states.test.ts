@@ -190,7 +190,7 @@ describe('the seven empty states', () => {
     ['no reviews (public)', 'src/pages/reviews.astro'],
     ['no reviews (admin)', 'src/components/admin/ReviewEditor.tsx'],
     ['no leads', 'src/components/admin/LeadTable.tsx'],
-    ['no images (public gallery)', 'src/pages/gallery.astro'],
+    ['no images (public gallery)', 'src/components/gallery/GalleryPage.astro'],
     ['no images (admin)', 'src/components/admin/ImageManager.tsx'],
     ['no analytics yet', 'src/components/admin/AnalyticsView.tsx'],
   ];
@@ -220,7 +220,7 @@ describe('the seven empty states', () => {
       ['no analytics yet', 'src/components/admin/AnalyticsView.tsx', /Publish something/],
       ['no categories', 'src/components/admin/CategoryTable.tsx', /Add the first category/],
       ['no products (dashboard)', 'src/components/admin/DashboardCards.tsx', /Add your first/],
-      ['no images (public)', 'src/pages/gallery.astro', /Ask for photographs/],
+      ['no images (public)', 'src/components/gallery/GalleryPage.astro', /Ask for photographs/],
       ['no reviews (public)', 'src/pages/reviews.astro', /slot="action"/],
       ['no page (404)', 'src/pages/404.astro', /Ask on WhatsApp/],
     ];

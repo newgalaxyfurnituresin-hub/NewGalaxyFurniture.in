@@ -84,7 +84,9 @@ export function toSearchDoc(product: Product): SearchDoc {
     f: flagsOf(product),
     ts: epochSeconds(product.createdAt),
     th: primary === null ? '' : derivativeUrl(product.id, primary.id, THUMB_WIDTH, 'webp'),
-    lq: primary?.lqip ?? '',
+    // Suggestion thumbnails do not need an embedded photograph per listing.
+    // Keep the actual LQIP on product cards, not in the global search download.
+    lq: '',
     ...optional('sz', product.size),
     ...(product.category === 'mattresses' && product.variants.length > 0
       ? { vs: [...new Set(product.variants.map((variant) => variant.label).filter(Boolean))] }

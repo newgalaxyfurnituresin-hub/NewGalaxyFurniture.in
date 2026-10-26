@@ -158,8 +158,14 @@ export function rankedSlugs(query: string, context: SuggestContext): string[] {
   return [...exact, ...results.filter((slug) => !hoisted.has(slug))];
 }
 
+const documentMaps = new WeakMap<readonly SearchDoc[], Map<string, SearchDoc>>();
 function docBySlug(context: SuggestContext, slug: string): SearchDoc | undefined {
-  return context.docs.find((doc) => doc.i === slug);
+  let map = documentMaps.get(context.docs);
+  if (!map) {
+    map = new Map(context.docs.map((doc) => [doc.i, doc]));
+    documentMaps.set(context.docs, map);
+  }
+  return map.get(slug);
 }
 
 function productSuggestion(doc: SearchDoc, context: SuggestContext): Suggestion {
@@ -328,6 +334,10 @@ export function nearestMatches(query: string, context: SuggestContext, limit = 3
 export function candidatesFor(query: string, context: SuggestContext): SearchDoc[] {
   const trimmed = query.trim();
   if (trimmed === '') return [...context.docs];
+  // A complete SKU is an identifier, not a broad OR query for its hyphenated
+  // words. Otherwise a shared brand prefix matches nearly the whole catalogue.
+  const exact = context.docs.find((doc) => fold(doc.k) === fold(trimmed));
+  if (exact) return [exact];
   return rankedSlugs(trimmed, context)
     .map((slug) => docBySlug(context, slug))
     .filter((doc): doc is SearchDoc => doc !== undefined);

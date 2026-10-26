@@ -31,10 +31,21 @@ export {
  * `readOptionalCollection` because `data/products/` ships empty on purpose and every listing
  * renders its designed empty state — see `./optional-collection` for why that needs saying.
  */
-export async function getCatalogue(): Promise<Product[]> {
+let catalogueSnapshot: Promise<Product[]> | undefined;
+
+async function readCatalogue(): Promise<Product[]> {
   const entries = await readOptionalCollection(() => getCollection('products'));
   const products: Product[] = entries.map((entry) => entry.data);
-  return filterCatalogue(products).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return filterCatalogue(products).sort(
+    (a, b) => b.createdAt.localeCompare(a.createdAt) || a.slug.localeCompare(b.slug),
+  );
+}
+
+export async function getCatalogue(): Promise<Product[]> {
+  // Deployed content is immutable for this build. Avoid re-reading and sorting the
+  // complete catalogue for every product page, image or enquiry request.
+  catalogueSnapshot ??= readCatalogue();
+  return [...(await catalogueSnapshot)];
 }
 
 /** Every published category in operator order. */

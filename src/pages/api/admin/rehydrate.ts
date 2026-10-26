@@ -33,6 +33,7 @@ export async function POST(context: APIContext): Promise<Response> {
     const client = createGitHubClient(context);
     const slugs = await client.listProductSlugs();
     const result = await rehydrateFromRepository({
+      offset: Math.max(0, Number(context.url.searchParams.get('offset')) || 0),
       drafts: getKV(context, 'DRAFTS'),
       client,
       slugs,

@@ -1,0 +1,90 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProductCard from '@/components/product/ProductCard.astro';
+import CatalogueControls from '@/components/product/CatalogueControls';
+import CataloguePagination from '@/components/product/CataloguePagination.astro';
+import QuickEnquireHost from '@/components/forms/QuickEnquireHost.astro';
+import { getCatalogue, getPublishedCategories } from '@/lib/content/catalogue';
+import { getSearchIndexUrl } from '@/lib/search/index-asset';
+import { getRankings } from '@/lib/content/site';
+import { CATALOGUE_PAGE_SIZE } from '@/lib/products/catalogue-page';
+import { pageMeta } from '@/lib/seo/page';
+import type { Product } from '@/schemas/product';
+export const getStaticPaths: GetStaticPaths = async () => {
+  const [all, categories] = await Promise.all([getCatalogue(), getPublishedCategories()]);
+  const names = Object.fromEntries(categories.map((category) => [category.slug, category.name]));
+  return ['all', ...categories.map((category) => category.slug)].flatMap((scope) => {
+    const products = scope === 'all' ? all : all.filter((product) => product.category === scope);
+    return Array.from(
+      { length: Math.max(0, Math.ceil(products.length / CATALOGUE_PAGE_SIZE) - 1) },
+      (_, index) => ({
+        params: { scope, page: String(index + 2) },
+        props: {
+          products: products.slice(
+            (index + 1) * CATALOGUE_PAGE_SIZE,
+            (index + 2) * CATALOGUE_PAGE_SIZE,
+          ),
+          total: products.length,
+          names,
+        },
+      }),
+    );
+  });
+};
+interface Props {
+  products: Product[];
+  total: number;
+  names: Record<string, string>;
+}
+const { products, total, names } = Astro.props;
+const scope = Astro.params.scope!;
+const page = Number(Astro.params.page);
+const title = scope === 'all' ? 'Collection' : (names[scope] ?? 'Collection');
+const rankings = getRankings();
+const indexUrl = await getSearchIndexUrl();
+const meta = pageMeta(Astro, {
+  title: `${title} — Page ${page}`,
+  description: `Page ${page} of ${title.toLowerCase()} from New Galaxy Furniture. Browse more products, compare details and enquire with our team.`,
+});
+---
+
+<BaseLayout meta={meta}>
+  <section class="mx-auto max-w-[1440px] px-4 py-10">
+    <p><a href={scope === 'all' ? '/collection' : `/collection/${scope}`}>Back to {title}</a></p>
+    <h1 class="mt-4">{title} — Page {page}</h1>
+    <h2 class="sr-only">Products</h2>
+    <CatalogueControls
+      client:visible
+      indexUrl={indexUrl}
+      categoryNames={names}
+      manualRankings={{
+        trending: rankings.trending,
+        bestSeller: rankings.bestSeller,
+        mostViewed: rankings.mostViewed,
+      }}
+      scopeCategory={scope === 'all' ? undefined : scope}
+      gridId="ngf-browse-grid"
+      noMatchId="ngf-browse-nomatch"
+      initialPage={page}
+    />
+    <ul id="ngf-browse-grid" class="ngf-grid">
+      {
+        products.map((product, index) => (
+          <li>
+            <ProductCard
+              product={product}
+              categoryName={names[product.category]}
+              eager={index < 6}
+            />
+          </li>
+        ))
+      }
+    </ul>
+    <p id="ngf-browse-nomatch" hidden>
+      No products match these filters. Clear the filters to see more products.
+    </p>
+    <CataloguePagination total={total} page={page} scope={scope} gridId="ngf-browse-grid" />
+  </section>
+  <QuickEnquireHost />
+</BaseLayout>

@@ -34,6 +34,8 @@ import { breadcrumbJsonLd, itemListJsonLd } from '@/lib/seo/jsonld';
 import { pageMeta, siteOrigin } from '@/lib/seo/page';
 import { categoryCrumbs } from '@/lib/site/breadcrumbs';
 import { getSearchIndexUrl } from '@/lib/search/index-asset';
+import { CATALOGUE_PAGE_SIZE } from '@/lib/products/catalogue-page';
+import CataloguePagination from '@/components/product/CataloguePagination.astro';
 import type { Category } from '@/schemas/category';
 import type { Product } from '@/schemas/product';
 import type { GetStaticPaths } from 'astro';
@@ -102,7 +104,9 @@ const meta = pageMeta(Astro, {
   jsonLd: [
     breadcrumbJsonLd(crumbs, origin),
     itemListJsonLd(
-      products.map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
+      products
+        .slice(0, CATALOGUE_PAGE_SIZE)
+        .map((product) => ({ name: product.name, url: `/product/${product.slug}` })),
       origin,
       { name: category.name },
     ),
@@ -229,7 +233,7 @@ const meta = pageMeta(Astro, {
               data-motion-group
               data-motion-cards
             >
-              {products.map((product, position) => (
+              {products.slice(0, CATALOGUE_PAGE_SIZE).map((product, position) => (
                 <li>
                   <ProductCard
                     product={product}
@@ -240,6 +244,7 @@ const meta = pageMeta(Astro, {
                 </li>
               ))}
             </ul>
+            <CataloguePagination total={count} scope={category.slug} gridId="ngf-category-grid" />
             <div id="ngf-category-nomatch" hidden>
               <CatalogueEmpty
                 heading="No products match these filters"

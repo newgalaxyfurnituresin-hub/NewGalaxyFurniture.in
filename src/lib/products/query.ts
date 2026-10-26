@@ -26,6 +26,7 @@ export interface ProductQuery {
 }
 
 export interface ProductPage {
+  pendingSync?: number;
   items: ProductSummary[];
   total: number;
   page: number;

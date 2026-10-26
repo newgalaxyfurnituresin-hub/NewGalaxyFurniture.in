@@ -28,6 +28,7 @@ import {
   type SitemapEntry,
 } from '@/lib/seo/sitemap';
 import { resolveSiteUrl } from '@/lib/seo/site-url';
+import { CATALOGUE_PAGE_SIZE, GALLERY_PAGE_SIZE } from '@/lib/products/catalogue-page';
 import type { APIContext } from 'astro';
 
 /** The entries, in a stable order: static pages, then categories, then products. */
@@ -36,11 +37,40 @@ export async function sitemapEntries(): Promise<SitemapEntry[]> {
 
   return [
     ...STATIC_SITEMAP_PATHS.map(staticEntry),
+    ...Array.from(
+      {
+        length: Math.max(
+          0,
+          Math.ceil(
+            products.filter((product) => product.images.length > 0).length / GALLERY_PAGE_SIZE,
+          ) - 1,
+        ),
+      },
+      (_, index): SitemapEntry => ({
+        path: `/gallery/page/${index + 2}`,
+        changefreq: 'weekly',
+        priority: '0.5',
+      }),
+    ),
     ...categories.map((category): SitemapEntry => ({
       path: `/collection/${category.slug}`,
       changefreq: 'weekly',
       priority: '0.8',
     })),
+    ...['all', ...categories.map((category) => category.slug)].flatMap((scope) => {
+      const count =
+        scope === 'all'
+          ? products.length
+          : products.filter((product) => product.category === scope).length;
+      return Array.from(
+        { length: Math.max(0, Math.ceil(count / CATALOGUE_PAGE_SIZE) - 1) },
+        (_, index): SitemapEntry => ({
+          path: `/browse/${scope}/${index + 2}`,
+          changefreq: 'weekly',
+          priority: '0.5',
+        }),
+      );
+    }),
     ...products.map((product): SitemapEntry => ({
       path: `/product/${product.slug}`,
       lastmod: isoDate(product.updatedAt),
