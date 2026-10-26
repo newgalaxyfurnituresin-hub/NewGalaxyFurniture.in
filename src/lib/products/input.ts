@@ -102,6 +102,28 @@ const EditableFields = z.object({
 
 export type EditableProductFields = z.infer<typeof EditableFields>;
 
+/** Private unfinished input, never a publishable product or a repository patch. */
+export const ProductEditorPatch = EditableFields.partial()
+  .extend({
+    name: z.string().max(120).optional(),
+    category: z.string().max(120).optional(),
+    price: z.number().int().nullable().optional(),
+    originalPrice: z.number().int().nullable().optional(),
+    dimensions: Dimensions.extend({
+      lengthCm: z.number().optional(),
+      widthCm: z.number().optional(),
+      heightCm: z.number().optional(),
+      depthCm: z.number().optional(),
+    })
+      .nullable()
+      .optional(),
+    colorOptions: z
+      .array(ProductColorOption.extend({ name: z.string().max(60) }))
+      .max(20)
+      .optional(),
+  })
+  .strict();
+
 /**
  * Create needs a name and a category and nothing else (Requirement 12.3: an incomplete
  * product is storable as a draft). `description` is relaxed to any string here because the

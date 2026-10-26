@@ -10,6 +10,35 @@ function bootstrap(): void {
   });
 }
 describe('admin request recovery', () => {
+  it('does not treat an HTML sign-in or broken JSON response as a successful API write', async () => {
+    bootstrap();
+    for (const body of ['<html>Sign in</html>', '{broken', 'null', '']) {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(body, { status: 200 })));
+      const result = await adminFetch('/api/admin/products', { method: 'POST', body: {} });
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.error.code).toBe('NETWORK');
+    }
+  });
+  it('ends a stalled request without automatically retrying a write', async () => {
+    bootstrap();
+    const request = vi.fn<typeof fetch>().mockImplementation(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')), {
+            once: true,
+          });
+        }),
+    );
+    vi.stubGlobal('fetch', request);
+    const result = await adminFetch('/api/admin/products', {
+      method: 'POST',
+      body: {},
+      timeoutMs: 10,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('NETWORK');
+    expect(request).toHaveBeenCalledTimes(1);
+  });
   it('keeps the confirmed revision on an image deletion with no response body', async () => {
     bootstrap();
     const request = vi.fn<typeof fetch>().mockResolvedValue(

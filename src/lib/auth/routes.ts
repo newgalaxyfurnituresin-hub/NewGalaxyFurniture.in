@@ -105,6 +105,9 @@ export const ADMIN_ROUTES: readonly AdminRoute[] = [
   route('GET', '/api/admin/session', sessionOnly),
 
   // --- Products -------------------------------------------------------------
+  route('GET', '/api/admin/editor-drafts', permission('product.write')),
+  route('POST', '/api/admin/editor-drafts', permission('product.write')),
+  route('DELETE', '/api/admin/editor-drafts', permission('product.write'), 'json'),
   route('GET', '/api/admin/products', READ),
   route('POST', '/api/admin/products', permission('product.write')),
   route('GET', '/api/admin/products/:id', READ),

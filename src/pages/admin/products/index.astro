@@ -9,6 +9,7 @@
  */
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import ProductTable from '@/components/admin/ProductTable';
+import EditorDraftList from '@/components/admin/EditorDraftList';
 import { can } from '@/lib/auth/permissions';
 import { createGitHubClient } from '@/lib/github/factory';
 import { getKV } from '@/lib/env';
@@ -55,6 +56,7 @@ const deleted = Astro.url.searchParams.get('deleted') === '1';
 ---
 
 <AdminLayout title="Products">
+  {canWrite && session && <EditorDraftList client:load owner={session.userId} />}
   {
     deleted && (
       <p class="mb-4 border border-taupe bg-white px-4 py-3 text-small" role="status">

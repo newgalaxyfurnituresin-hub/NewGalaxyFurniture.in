@@ -94,6 +94,7 @@ const duplicated = Astro.url.searchParams.get('duplicated') === '1';
         <ProductForm
           client:load
           mode="edit"
+          recoveryOwner={session?.userId}
           product={product}
           categories={categories}
           canWrite={can(role, 'product.write')}

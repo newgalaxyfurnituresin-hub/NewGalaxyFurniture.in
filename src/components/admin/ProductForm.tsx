@@ -49,6 +49,8 @@ import ColorEditor from './ColorEditor';
 import { colorOptionsOf, retainColorPhotos } from '@/lib/products/colors';
 import PublicationProgress from './PublicationProgress';
 import type { PendingPublication } from '@/lib/admin/publication';
+import { useProductRecovery } from './useProductRecovery';
+import type { EditorPatch } from '@/lib/products/editor-drafts';
 import type { Product, StockStatusValue } from '@/schemas/product';
 import { advanceProductRevision } from '@/lib/products/revision';
 
@@ -67,6 +69,7 @@ export interface ProductFormProps {
   canWrite: boolean;
   canPublish: boolean;
   canDelete: boolean;
+  recoveryOwner?: string;
 }
 
 const STOCK_OPTIONS: readonly { value: StockStatusValue; label: string }[] = [
@@ -77,7 +80,7 @@ const STOCK_OPTIONS: readonly { value: StockStatusValue; label: string }[] = [
 ];
 
 /** The editable fields, as the API's patch shape. */
-function patchFrom(draft: Product): Record<string, unknown> {
+function patchFrom(draft: Product): EditorPatch {
   return {
     name: draft.name,
     category: draft.category,
@@ -130,6 +133,22 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   const [imageBusy, setImageBusy] = useState(false);
   const [colorBusy, setColorBusy] = useState(false);
   const [deleted, setDeleted] = useState<PendingPublication | null>(null);
+  const recoveryPatch = useMemo(() => patchFrom(draft), [draft]);
+  const restoreDraft = useCallback((product: Product) => {
+    setDraft(product);
+    setHasEdits(true);
+  }, []);
+  const recovery = useProductRecovery({
+    owner: props.recoveryOwner,
+    mode: props.mode,
+    product: props.product,
+    draft,
+    patch: recoveryPatch,
+    hasEdits,
+    canWrite: props.canWrite,
+    paused: imageBusy || colorBusy || save.kind === 'saving',
+    restore: restoreDraft,
+  });
 
   const localErrors = useMemo(() => {
     const found = fieldIssues(draft);
@@ -162,6 +181,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
   }, []);
 
   const readOnly = !props.canWrite;
+  const fieldsDisabled = readOnly || save.kind === 'saving';
 
   const subcategoryOptions = useMemo(() => {
     const category = props.categories.find((entry) => entry.slug === draft.category);
@@ -207,6 +227,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           }
           // The editor for a saved product is a different URL, and the operator should land
           // there — the record now has an id, a slug and a SKU it did not have a moment ago.
+          await recovery.clear(created.value.id);
           window.location.assign(`/admin/products/${created.value.id}?created=1`);
           return;
         }
@@ -224,8 +245,9 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         );
 
         if (result.ok) {
-          setDraft(result.value.product);
+          await recovery.clear();
           setHasEdits(false);
+          setDraft(result.value.product);
           setSave({ kind: 'saved', at: result.value.product.updatedAt });
           return;
         }
@@ -258,7 +280,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         saving.current = false;
       }
     },
-    [draft, props.mode, imageBusy, colorBusy],
+    [draft, props.mode, imageBusy, colorBusy, recovery.clear],
   );
 
   const errorEntries = Object.entries(errors);
@@ -298,6 +320,48 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           <strong>3. Check & publish</strong>Review the checklist and go live.
         </li>
       </ol>
+      {props.recoveryOwner && props.canWrite && (
+        <section
+          aria-label="Draft recovery"
+          className="border border-taupe bg-white p-4 text-small"
+        >
+          <p role="status" aria-live="polite">
+            {recovery.message ||
+              'Unfinished details are saved on this device and synced privately online after you pause. Recovery drafts are kept for 30 days.'}
+          </p>
+          <p className="mt-1 text-walnut">
+            This does not publish changes. Use Save when the details are ready.
+          </p>
+          {recovery.stale && (
+            <div className="mt-3">
+              <p>
+                The saved product changed after this unfinished draft. Restore your details to
+                review them, or continue with the saved product.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className="min-h-[44px] border border-espresso px-3"
+                  onClick={recovery.restoreStale}
+                >
+                  Restore unfinished details
+                </button>
+                <button
+                  type="button"
+                  className="min-h-[44px] border border-taupe px-3"
+                  onClick={() => {
+                    setHasEdits(false);
+                    setDraft(props.product);
+                    void recovery.clear();
+                  }}
+                >
+                  Use saved product instead
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
       {/* Save state, stated plainly and never optimistically. */}
       <div
         aria-live="polite"
@@ -389,6 +453,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           <button
             type="button"
             onClick={() => {
+              void recovery.clear();
               if (save.remote !== null) setDraft(save.remote);
               setHasEdits(false);
               setSave({ kind: 'idle' });
@@ -437,7 +502,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             value={draft.name}
             placeholder="For example, a three-seater sofa"
             maxLength={120}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.name}
             onChange={(value) => update({ name: value })}
           />
@@ -448,7 +513,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           required
           value={draft.category}
           placeholder="Choose a category"
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors.category}
           options={props.categories.map((entry) => ({ value: entry.slug, label: entry.name }))}
           onChange={(value) => update({ category: value, subcategory: undefined })}
@@ -471,7 +536,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             rows={7}
             value={draft.description}
             maxLength={6000}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.description}
             hint="At least 20 characters are required to publish."
             onChange={(value) => update({ description: value })}
@@ -484,7 +549,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             rows={2}
             value={draft.shortDescription ?? ''}
             maxLength={240}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.shortDescription}
             hint="Used on cards and in search results. Up to 240 characters."
             onChange={(value) => update({ shortDescription: value === '' ? undefined : value })}
@@ -503,7 +568,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             id="field-priceOnEnquiry"
             label="Price on enquiry"
             checked={draft.priceOnEnquiry}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             hint={`Shows “${PRICE_ON_ENQUIRY_LABEL}” instead of an amount, and clears the price.`}
             onChange={(checked) =>
               update(
@@ -561,7 +626,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           label="Material"
           value={draft.material ?? ''}
           maxLength={120}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors.material}
           onChange={(value) => update({ material: value === '' ? undefined : value })}
         />
@@ -570,7 +635,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           label="Colour shown in the photographs (optional)"
           value={draft.color ?? ''}
           maxLength={60}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors.color}
           onChange={(value) => update({ color: value === '' ? undefined : value })}
         />
@@ -579,7 +644,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           label="Size"
           value={draft.size ?? ''}
           maxLength={60}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors.size}
           hint="Free text, e.g. “3 Seater” or “Queen”."
           onChange={(value) => update({ size: value === '' ? undefined : value })}
@@ -588,7 +653,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           id="field-length"
           label="Length (cm)"
           value={draft.dimensions?.lengthCm ?? null}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors['dimensions.lengthCm']}
           onChange={(value) =>
             update({
@@ -603,7 +668,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           id="field-width"
           label="Width (cm)"
           value={draft.dimensions?.widthCm ?? null}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors['dimensions.widthCm']}
           onChange={(value) =>
             update({
@@ -618,7 +683,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           id="field-height"
           label="Height (cm)"
           value={draft.dimensions?.heightCm ?? null}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors['dimensions.heightCm']}
           onChange={(value) =>
             update({
@@ -633,7 +698,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           id="field-depth"
           label="Depth (cm)"
           value={draft.dimensions?.depthCm ?? null}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           errors={errors['dimensions.depthCm']}
           onChange={(value) =>
             update({
@@ -650,7 +715,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             label="Dimensions as written on the page"
             value={draft.dimensions?.display ?? ''}
             maxLength={120}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors['dimensions.display']}
             hint="Optional. Shown to customers as typed, e.g. “7 ft × 3 ft × 2.5 ft”."
             onChange={(value) =>
@@ -670,7 +735,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             rows={3}
             value={draft.customization ?? ''}
             maxLength={2000}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.customization}
             hint="What a customer can change: size, fabric, finish, configuration."
             onChange={(value) => update({ customization: value === '' ? undefined : value })}
@@ -683,7 +748,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             rows={3}
             value={draft.deliveryInformation ?? ''}
             maxLength={2000}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.deliveryInformation}
             hint="Only what you can commit to. Do not state a delivery time you cannot honour."
             onChange={(value) => update({ deliveryInformation: value === '' ? undefined : value })}
@@ -692,7 +757,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
         <Wide>
           <VariantEditor
             variants={draft.variants}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             onChange={(variants) => update({ variants })}
           />
         </Wide>
@@ -751,28 +816,28 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
           id="field-featured"
           label="Featured"
           checked={draft.featured}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           onChange={(checked) => update({ featured: checked })}
         />
         <CheckboxField
           id="field-trending"
           label="Trending"
           checked={draft.trending}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           onChange={(checked) => update({ trending: checked })}
         />
         <CheckboxField
           id="field-bestSeller"
           label="Best seller"
           checked={draft.bestSeller}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           onChange={(checked) => update({ bestSeller: checked })}
         />
         <CheckboxField
           id="field-newArrival"
           label="New arrival"
           checked={draft.newArrival}
-          disabled={readOnly}
+          disabled={fieldsDisabled}
           onChange={(checked) => update({ newArrival: checked })}
         />
         <Wide>
@@ -780,7 +845,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             id="field-tags"
             label="Tags"
             values={draft.tags}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.tags}
             onChange={(values) => update({ tags: values })}
           />
@@ -790,7 +855,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             id="field-relatedProductIds"
             label="Related products"
             values={draft.relatedProductIds}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.relatedProductIds}
             hint="Product identifiers, separated by commas. Leave empty to let the site choose."
             onChange={(values) => update({ relatedProductIds: values })}
@@ -812,7 +877,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             label="SEO title"
             value={draft.seoTitle ?? ''}
             maxLength={70}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.seoTitle}
             hint="Up to 70 characters."
             onChange={(value) => update({ seoTitle: value === '' ? undefined : value })}
@@ -825,7 +890,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             rows={2}
             value={draft.seoDescription ?? ''}
             maxLength={170}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.seoDescription}
             hint="Up to 170 characters."
             onChange={(value) => update({ seoDescription: value === '' ? undefined : value })}
@@ -836,7 +901,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
             id="field-keywords"
             label="Keywords"
             values={draft.keywords}
-            disabled={readOnly}
+            disabled={fieldsDisabled}
             errors={errors.keywords}
             onChange={(values) => update({ keywords: values })}
           />
@@ -864,7 +929,7 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               productId={draft.id}
               images={draft.images}
               primaryImage={draft.primaryImage ?? null}
-              canWrite={props.canWrite && !colorBusy}
+              canWrite={props.canWrite && !colorBusy && save.kind !== 'saving'}
               onBusyChange={setImageBusy}
               onPreparedPhoto={(image, colorName, revision) =>
                 setDraft((current) => ({
@@ -972,7 +1037,11 @@ export default function ProductForm(props: ProductFormProps): ReactElement {
               canDelete={props.canDelete}
               disabled={hasEdits || imageBusy || colorBusy || save.kind === 'saving'}
               onProduct={(next) => setDraft(next)}
-              onDeleted={setDeleted}
+              onDeleted={(pending) => {
+                setHasEdits(false);
+                void recovery.clear();
+                setDeleted(pending);
+              }}
             />
           </Wide>
         </FormSection>

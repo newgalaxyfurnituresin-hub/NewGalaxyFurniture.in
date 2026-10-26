@@ -15,7 +15,7 @@
  * Requirements: 24.8, 24.9, 26.9.
  */
 
-import type { ReactElement, ReactNode } from 'react';
+import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 
 /* -------------------------------------------------------------------------- */
 /* Shared shell                                                               */
@@ -310,6 +310,19 @@ export interface ListFieldProps {
 }
 
 export function ListField(props: ListFieldProps): ReactElement {
+  const [text, setText] = useState(props.values.join(', '));
+  const parse = (value: string): string[] => [
+    ...new Set(
+      value
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean),
+    ),
+  ];
+  useEffect(() => {
+    if (JSON.stringify(parse(text)) !== JSON.stringify(props.values))
+      setText(props.values.join(', '));
+  }, [props.values]);
   return (
     <FieldShell
       id={props.id}
@@ -323,18 +336,11 @@ export function ListField(props: ListFieldProps): ReactElement {
             {...aria}
             type="text"
             className={CONTROL_CLASS}
-            defaultValue={props.values.join(', ')}
+            value={text}
             disabled={props.disabled === true}
-            onBlur={(event) => {
-              const parsed = [
-                ...new Set(
-                  event.target.value
-                    .split(',')
-                    .map((part) => part.trim())
-                    .filter((part) => part !== ''),
-                ),
-              ];
-              props.onChange(parsed);
+            onChange={(event) => {
+              setText(event.target.value);
+              props.onChange(parse(event.target.value));
             }}
           />
           {props.values.length > 0 && (

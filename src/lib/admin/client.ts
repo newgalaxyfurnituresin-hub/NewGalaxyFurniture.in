@@ -59,6 +59,7 @@ interface RequestOptions {
   /** Multipart uploads send a FormData body and no JSON content type. */
   formData?: FormData;
   signal?: AbortSignal;
+  timeoutMs?: number;
 }
 
 /**
@@ -72,6 +73,20 @@ export async function adminFetch<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<ApiResult<T>> {
+  const controller = new AbortController();
+  const abort = (): void => controller.abort();
+  if (options.signal?.aborted) abort();
+  options.signal?.addEventListener('abort', abort, { once: true });
+  const timer = setTimeout(abort, options.timeoutMs ?? (options.formData ? 180_000 : 45_000));
+  try {
+    return await requestAdmin<T>(path, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', abort);
+  }
+}
+
+async function requestAdmin<T>(path: string, options: RequestOptions): Promise<ApiResult<T>> {
   const method = options.method ?? 'GET';
   const csrfToken = readBootstrap().csrfToken ?? '';
   const headers: Record<string, string> = { accept: 'application/json' };
@@ -154,6 +169,17 @@ export async function adminFetch<T>(
     };
   }
 
+  if (payload === null || typeof payload !== 'object') {
+    return {
+      ok: false,
+      error: {
+        code: 'NETWORK',
+        message:
+          'The server returned an unreadable response. Your details are still here. Check the saved product before trying the action again.',
+        status: response.status,
+      },
+    };
+  }
   return { ok: true, value: payload as T, ...(revision ? { revision } : {}) };
 }
 

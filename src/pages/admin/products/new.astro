@@ -78,6 +78,7 @@ const blank: Product = {
   <ProductForm
     client:load
     mode="create"
+    recoveryOwner={Astro.locals.adminSession?.userId}
     product={blank}
     categories={categories}
     canWrite={can(role, 'product.write')}
