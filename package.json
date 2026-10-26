@@ -28,6 +28,7 @@
     "seed:admin": "tsx scripts/seed-admin.ts",
     "validate:content": "tsx scripts/validate-content.ts",
     "scan:secrets": "tsx scripts/scan-secrets.ts",
+    "monitor:website": "tsx scripts/website-monitor.ts",
     "size-limit": "size-limit",
     "product:add": "tsx scripts/add-product.ts"
   },
