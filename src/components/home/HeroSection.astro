@@ -53,8 +53,8 @@ interface HeroShowcaseImage {
   height: number;
   alt: string;
   lqip?: string;
-  srcset: string;
-  sizes: string;
+  srcset?: string;
+  sizes?: string;
 }
 
 interface HeroSlide {
@@ -72,15 +72,13 @@ interface Props {
   /** The positioning line in force — `effectiveTagline(settings, homepage)`. */
   tagline: string | null;
   /**
-   * A real product photograph to carry the hero when no `settings.heroImage` is supplied, resolved
-   * by the page from the published catalogue. `null` when the operator has supplied a hero
-   * photograph (which wins) or when the catalogue has none (the composition answers instead).
+   * The first category-selected product photograph. When none exists, use the supplied scene
+   * or the composition fallback instead.
    */
   showcase?: HeroShowcaseImage | null;
   /**
-   * The carousel's slides, built by the page: slide 1 is the prepared opening frame (the supplied
-   * `hero.png`, else the showcase, else the composition), followed by real published product
-   * photographs. Absent or single-entry → the hero is the static single image it always was.
+   * Up to eight category-selected product photographs, or a single empty-catalogue fallback.
+   * Absent or single-entry → the hero renders a static image without carousel controls.
    */
   slides?: HeroSlide[];
 }
@@ -89,12 +87,11 @@ const { section, tagline, showcase = null, slides } = Astro.props;
 const settings = getSiteSettings();
 
 /*
- * The hero image. The operator's supplied showroom photograph wins; otherwise the page's product
- * showcase; otherwise the designed composition. `heroImageOf` answers the first and third, and the
- * page decides whether to pass a `showcase` (it passes `null` whenever a hero image is supplied).
+ * The selected product leads. The configured showroom scene and composition are fallbacks when
+ * no public product photograph is available.
  */
 const supplied = heroImageOf(settings);
-const image = supplied.supplied ? supplied : (showcase ?? supplied);
+const image = showcase ?? supplied;
 /*
  * "Photo" means the panel paints a real photograph edge to edge (cover) with the fade over it;
  * "composition" means the hairline fallback drawing, which is contained on cream with no fade. The
@@ -160,6 +157,7 @@ const headingLines =
   aria-labelledby="ngf-hero-heading"
   data-ngf-section="hero"
   data-hero-mode={isPhoto ? 'photo' : 'composition'}
+  data-hero-products={showcase !== null ? '' : undefined}
   data-parallax-root
 >
   {
@@ -257,7 +255,7 @@ const headingLines =
       }
       {
         isCarousel && (
-          <div class="ngf-hero-dots" role="group" aria-label="Choose a showroom image">
+          <div class="ngf-hero-dots" role="group" aria-label="Choose a product image">
             {heroSlides.map((slide, index) => (
               <button
                 type="button"
@@ -744,9 +742,12 @@ const headingLines =
     align-self: center;
     justify-self: start;
     width: 100%;
+    /* The full-width empty part must not intercept the image controls behind it. */
+    pointer-events: none;
   }
 
   .ngf-hero-copy-inner {
+    pointer-events: auto;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -763,6 +764,27 @@ const headingLines =
   @media (min-width: 1024px) {
     .ngf-hero-copy-inner {
       max-width: 36rem;
+    }
+  }
+
+  /* Product photos vary in brightness. Keep desktop copy readable on every slide. */
+  @media (min-width: 1024px) {
+    .ngf-hero[data-hero-products] .ngf-hero-scrim {
+      background: linear-gradient(
+        90deg,
+        rgb(20 18 16 / 0.88),
+        rgb(20 18 16 / 0.55) 45%,
+        transparent 85%
+      );
+    }
+    .ngf-hero[data-hero-products]
+      .ngf-hero-panel
+      ~ .ngf-hero-copy
+      :is(.ngf-hero-kicker, .ngf-hero-sub, .ngf-hero-assurance-label) {
+      color: var(--color-white);
+    }
+    .ngf-hero[data-hero-products] .ngf-hero-panel ~ .ngf-hero-copy .ngf-hero-kicker::before {
+      background-color: var(--color-white);
     }
   }
   .ngf-hero-eyebrow {
@@ -1081,7 +1103,7 @@ const headingLines =
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.85rem;
+    width: 44px;
     height: 44px;
     padding: 0;
     border: 0;
@@ -1196,6 +1218,9 @@ const headingLines =
     .ngf-hero-dots {
       bottom: 3.75rem;
       right: 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(4, 44px);
+      gap: 0 0.25rem;
     }
 
     /* The image fills the contained banner; centre the furniture rather than pushing it right, since

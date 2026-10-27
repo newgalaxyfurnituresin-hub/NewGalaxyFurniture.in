@@ -44,7 +44,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getAnalyticsSnapshot } from '@/lib/content/analytics-snapshot';
 import { heroImagePreload } from '@/lib/images/preload';
 import { heroImageOf } from '@/lib/site/hero-image';
-import { heroShowcaseFrom, heroSlidesFrom, type HeroSlide } from '@/lib/site/hero-showcase';
+import { heroSlidesFrom, type HeroSlide } from '@/lib/site/hero-showcase';
 import { getCatalogue, getPublishedCategories } from '@/lib/content/catalogue';
 import { getPublishedReviews } from '@/lib/content/reviews';
 import { getEnabledSections, getHomepage, getRankings, getSiteSettings } from '@/lib/content/site';
@@ -120,56 +120,24 @@ const trendingMeasuredAsOf =
  * emits only what Settings actually holds; the address, hours, price range and coordinates are
  * absent until the operator supplies them rather than guessed (Requirement 19.6).
  */
-/*
- * The hero's editorial visual. When the catalogue has a real published photograph, the hero shows
- * it (a genuine piece we make, not a fabricated showroom scene); otherwise it falls back to the
- * project's own hairline composition via `heroImageOf`. `site.heroImage` in Settings is a separate,
- * still-unsupplied concern, so this is an editorial choice made from real assets, not an operator
- * hero photograph.
- *
- * The preload hint is built from the same resolution the hero paints, so the page preloads exactly
- * one image and it is the one the hero renders (Requirement 22.10).
- */
-/*
- * The operator's supplied showroom photograph (`site.heroImage` → `/brand/hero.png`) is the hero's
- * editorial visual and it wins outright: it is the full styled living-room scene the homepage is
- * meant to open on, not a single product crop. `heroShowcaseFrom` — which picks the first published
- * product photo — is kept only as the fallback for installs that have *not* supplied a hero image,
- * so the hero is never empty. When a hero image is supplied the page preloads exactly that file.
- */
+/* Eight category-first product photographs; the supplied scene is empty-catalogue fallback only. */
 const suppliedHero = heroImageOf(settings);
-const heroShowcase = suppliedHero.supplied ? null : heroShowcaseFrom(products);
+const publishedCategories = new Set(categories.map((category) => category.slug));
+const productSlides = heroSlidesFrom(
+  products.filter((product) => publishedCategories.has(product.category)),
+);
+const firstProductSlide = productSlides[0];
+const heroShowcase =
+  firstProductSlide === undefined ? null : { ...firstProductSlide, supplied: true };
 const heroPreload =
-  heroShowcase !== null ? heroShowcase.preload : heroImagePreload(suppliedHero.src);
-
-/*
- * The hero carousel's slides.
- *
- * Slide 1 is always the first image the hero would otherwise paint on its own — the operator's
- * supplied `hero.png` when set, else the product showcase, else the composition — so the carefully
- * prepared opening frame is unchanged and stays the LCP image the page preloads. After it come the
- * real published product photographs (`heroSlidesFrom`), deduped so the same asset never repeats
- * (the showcase, if it carried slide 1, is dropped from the tail).
- *
- * With no supplied hero image and no products this is a single slide, and the carousel degrades to
- * the static hero it already was — no indicators, no autoplay.
- */
-const firstSlide: HeroSlide = {
-  src: (heroShowcase?.image ?? suppliedHero).src,
-  width: (heroShowcase?.image ?? suppliedHero).width,
-  height: (heroShowcase?.image ?? suppliedHero).height,
-  alt: (heroShowcase?.image ?? suppliedHero).alt,
-  ...((heroShowcase?.image ?? suppliedHero).lqip === undefined
-    ? {}
-    : { lqip: (heroShowcase?.image ?? suppliedHero).lqip }),
-  ...(heroShowcase !== null
-    ? { srcset: heroShowcase.image.srcset, sizes: heroShowcase.image.sizes }
-    : {}),
-};
-const heroSlides: HeroSlide[] = [
-  firstSlide,
-  ...heroSlidesFrom(products).filter((slide) => slide.src !== firstSlide.src),
-];
+  firstProductSlide === undefined
+    ? heroImagePreload(suppliedHero.src)
+    : {
+        href: firstProductSlide.src,
+        srcset: firstProductSlide.srcset,
+        sizes: firstProductSlide.sizes,
+      };
+const heroSlides: HeroSlide[] = productSlides.length > 0 ? productSlides : [suppliedHero];
 
 const origin = siteOrigin(Astro);
 const meta = pageMeta(Astro, {
@@ -206,7 +174,7 @@ const meta = pageMeta(Astro, {
               <HeroSection
                 section={section}
                 tagline={tagline}
-                showcase={heroShowcase?.image ?? null}
+                showcase={heroShowcase}
                 slides={heroSlides}
               />
             );

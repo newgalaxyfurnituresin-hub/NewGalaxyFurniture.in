@@ -28,6 +28,7 @@ import type { ImagePreloadHint } from '@/lib/images/preload';
 import { staticProductImages } from '@/lib/products/static-images';
 import type { HeroImage } from '@/lib/site/hero-image';
 import { primaryImageOf, type Product } from '@/schemas/product';
+import { isCatalogueProduct } from '@/lib/content/catalogue-filter';
 
 export interface HeroShowcase {
   /** A `HeroImage` the existing hero markup can render unchanged. */
@@ -98,32 +99,24 @@ export function heroShowcaseFrom(products: readonly Product[]): HeroShowcase | n
 }
 
 /**
- * The full set of product slides for the hero carousel — one image per published product.
+ * Resolve the category-first hero selection through the existing image pipeline.
  *
  * One image *per product*, its primary photograph, so the carousel shows variety rather than four
  * near-identical angles of the same sofa. Products with no ready photograph are skipped (never a
  * placeholder), and a `src` is never repeated, so a product that reuses another's asset cannot
- * produce a duplicate slide. The order is the catalogue's own order, which is stable.
+ * produce a duplicate slide. Representatives and spare slots are ordered newest-added first.
  *
  * This fabricates nothing: every slide is a real product photograph the site already ships, resolved
- * through the same `srcset`/`sizes`/`fallbackSrc` builders as the cards. The page prepends the
- * operator's supplied `hero.png` as the first slide, so this returns only the product images.
+ * through the same `srcset`/`sizes`/`fallbackSrc` builders as the cards. There is no extra fixed
+ * opening slide; the page uses the configured scene only when this selection is empty.
  */
 export function heroSlidesFrom(products: readonly Product[]): HeroSlide[] {
-  const slides: HeroSlide[] = [];
-  const seen = new Set<string>();
-
-  for (const product of products) {
-    const primary = primaryImageOf(product);
-    if (primary === null) continue;
-
+  return selectHeroProducts(products).map((product) => {
+    const primary = primaryImageOf(product)!;
     const ref: ImageRef = { productId: product.id, image: primary };
     const staticSrc = staticProductImages(product.slug)[primary.id];
     const src = staticSrc ?? fallbackSrc(ref);
-    if (seen.has(src)) continue;
-    seen.add(src);
-
-    slides.push({
+    return {
       src,
       width: primary.width,
       height: primary.height,
@@ -133,11 +126,38 @@ export function heroSlidesFrom(products: readonly Product[]): HeroSlide[] {
       ...(staticSrc === undefined
         ? { srcset: buildSrcSet(ref, heroWidths(primary.width)), sizes: pickSizes('hero') }
         : {}),
-    });
-    // A hero introduces the range; it must not grow a slide and a control for
-    // every catalogue item. The complete catalogue remains available below.
-    if (slides.length >= 5) break;
-  }
+    };
+  });
+}
 
-  return slides;
+/** Newest public product per category first, then newest remaining products; eight maximum. */
+export function selectHeroProducts(products: readonly Product[]): Product[] {
+  const eligible = products
+    .filter((product) => {
+      const image = primaryImageOf(product);
+      return isCatalogueProduct(product) && image !== null && image.derivativesReady !== false;
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.slug.localeCompare(b.slug));
+  const selected: Product[] = [];
+  const categories = new Set<string>();
+  const seenProducts = new Set<string>();
+  const seenImages = new Set<string>();
+  const add = (product: Product): boolean => {
+    const image = primaryImageOf(product)!;
+    if (seenProducts.has(product.id) || seenImages.has(image.key)) return false;
+    selected.push(product);
+    seenProducts.add(product.id);
+    seenImages.add(image.key);
+    return true;
+  };
+  for (const product of eligible) {
+    if (categories.has(product.category)) continue;
+    if (add(product)) categories.add(product.category);
+    if (selected.length === 8) return selected;
+  }
+  for (const product of eligible) {
+    add(product);
+    if (selected.length === 8) break;
+  }
+  return selected;
 }
