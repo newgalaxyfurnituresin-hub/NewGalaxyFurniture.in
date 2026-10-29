@@ -65,8 +65,9 @@ export default function PhotoUploadPicker({
         <input
           ref={input}
           type="file"
+          // Use the general document picker. An image-only accept filter can route Android
+          // through its Photos provider instead. File types are verified from bytes on the server.
           multiple
-          accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif"
           aria-label={label}
           aria-describedby={hint}
           disabled={disabled || busy}
@@ -95,9 +96,10 @@ export default function PhotoUploadPicker({
       </p>
       <p id={hint} className="text-small text-walnut">
         Choose photos, then tap Upload selected photos. JPEG, PNG, WebP or AVIF; up to 12 MB each.
-        If your gallery returns no files, save the JPGs to Files or Downloads and choose them there.
-        Photos are prepared securely online at their original resolution. For HEIC photos, export a
-        JPEG copy first.
+        On tablets, choose Files or Downloads, then select your JPGs. If your photos are only in a
+        photo app, save a copy to this device first. The file browser shows all file types; only
+        supported images are accepted. Photos are prepared securely online at their original
+        resolution. For HEIC photos, export a JPEG copy first.
       </p>
     </div>
   );
