@@ -379,3 +379,35 @@
     width: 100%;
   }
 }
+
+/* Keep the actual file control visible and touchable: no synthetic picker activation. */
+.ngf-admin-photo-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  margin-top: 0.5rem;
+  border: 1px solid var(--color-taupe);
+  border-radius: var(--radius-soft);
+  background: var(--color-white);
+  color: var(--color-espresso);
+  font: inherit;
+}
+.ngf-admin-photo-input::file-selector-button {
+  min-height: 48px;
+  max-width: 100%;
+  margin-right: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 0;
+  background: var(--color-espresso);
+  color: var(--color-cream);
+  font: inherit;
+  cursor: pointer;
+}
+.ngf-admin-photo-input:focus-visible {
+  outline: 2px solid var(--color-espresso);
+  outline-offset: 3px;
+}
+.ngf-admin-photo-input:disabled {
+  opacity: 0.55;
+}

@@ -15,9 +15,30 @@ for (const viewport of [
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     try {
+      let uploaded = 0;
+      await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
+        if (route.request().method() === 'GET') {
+          await route.fulfill({ json: { computerOnline: true, uploads: [] } });
+          return;
+        }
+        uploaded++;
+        await route.fulfill({
+          status: 201,
+          json: {
+            images: [
+              {
+                ...demoSofa.images[0],
+                id: 'img_tablet' + String(uploaded).padStart(4, '0'),
+                order: uploaded,
+              },
+            ],
+            rejected: [],
+          },
+        });
+      });
       await page.goto('http://127.0.0.1:8898/admin/products/edit?reset=1');
       const images = page.getByRole('region', { name: 'Images', exact: true });
-      const picker = images.getByRole('button', { name: 'Choose files', exact: true });
+      const picker = images.getByLabel('Product photographs', { exact: true });
       const photo = {
         name: 'tablet-front.png',
         mimeType: 'image/png',
@@ -36,15 +57,10 @@ for (const viewport of [
       await expect(images.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(3);
       await page.getByRole('button', { name: 'Add colour', exact: true }).tap();
       const colour = page.getByRole('group', { name: 'Colour 1', exact: true });
-      await expect(
-        colour.getByRole('button', { name: 'Choose photos for colour 1' }),
-      ).toBeDisabled();
+      await expect(colour.getByLabel('Upload photos for colour 1', { exact: true })).toBeDisabled();
       const name = 'Warm walnut brown with textured upholstery';
       await colour.getByLabel('Colour name', { exact: true }).fill(name);
-      const colourPicker = colour.getByRole('button', {
-        name: `Choose photos for ${name}`,
-        exact: true,
-      });
+      const colourPicker = colour.getByLabel(`Upload photos for ${name}`, { exact: true });
       await choose(colourPicker);
       await expect(colour.getByText('1 photo(s) selected.', { exact: false })).toBeVisible();
       await colour
@@ -216,3 +232,36 @@ for (const width of [375, 768, 1440]) {
     });
   });
 }
+
+test('an unexpected upload response is visible and the picker recovers', async ({ page }) => {
+  await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
+    await route.fulfill({
+      json:
+        route.request().method() === 'GET'
+          ? { computerOnline: true, uploads: [] }
+          : { unexpected: true },
+    });
+  });
+  await page.goto('/admin/products/edit?reset=1');
+  const picker = page.getByLabel('Product photographs', { exact: true });
+  await picker.setInputFiles({
+    name: 'photo.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('fixture'),
+  });
+  await expect(page.getByText('Photo upload was interrupted.', { exact: false })).toBeVisible();
+  await expect(picker).toBeEnabled();
+  await page.getByRole('button', { name: 'Add colour', exact: true }).click();
+  const colour = page.getByRole('group', { name: 'Colour 1', exact: true });
+  await colour.getByLabel('Colour name', { exact: true }).fill('Brown');
+  const colorPicker = colour.getByLabel('Upload photos for Brown', { exact: true });
+  await colorPicker.setInputFiles({
+    name: 'photo.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('fixture'),
+  });
+  await expect(
+    page.getByText('Colour photo upload was interrupted.', { exact: false }),
+  ).toBeVisible();
+  await expect(colorPicker).toBeEnabled();
+});

@@ -47,6 +47,10 @@ export default function ColorEditor({
       setMessage(
         `${result.added} of ${list.length} photograph(s) added for ${color.name}. ${result.pending ? `${result.pending} being prepared securely online. Prepared photos appear in Images automatically.` : ''} ${result.rejected.map((entry) => `${entry.filename}: ${entry.message}`).join(' ')} ${result.added ? 'Save your colour choices. Original resolution is preserved; photographs stay private until the product is published.' : ''}`,
       );
+    } catch {
+      setMessage(
+        'Colour photo upload was interrupted. Your product details are still here. Check saved photos before retrying. If a gallery photo will not open, save a JPEG copy to Files on this device and select it again.',
+      );
     } finally {
       working.current = false;
       setBusy(false);

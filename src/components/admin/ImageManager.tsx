@@ -237,6 +237,10 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
         setMessage(
           `${result.added} of ${list.length} photos added.${result.pending ? ` ${result.pending} being prepared securely online; prepared photos appear here automatically.` : ''}${result.rejected.length ? ' Check the file messages below.' : ''} ${result.added ? 'Check the photo descriptions below. Original resolution is preserved and smaller sizes are ready.' : ''}`,
         );
+      } catch {
+        setMessage(
+          'Photo upload was interrupted. Your product details are still here. Check saved photos before retrying. If a gallery photo will not open, save a JPEG copy to Files on this device and select it again.',
+        );
       } finally {
         finish();
       }
