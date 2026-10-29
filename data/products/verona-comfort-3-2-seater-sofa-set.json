@@ -19,7 +19,32 @@
   "discount": 10,
   "featured": false,
   "id": "p_iavjizg80y",
-  "images": [],
+  "images": [
+    {
+      "alt": "Verona Comfort 3+2 Seater Sofa Set — photograph 1",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280,
+        1600
+      ],
+      "derivativesReady": true,
+      "filename": "file_00000000d18c8207a6e74320d243d24c.png",
+      "height": 909,
+      "id": "img_jeogmxycy6",
+      "key": "products/p_iavjizg80y/img_jeogmxycy6/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRsYAAABXRUJQVlA4ILoAAACQBACdASoYAAwAPqVCm0imI6KhMAgAwBSJQBOl4AKwJcqL6eycWZoOrrqCcAAA/uHb5yU6rhpAZKP985EM+CgFCPLFBCc1raaqPSbo5phgOt9CWcb1VXY38G6O7N36Fyf477pM/0W2PuwPGE+9G+ctby/yXk59ZizRrKZ/8Xv1sGet4zfHaL+7eJeLxPl98/bEMUtDvNwKPNi33VByfiGddRSqkOyaHq9gFHacipiMZkLvtdwx79jYAAA=",
+      "mime": "image/jpeg",
+      "order": 0,
+      "width": 1730
+    }
+  ],
   "keywords": [],
   "madeToOrder": true,
   "material": "Solid Neem Wood Frame, Duroflex 40-Density Foam, Premium Suede Fabric",
@@ -28,6 +53,7 @@
   "originalPrice": 49499,
   "price": 44499,
   "priceOnEnquiry": false,
+  "primaryImage": "img_jeogmxycy6",
   "published": false,
   "relatedProductIds": [],
   "shortDescription": "Experience luxury with the Verona Comfort 3+2 Seater Sofa, featuring a durable Neem wood frame, Duroflex 40-density foam with a 5-year warranty, and premium water-resistant, washable suede fabric. Available in multiple colours and customisa",
@@ -43,6 +69,6 @@
     "Customizable Sofa."
   ],
   "trending": false,
-  "updatedAt": "2026-10-25T10:41:17.954Z",
+  "updatedAt": "2026-10-29T12:37:26.455Z",
   "variants": []
 }
