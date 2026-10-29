@@ -217,13 +217,13 @@
   "price": 44499,
   "priceOnEnquiry": false,
   "primaryImage": "img_jeogmxycy6",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "shortDescription": "Experience luxury with the Verona Comfort 3+2 Seater Sofa, featuring a durable Neem wood frame, Duroflex 40-density foam with a 5-year warranty, and premium water-resistant, washable suede fabric. Available in multiple colours and customisa",
   "size": "3 seater + 2 Seater ",
   "sku": "NGF-SOF-Z4IO41",
   "slug": "verona-comfort-3-2-seater-sofa-set",
-  "status": "DRAFT",
+  "status": "PUBLISHED",
   "stockStatus": "MADE_TO_ORDER",
   "tags": [
     "3+2 Seater Sofa",
@@ -232,6 +232,6 @@
     "Customizable Sofa."
   ],
   "trending": false,
-  "updatedAt": "2026-10-29T12:47:30.949Z",
+  "updatedAt": "2026-10-29T12:48:35.897Z",
   "variants": []
 }
