@@ -148,7 +148,7 @@ export default function ColorEditor({
                   label={`Upload photos for ${option.name || `colour ${index + 1}`}`}
                   buttonLabel={`Choose photos for ${option.name || `colour ${index + 1}`}`}
                   disabled={disabled || busy || !option.name.trim()}
-                  onFiles={(files) => void upload(option, files)}
+                  onFiles={(files) => upload(option, files)}
                 />
                 {!option.name.trim() && (
                   <p className="mt-2 text-small text-walnut">

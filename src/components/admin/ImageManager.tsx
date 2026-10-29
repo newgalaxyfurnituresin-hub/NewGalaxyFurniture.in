@@ -388,7 +388,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
             label="Product photographs"
             buttonLabel="Choose files"
             disabled={busy}
-            onFiles={(files) => void upload(files)}
+            onFiles={(files) => upload(files)}
           />
         </div>
       )}

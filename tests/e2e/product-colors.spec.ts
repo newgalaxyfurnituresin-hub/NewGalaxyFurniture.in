@@ -15,6 +15,12 @@ for (const width of [320, 375, 430, 768, 1024, 1440]) {
       mimeType: 'image/png',
       buffer: Buffer.from('isolated fixture'),
     });
+    await first
+      .getByLabel('Upload photos for Walnut brown', { exact: true })
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: '2. Upload selected photos', exact: true })
+      .click();
     await expect(first.getByText('1 photo(s) selected.', { exact: false })).toBeVisible();
     await first
       .getByRole('checkbox', { name: 'Show an approximate colour swatch (optional)', exact: true })
@@ -28,6 +34,12 @@ for (const width of [320, 375, 430, 768, 1024, 1440]) {
       mimeType: 'image/png',
       buffer: Buffer.from('isolated fixture'),
     });
+    await second
+      .getByLabel('Upload photos for Cream', { exact: true })
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: '2. Upload selected photos', exact: true })
+      .click();
     await expect(second.getByText('1 photo(s) selected.', { exact: false })).toBeVisible();
     await second
       .getByLabel('Availability for this colour', { exact: true })
@@ -129,6 +141,12 @@ test('the existing image remover keeps new colour selections valid without reloa
     mimeType: 'image/jpeg',
     buffer: Buffer.from('isolated fixture'),
   });
+  await color
+    .getByLabel('Upload photos for Brown', { exact: true })
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: '2. Upload selected photos', exact: true })
+    .click();
   await expect(color.getByText('2 photo(s) selected.', { exact: false })).toBeVisible();
   let saved = page.waitForResponse(
     (r) => r.request().method() === 'PATCH' && r.url().endsWith('/p_device0001'),

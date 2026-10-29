@@ -49,6 +49,14 @@ for (const viewport of [
         const chooser = page.waitForEvent('filechooser');
         await button.tap();
         await (await chooser).setFiles(photo);
+        await expect(
+          button.locator('..').locator('..').getByText(photo.name, { exact: true }),
+        ).toBeVisible();
+        await button
+          .locator('..')
+          .locator('..')
+          .getByRole('button', { name: '2. Upload selected photos', exact: true })
+          .tap();
       };
       await choose(picker);
       await expect(images.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(2);
@@ -129,6 +137,12 @@ test('private online preparation resumes after a service interruption', async ({
     mimeType: 'image/jpeg',
     buffer: Buffer.from('local mock'),
   });
+  await page
+    .getByLabel('Product photographs', { exact: true })
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: '2. Upload selected photos', exact: true })
+    .click();
   await expect(page.getByText('1 being prepared securely online', { exact: false })).toBeVisible();
   mode = 'ready';
   await page.reload();
@@ -182,6 +196,12 @@ for (const width of [375, 768, 1440]) {
       buffer: Buffer.alloc(5 * 1024 * 1024),
     }));
     await page.getByLabel('Product photographs', { exact: true }).setInputFiles(photos);
+    await page
+      .getByLabel('Product photographs', { exact: true })
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: '2. Upload selected photos', exact: true })
+      .click();
     await expect(page.getByText('3 of 3 photos added.', { exact: false })).toBeVisible({
       timeout: 15000,
     });
@@ -195,6 +215,7 @@ for (const width of [375, 768, 1440]) {
     await colour
       .getByLabel('Upload photos for Walnut brown', { exact: true })
       .setInputFiles(photos.slice(0, 2));
+    await colour.getByRole('button', { name: '2. Upload selected photos', exact: true }).click();
     await expect(colour.getByText('2 photo(s) selected.', { exact: false })).toBeVisible();
     await expect(
       page.getByText('2 of 2 photograph(s) added for Walnut brown.', { exact: false }),
@@ -219,6 +240,12 @@ for (const width of [375, 768, 1440]) {
       else await route.fulfill({ status: 500, body: 'Worker error' });
     });
     await page.getByLabel('Product photographs', { exact: true }).setInputFiles(photos);
+    await page
+      .getByLabel('Product photographs', { exact: true })
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: '2. Upload selected photos', exact: true })
+      .click();
     await expect(page.getByText('1 of 3 photos added.', { exact: false })).toBeVisible();
     await expect(page.getByText('may already have been saved.', { exact: false })).toBeVisible();
     expect(recoveryCalls).toBe(2);
@@ -249,6 +276,11 @@ test('an unexpected upload response is visible and the picker recovers', async (
     mimeType: 'image/jpeg',
     buffer: Buffer.from('fixture'),
   });
+  await picker
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: '2. Upload selected photos', exact: true })
+    .click();
   await expect(page.getByText('Photo upload was interrupted.', { exact: false })).toBeVisible();
   await expect(picker).toBeEnabled();
   await page.getByRole('button', { name: 'Add colour', exact: true }).click();
@@ -260,8 +292,51 @@ test('an unexpected upload response is visible and the picker recovers', async (
     mimeType: 'image/jpeg',
     buffer: Buffer.from('fixture'),
   });
+  await colorPicker
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: '2. Upload selected photos', exact: true })
+    .click();
   await expect(
     page.getByText('Colour photo upload was interrupted.', { exact: false }),
   ).toBeVisible();
   await expect(colorPicker).toBeEnabled();
+});
+
+test('Android native selection uploads even when input/change events are missing', async ({
+  page,
+}) => {
+  let writes = 0;
+  await page.route('**/api/admin/products/p_device0001/photo-uploads', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: { computerOnline: true, uploads: [] } });
+      return;
+    }
+    writes++;
+    await route.fulfill({
+      status: 201,
+      json: { images: [{ ...demoSofa.images[0], id: 'img_android001', order: 1 }], rejected: [] },
+    });
+  });
+  await page.goto('/admin/products/edit?reset=1');
+  const picker = page.getByLabel('Product photographs', { exact: true });
+  // Model an Android document-provider handoff that populates files without dispatching events.
+  await picker.evaluate((element: HTMLInputElement) => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['local test'], 'lenovo-photo.jpg', { type: 'image/jpeg' }));
+    element.files = transfer.files;
+  });
+  expect(writes).toBe(0);
+  const upload = picker
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: '2. Upload selected photos', exact: true });
+  await upload.click();
+  await expect(page.getByText('1 of 1 photos added.', { exact: false })).toBeVisible();
+  expect(writes).toBe(1);
+  await upload.click();
+  await expect(
+    page.getByText('No photos were received from the selector.', { exact: false }),
+  ).toBeVisible();
+  expect(writes).toBe(1);
 });
