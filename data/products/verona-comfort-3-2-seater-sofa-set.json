@@ -90,6 +90,30 @@
       "mime": "image/jpeg",
       "order": 2,
       "width": 1536
+    },
+    {
+      "alt": "Verona Comfort 3+2 Seater Sofa Set — photograph 4",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280,
+        1600
+      ],
+      "derivativesReady": true,
+      "filename": "file_0000000054588211b956db98aee309e8.png",
+      "height": 887,
+      "id": "img_oe6xoqtpvy",
+      "key": "products/p_iavjizg80y/img_oe6xoqtpvy/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRqQAAABXRUJQVlA4IJgAAADQAwCdASoYAAwAPqVEnEimI6KhMAgAwBSJYgCdACB+rfqFuVVPysgA/rgbiVdqBhCFdPFVoF+MtWKCZ1plsMPYDfDTeTdwwMZsu92a860b89XoMPM7Dfab9HWs/UnUxsxvoJbwbn+fTGKx0M6z/05URkbJUL5mCtTbyxGSYEM72UdYQB8em+Lx3PCHnkYQCNLJwHIIMdBwAA==",
+      "mime": "image/jpeg",
+      "order": 3,
+      "width": 1773
     }
   ],
   "keywords": [],
@@ -116,6 +140,6 @@
     "Customizable Sofa."
   ],
   "trending": false,
-  "updatedAt": "2026-10-29T12:38:01.794Z",
+  "updatedAt": "2026-10-29T12:38:21.771Z",
   "variants": []
 }
