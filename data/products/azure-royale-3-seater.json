@@ -19,7 +19,32 @@
   "discount": 16,
   "featured": false,
   "id": "p_ey8ddqoy3w",
-  "images": [],
+  "images": [
+    {
+      "alt": "Azure Royale 3-Seater — photograph 1",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280,
+        1600
+      ],
+      "derivativesReady": true,
+      "filename": "file_000000001e9882118adf393e6bd60061.png",
+      "height": 941,
+      "id": "img_49ireqwgkw",
+      "key": "products/p_ey8ddqoy3w/img_49ireqwgkw/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRugAAABXRUJQVlA4INwAAACQBQCdASoYAA0APqVCnEimI6KhMAgAwBSJbACdMoR4NuAt/+yWK4ADfdrs25GoXaqWLfj0wAD+Vfbt/fuvukI7tVtezd7SMy6usDnvZ33LrLOXk+5FWfbHGPwV/u4flZW/LhkqbNI2NizpY2C78VkC9PW+hVN52E6H7jnTaZRi7Ra1l351oEdkfA7x82fO/ggJbTyVWpv/p+7P/xH++yRv/yg5X+OAag7ttuji0rlx/lb24G4kxLC5Sid0EWjJf+i7wW8k8UVySVeh/2ha+PDnYPFUtsoZEq5GNRAA",
+      "mime": "image/jpeg",
+      "order": 0,
+      "width": 1672
+    }
+  ],
   "keywords": [],
   "madeToOrder": true,
   "material": "Solid Neem Wood Frame, Premium Suede Upholstery",
@@ -28,6 +53,7 @@
   "originalPrice": 38499,
   "price": 32499,
   "priceOnEnquiry": false,
+  "primaryImage": "img_49ireqwgkw",
   "published": false,
   "relatedProductIds": [],
   "shortDescription": "Luxury 3-Seater Sofa with solid Neem wood frame, Duroflex 40-density cushions, 5-year cushion warranty & water-resistant, washable suede upholstery. Available in multiple colours and customisable sizes. Enquire Now!",
@@ -43,6 +69,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-29T12:09:05.909Z",
+  "updatedAt": "2026-10-29T12:50:33.817Z",
   "variants": []
 }
