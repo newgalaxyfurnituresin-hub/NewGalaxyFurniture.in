@@ -1,3 +1,4 @@
+import { MAX_PHOTO_BYTES } from '@/lib/images/upload-limits';
 import type { APIContext } from 'astro';
 import { openAdminContext } from '@/lib/admin/context';
 import { getImages, getR2 } from '@/lib/env';
@@ -22,7 +23,7 @@ import {
   type UploadJobValue,
 } from '@/lib/images/upload-jobs';
 export const prerender = false;
-export const MAX_UPLOAD_BODY_BYTES = 12 * 1024 * 1024 + 64 * 1024;
+export const MAX_UPLOAD_BODY_BYTES = MAX_PHOTO_BYTES + 64 * 1024;
 export async function GET(context: APIContext): Promise<Response> {
   const opened = await openAdminContext(context, 'product.write');
   if (!opened.ok) return opened.response;
@@ -122,7 +123,7 @@ export async function POST(context: APIContext): Promise<Response> {
     logServerError('photo uploads: staging failed', error);
     if (error instanceof BodyTooLargeError)
       return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
-        message: 'Each photo can be up to 12 MB.',
+        message: 'Each photo can be up to 15 MB.',
       });
     return toClientErrorResponse(error);
   }

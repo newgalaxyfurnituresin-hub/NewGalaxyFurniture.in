@@ -1,3 +1,8 @@
+import {
+  MAX_PHOTO_BYTES,
+  MAX_PHOTOS_PER_BATCH,
+  MAX_PHOTO_BATCH_BYTES,
+} from '@/lib/images/upload-limits';
 import { adminFetch, type ApiResult } from './client';
 import type { ProductRevision } from '@/lib/products/revision';
 import type { ProductImageValue } from '@/schemas/product';
@@ -37,9 +42,14 @@ async function waitForPhoto(
   imageId: string,
   progress: (message: string) => void,
 ): Promise<ApiResult<PhotoResponse> | null> {
+  let previousStarted = 0;
   let completing = false;
   let transientFailures = 0;
   for (let attempt = 0; attempt < 45; attempt++) {
+    // Pace request starts, counting time already spent on the network instead of adding a delay.
+    const pause = previousStarted + 750 - Date.now();
+    if (pause > 0) await new Promise((resolve) => setTimeout(resolve, pause));
+    previousStarted = Date.now();
     if (!completing) {
       const result = await adminFetch<PendingPhotos>(
         `/api/admin/products/${productId}/photo-uploads`,
@@ -77,8 +87,6 @@ async function waitForPhoto(
         step.value.progress ?? 'Photo received privately. Preparing the next size securely online.',
       );
     }
-    // At most one checkpoint per second, below the shared admin request ceiling.
-    await new Promise((resolve) => setTimeout(resolve, 1100));
   }
   return null;
 }
@@ -92,6 +100,20 @@ export async function uploadPhotos(input: {
   onProgress: (message: string) => void;
   onAccepted: (images: ProductImageValue[], revision?: ProductRevision) => void;
 }): Promise<{ added: number; pending: number; rejected: PhotoRejection[]; stopped: boolean }> {
+  if (
+    input.files.length > MAX_PHOTOS_PER_BATCH ||
+    input.files.reduce((total, file) => total + file.size, 0) > MAX_PHOTO_BATCH_BYTES
+  )
+    return {
+      added: 0,
+      pending: 0,
+      stopped: true,
+      rejected: input.files.map((file) => ({
+        filename: file.name,
+        code: 'BATCH_TOO_LARGE',
+        message: 'Choose at most 15 photos, up to 15 MB each (225 MB per batch).',
+      })),
+    };
   const rejected: PhotoRejection[] = [];
   let added = 0;
   let pending = 0;
@@ -106,14 +128,14 @@ export async function uploadPhotos(input: {
       });
       continue;
     }
-    if (file.size > 12 * 1024 * 1024 || file.size === 0) {
+    if (file.size > MAX_PHOTO_BYTES || file.size === 0) {
       rejected.push({
         filename: file.name,
         code: file.size === 0 ? 'EMPTY_FILE' : 'TOO_LARGE',
         message:
           file.size === 0
             ? 'This file is empty.'
-            : 'This photo is larger than 12 MB. Export a smaller file and try again.',
+            : 'This photo is larger than 15 MB. Export a smaller file and try again.',
       });
       continue;
     }

@@ -377,7 +377,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
               : 'Add more product photographs'}
           </p>
           <p className="max-w-[46ch] text-small text-walnut">
-            JPEG, PNG, WebP or AVIF. At least 256 pixels wide and 64 pixels high, up to 12 MB each.
+            JPEG, PNG, WebP or AVIF. At least 256 pixels wide and 64 pixels high, up to 15 MB each.
             Up to 20 images per product.
           </p>
           <p className="max-w-[52ch] text-small text-walnut">

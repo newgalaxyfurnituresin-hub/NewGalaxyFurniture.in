@@ -1,3 +1,4 @@
+import { MAX_PHOTO_BYTES } from './upload-limits';
 /**
  * Upload validation, in the design's order: cheapest and most decisive first.
  *
@@ -36,7 +37,7 @@ import { sanitizeFilenameLabel, sniffImageType, SNIFF_BYTES, type SniffedType } 
 
 /** The design's constraints, verbatim. */
 export const UPLOAD_CONSTRAINTS = {
-  maxBytes: 12_582_912, // 12 MB
+  maxBytes: MAX_PHOTO_BYTES, // 15 MB
   maxPixels: 40_000_000, // 40 MP guards decompression bombs
   minWidth: 800, // below this it cannot serve a PDP hero
   allowedMime: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
@@ -93,7 +94,7 @@ export type DecodeFn = (bytes: Uint8Array, type: SniffedType) => Promise<Decoded
 
 const MESSAGES: Record<UploadErrorCode, string> = {
   EMPTY_FILE: 'This file is empty.',
-  TOO_LARGE: 'This image is larger than 12 MB. Export it at a smaller file size and try again.',
+  TOO_LARGE: 'This image is larger than 15 MB. Export it at a smaller file size and try again.',
   NOT_AN_IMAGE:
     'This file is not a JPEG, PNG, WebP or AVIF image. The file’s contents decide, not its name.',
   SVG_REJECTED:

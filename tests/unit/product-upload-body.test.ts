@@ -22,7 +22,7 @@ beforeEach(() => {
 const context = (request: Request) =>
   ({ request, params: { id: 'p_device0001' } }) as unknown as APIContext;
 describe('product photo multipart boundary', () => {
-  it('allows a 12 MB photo plus multipart boundaries and a colour field to reach validation', async () => {
+  it('allows a 15 MB photo plus multipart boundaries and a colour field to reach validation', async () => {
     const form = new FormData();
     form.append(
       'file',

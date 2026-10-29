@@ -1,3 +1,4 @@
+import { MAX_PHOTO_BYTES } from '@/lib/images/upload-limits';
 import type { APIContext } from 'astro';
 import { lockNamespace, openAdminContext } from '@/lib/admin/context';
 import { getImages, getR2 } from '@/lib/env';
@@ -126,7 +127,7 @@ export async function POST(context: APIContext): Promise<Response> {
           message: 'The prepared photo could not be verified.',
         });
       const object = await getR2(context).get(image.key);
-      if (!object || object.size > 12 * 1024 * 1024)
+      if (!object || object.size > MAX_PHOTO_BYTES)
         return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
           message: 'The prepared photo is unavailable.',
         });

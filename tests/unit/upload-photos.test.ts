@@ -78,7 +78,7 @@ describe('multiple admin photo uploads', () => {
       starts.push(Date.now());
       const form = options?.body as FormData;
       expect(form.getAll('file')).toHaveLength(1);
-      expect((form.get('file') as File).size).toBe(5 * 1024 * 1024);
+      expect((form.get('file') as File).size).toBe(15 * 1024 * 1024);
       expect(form.get('colorName')).toBe('Walnut brown');
       expect(new Headers(options?.headers).get('X-CSRF-Token')).toBe('test-csrf');
       await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -87,7 +87,7 @@ describe('multiple admin photo uploads', () => {
     });
     vi.stubGlobal('fetch', request);
     const options = {
-      ...input(['front', 'side', 'back'].map((name) => photo(`${name}.jpg`, 5 * 1024 * 1024))),
+      ...input(['front', 'side', 'back'].map((name) => photo(`${name}.jpg`, 15 * 1024 * 1024))),
       colorName: 'Walnut brown',
     };
     const pending = uploadPhotos(options);
@@ -158,7 +158,7 @@ describe('multiple admin photo uploads', () => {
     vi.stubGlobal('fetch', request);
     const options = {
       ...input([
-        photo('large.jpg', 12 * 1024 * 1024 + 1),
+        photo('large.jpg', 15 * 1024 * 1024 + 1),
         photo('empty.jpg', 0),
         photo('valid.jpg'),
         photo('overflow.jpg'),
@@ -176,7 +176,7 @@ describe('multiple admin photo uploads', () => {
   });
 });
 
-it('serializes ten 5 MB photos through checkpoint requests and safely resumes one interrupted checkpoint', async () => {
+it('serializes fifteen 15 MB photos through checkpoint requests and safely resumes one interrupted checkpoint', async () => {
   let current = '';
   let remaining = 0;
   let staged = 0;
@@ -214,20 +214,29 @@ it('serializes ten 5 MB photos through checkpoint requests and safely resumes on
   });
   vi.stubGlobal('fetch', request);
   const options = input(
-    Array.from({ length: 10 }, (_, i) => photo('large-' + i + '.png', 5 * 1024 * 1024)),
+    Array.from({ length: 15 }, (_, i) => photo('large-' + i + '.png', 5 * 1024 * 1024)),
   );
   const work = uploadPhotos(options);
   await vi.runAllTimersAsync();
   const result = await work;
-  expect(result).toEqual({ added: 10, pending: 0, rejected: [], stopped: false });
-  expect(staged).toBe(10);
-  expect(statusReads).toBe(10);
-  expect(new Set(completed).size).toBe(10);
-  expect(options.onAccepted).toHaveBeenCalledTimes(10);
+  expect(result).toEqual({ added: 15, pending: 0, rejected: [], stopped: false });
+  expect(staged).toBe(15);
+  expect(statusReads).toBe(15);
+  expect(new Set(completed).size).toBe(15);
+  expect(options.onAccepted).toHaveBeenCalledTimes(15);
   expect(interrupted).toBe(true);
   expect(
     options.onProgress.mock.calls.some(([message]) =>
       String(message).includes('Resuming the same private photo checkpoint'),
     ),
   ).toBe(true);
+});
+
+it('rejects a sixteenth photo before any transmission', async () => {
+  const request = vi.fn<typeof fetch>();
+  vi.stubGlobal('fetch', request);
+  const result = await uploadPhotos(input(Array.from({ length: 16 }, (_, i) => photo(i + '.jpg'))));
+  expect(result.stopped).toBe(true);
+  expect(result.rejected).toHaveLength(16);
+  expect(request).not.toHaveBeenCalled();
 });

@@ -342,7 +342,7 @@ test('Android native selection uploads even when input/change events are missing
   expect(writes).toBe(1);
 });
 
-test('tablet completes ten high-quality photos through durable preparation checkpoints', async ({
+test('tablet completes fifteen 15 MB photos through durable preparation checkpoints', async ({
   page,
 }, testInfo) => {
   test.setTimeout(180000);
@@ -386,19 +386,19 @@ test('tablet completes ten high-quality photos through durable preparation check
   await page.goto('/admin/products/edit?reset=1');
   const images = page.getByRole('region', { name: 'Images', exact: true });
   await mkdir(testInfo.outputPath('photo-files'), { recursive: true });
-  const photos = Array.from({ length: 10 }, (_, i) =>
+  const photos = Array.from({ length: 15 }, (_, i) =>
     testInfo.outputPath('photo-files', 'high-quality-' + i + '.png'),
   );
-  const bytes = Buffer.alloc(5 * 1024 * 1024);
+  const bytes = Buffer.alloc(15 * 1024 * 1024);
   await Promise.all(photos.map((path) => writeFile(path, bytes)));
   await images.getByLabel('Product photographs', { exact: true }).setInputFiles(photos);
   await images.getByRole('button', { name: '2. Upload selected photos', exact: true }).click();
-  await expect(images.getByText('Photo 1 of 10:', { exact: false })).toBeVisible();
-  await expect(images.getByText('10 of 10 photos added.', { exact: false })).toBeVisible({
+  await expect(images.getByText('Photo 1 of 15:', { exact: false })).toBeVisible();
+  await expect(images.getByText('15 of 15 photos added.', { exact: false })).toBeVisible({
     timeout: 150000,
   });
-  expect(received).toBe(10);
-  expect(finished).toBe(10);
-  await expect(images.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(11);
+  expect(received).toBe(15);
+  expect(finished).toBe(15);
+  await expect(images.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(16);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

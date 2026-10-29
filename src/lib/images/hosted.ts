@@ -1,3 +1,4 @@
+import { MAX_PHOTO_BYTES } from '@/lib/images/upload-limits';
 import { AppError, ERROR_CODES } from '@/lib/errors';
 import type { ObjectBucket } from '@/lib/runtime/types';
 import { DERIVATIVE_WIDTHS } from './srcset';
@@ -43,9 +44,9 @@ export async function hostedOriginal(
       message: 'This photo could not be prepared. Re-export it as JPEG and try again.',
     });
   const sanitized = new Uint8Array(await response.arrayBuffer());
-  if (sanitized.byteLength > 12 * 1024 * 1024)
+  if (sanitized.byteLength > MAX_PHOTO_BYTES)
     throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
-      message: 'The prepared photo exceeds 12 MB. Export a smaller image.',
+      message: 'The prepared photo exceeds 15 MB. Export a smaller image.',
     });
   const result = await service.info(photoBlob(sanitized).stream());
   return { bytes: sanitized, width: result.width, height: result.height };
@@ -125,7 +126,7 @@ export async function advanceHostedPhoto(
   };
   if (!job.result) {
     const source = await bucket.get(job.sourceKey);
-    if (!source || source.size > 12 * 1024 * 1024)
+    if (!source || source.size > MAX_PHOTO_BYTES)
       throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
         message: 'The private source photo is unavailable or too large.',
       });
@@ -170,7 +171,7 @@ export async function advanceHostedPhoto(
   const completed = image.derivativeWidths ?? [];
   const next = widths.find((width) => !completed.includes(width));
   const stored = await bucket.get(key);
-  if (!stored || stored.size > 12 * 1024 * 1024)
+  if (!stored || stored.size > MAX_PHOTO_BYTES)
     throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
       message: 'The prepared photo is unavailable.',
     });

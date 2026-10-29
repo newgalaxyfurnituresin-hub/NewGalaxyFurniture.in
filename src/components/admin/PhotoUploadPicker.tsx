@@ -1,3 +1,4 @@
+import { MAX_PHOTOS_PER_BATCH, MAX_PHOTO_BYTES } from '@/lib/images/upload-limits';
 import { useId, useRef, useState, type ReactElement } from 'react';
 
 /** Keep native tablet selections intact until the operator explicitly starts the upload. */
@@ -35,6 +36,15 @@ export default function PhotoUploadPicker({
     if (!photos.length) {
       setMessage(
         'No photos were received from the selector. Choose files again and use Files or Downloads on your device.',
+      );
+      return;
+    }
+    if (
+      photos.length > MAX_PHOTOS_PER_BATCH ||
+      photos.some((file) => file.size > MAX_PHOTO_BYTES)
+    ) {
+      setMessage(
+        'Choose at most 15 photos, up to 15 MB each (225 MB per batch). Your selection is still here.',
       );
       return;
     }
@@ -95,11 +105,11 @@ export default function PhotoUploadPicker({
         {message}
       </p>
       <p id={hint} className="text-small text-walnut">
-        Choose photos, then tap Upload selected photos. JPEG, PNG, WebP or AVIF; up to 12 MB each.
-        On tablets, choose Files or Downloads, then select your JPGs. If your photos are only in a
-        photo app, save a copy to this device first. The file browser shows all file types; only
-        supported images are accepted. Photos are prepared securely online at their original
-        resolution. For HEIC photos, export a JPEG copy first.
+        Choose photos, then tap Upload selected photos. JPEG, PNG, WebP or AVIF; up to 15 MB each,
+        15 photos per batch (225 MB total). On tablets, choose Files or Downloads, then select your
+        JPGs. If your photos are only in a photo app, save a copy to this device first. The file
+        browser shows all file types; only supported images are accepted. Photos are prepared
+        securely online at their original resolution. For HEIC photos, export a JPEG copy first.
       </p>
     </div>
   );
