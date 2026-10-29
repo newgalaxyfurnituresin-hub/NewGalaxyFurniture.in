@@ -109,3 +109,111 @@ export async function prepareHostedPhoto(
     },
   };
 }
+
+/** Advance one durable photo checkpoint per request. Never generate all sizes in one Worker invocation. */
+export async function advanceHostedPhoto(
+  service: HostedImageService,
+  bucket: ObjectBucket,
+  job: UploadJobValue,
+): Promise<UploadJobValue> {
+  const prefix = `products/${job.productId}/${job.imageId}`;
+  const key = `${prefix}/original.jpg`;
+  const put = async (path: string, bytes: Uint8Array, contentType: string): Promise<void> => {
+    await bucket.put(path, bytes, {
+      httpMetadata: { contentType, cacheControl: 'private, no-store' },
+    });
+  };
+  if (!job.result) {
+    const source = await bucket.get(job.sourceKey);
+    if (!source || source.size > 12 * 1024 * 1024)
+      throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
+        message: 'The private source photo is unavailable or too large.',
+      });
+    const original = await hostedOriginal(service, new Uint8Array(await source.arrayBuffer()));
+    await put(key, original.bytes, 'image/jpeg');
+    const digest = new Uint8Array(
+      await crypto.subtle.digest('SHA-256', original.bytes as Uint8Array<ArrayBuffer>),
+    );
+    return {
+      ...job,
+      state: 'processing',
+      updatedAt: Date.now(),
+      sha256: Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join(''),
+      result: {
+        id: job.imageId,
+        key,
+        width: original.width,
+        height: original.height,
+        alt: '',
+        altSource: 'admin',
+        filename: job.filename,
+        mime: 'image/jpeg',
+        order: 0,
+        derivativesReady: false,
+        derivativeWidths: [],
+        derivativeFormats: ['webp'],
+      },
+    };
+  }
+  const image = job.result;
+  if (
+    image.id !== job.imageId ||
+    image.key !== key ||
+    image.mime !== 'image/jpeg' ||
+    image.enhancedFrom
+  )
+    throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
+      message: 'The private photo checkpoint could not be verified.',
+    });
+  const widths = DERIVATIVE_WIDTHS.filter((width) => width <= image.width);
+  if (!widths.length) widths.push(image.width);
+  const completed = image.derivativeWidths ?? [];
+  const next = widths.find((width) => !completed.includes(width));
+  const stored = await bucket.get(key);
+  if (!stored || stored.size > 12 * 1024 * 1024)
+    throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
+      message: 'The prepared photo is unavailable.',
+    });
+  // Native R2 streams avoid loading and copying the full-resolution photo into JS for each size.
+  const source =
+    (stored.body as ReadableStream<Uint8Array> | null) ??
+    photoBlob(new Uint8Array(await stored.arrayBuffer())).stream();
+  const transformed = await service
+    .input(source)
+    .transform(
+      next === undefined
+        ? { width: 24, height: 24, fit: 'scale-down', metadata: 'none' }
+        : { width: next, fit: 'scale-down', metadata: 'none' },
+    )
+    .output({ format: 'image/webp', quality: next === undefined ? 65 : 82, anim: false });
+  const response = transformed.response();
+  if (!response.ok)
+    throw new AppError(ERROR_CODES.CONFIGURATION_INCOMPLETE, {
+      message:
+        'Image preparation is temporarily unavailable. The private photo checkpoint is preserved.',
+    });
+  const output = new Uint8Array(await response.arrayBuffer());
+  if (next !== undefined) {
+    await put(`${prefix}/${next}.webp`, output, 'image/webp');
+    return {
+      ...job,
+      state: 'processing',
+      updatedAt: Date.now(),
+      result: { ...image, derivativeWidths: [...completed, next] },
+    };
+  }
+  if (output.byteLength > 2900)
+    throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
+      message: 'The photo preview could not be prepared safely.',
+    });
+  return {
+    ...job,
+    state: 'ready',
+    updatedAt: Date.now(),
+    result: {
+      ...image,
+      derivativesReady: true,
+      lqip: `data:image/webp;base64,${btoa(String.fromCharCode(...output))}`,
+    },
+  };
+}

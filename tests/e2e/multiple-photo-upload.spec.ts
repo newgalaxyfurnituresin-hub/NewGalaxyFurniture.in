@@ -1,3 +1,4 @@
+import { mkdir, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { demoSofa } from '../fixtures/products';
 test.skip(process.env.NGF_COLOR_HARNESS !== '1', 'Uses the isolated local admin fixture.');
@@ -339,4 +340,65 @@ test('Android native selection uploads even when input/change events are missing
     page.getByText('No photos were received from the selector.', { exact: false }),
   ).toBeVisible();
   expect(writes).toBe(1);
+});
+
+test('tablet completes ten high-quality photos through durable preparation checkpoints', async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(180000);
+  await page.setViewportSize({ width: 820, height: 1180 });
+  let id = '';
+  let remaining = 0;
+  let received = 0;
+  let finished = 0;
+  await page.route('**/api/admin/products/p_device0001/photo-uploads**', async (route) => {
+    const request = route.request();
+    const isCollection = new URL(request.url()).pathname.endsWith('/photo-uploads');
+    if (request.method() === 'GET') {
+      await route.fulfill({
+        json: {
+          computerOnline: true,
+          uploads: remaining ? [{ imageId: id, state: 'processing' }] : [],
+        },
+      });
+      return;
+    }
+    if (isCollection) {
+      expect(remaining).toBe(0);
+      id = 'img_batch' + String(++received).padStart(5, '0');
+      remaining = 8;
+      await route.fulfill({ status: 202, json: { uploadId: id, images: [], rejected: [] } });
+      return;
+    }
+    expect(request.url().endsWith('/' + id)).toBe(true);
+    if (--remaining > 0) {
+      await route.fulfill({
+        status: 202,
+        json: { uploadId: id, images: [], rejected: [], progress: 'Preparing next size' },
+      });
+      return;
+    }
+    finished++;
+    await route.fulfill({
+      json: { images: [{ ...demoSofa.images[0], id, order: finished }], rejected: [] },
+    });
+  });
+  await page.goto('/admin/products/edit?reset=1');
+  const images = page.getByRole('region', { name: 'Images', exact: true });
+  await mkdir(testInfo.outputPath('photo-files'), { recursive: true });
+  const photos = Array.from({ length: 10 }, (_, i) =>
+    testInfo.outputPath('photo-files', 'high-quality-' + i + '.png'),
+  );
+  const bytes = Buffer.alloc(5 * 1024 * 1024);
+  await Promise.all(photos.map((path) => writeFile(path, bytes)));
+  await images.getByLabel('Product photographs', { exact: true }).setInputFiles(photos);
+  await images.getByRole('button', { name: '2. Upload selected photos', exact: true }).click();
+  await expect(images.getByText('Photo 1 of 10:', { exact: false })).toBeVisible();
+  await expect(images.getByText('10 of 10 photos added.', { exact: false })).toBeVisible({
+    timeout: 150000,
+  });
+  expect(received).toBe(10);
+  expect(finished).toBe(10);
+  await expect(images.getByRole('button', { name: 'Remove', exact: true })).toHaveCount(11);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

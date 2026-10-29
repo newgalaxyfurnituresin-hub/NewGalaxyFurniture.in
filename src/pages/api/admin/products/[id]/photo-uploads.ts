@@ -1,7 +1,6 @@
 import type { APIContext } from 'astro';
 import { openAdminContext } from '@/lib/admin/context';
 import { getImages, getR2 } from '@/lib/env';
-import { prepareHostedPhoto } from '@/lib/images/hosted';
 import {
   ERROR_CODES,
   errorResponse,
@@ -116,26 +115,8 @@ export async function POST(context: APIContext): Promise<Response> {
       ),
       { expirationTtl: UPLOAD_JOB_TTL },
     );
-    try {
-      const service = getImages(context);
-      if (!service) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
-      const prepared = await prepareHostedPhoto(
-        service,
-        getR2(context),
-        job,
-        validation.image.bytes,
-      );
-      await drafts.put(key, JSON.stringify(prepared), { expirationTtl: UPLOAD_JOB_TTL });
-    } catch (error) {
-      logServerError('photo uploads: online preparation failed', error);
-      await drafts.put(key, JSON.stringify({ ...job, state: 'failed', updatedAt: Date.now() }), {
-        expirationTtl: UPLOAD_JOB_TTL,
-      });
-      return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
-        message:
-          'Online photo preparation is unavailable or the image could not be decoded. Your upload stays private. Try a JPEG photo, or try again later.',
-      });
-    }
+    if (!getImages(context)) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
+    // Receipt and private staging only. Preparation runs in resumable, bounded requests.
     return jsonResponse({ uploadId: imageId, images: [], rejected: [] }, { status: 202 });
   } catch (error) {
     logServerError('photo uploads: staging failed', error);

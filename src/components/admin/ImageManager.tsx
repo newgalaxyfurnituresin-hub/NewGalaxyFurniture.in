@@ -126,7 +126,7 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
               continue;
             try {
               const prepared = await completePhotoUpload(props.productId, job.imageId);
-              if (!cancelled && prepared.ok) {
+              if (!cancelled && prepared.ok && prepared.value.images.length > 0) {
                 for (const image of prepared.value.images)
                   currentProps.current.onPreparedPhoto?.(
                     image,
@@ -136,7 +136,11 @@ export default function ImageManager(props: ImageManagerProps): ReactElement {
                 setMessage(
                   'Prepared photo added. Smaller sizes are ready and original resolution is preserved.',
                 );
-              } else if (!cancelled && !prepared.ok) setMessage(prepared.error.message);
+              } else if (!cancelled && prepared.ok)
+                setMessage(
+                  prepared.value.progress ?? 'Preparing the next photo size securely online.',
+                );
+              else if (!cancelled && !prepared.ok) setMessage(prepared.error.message);
             } finally {
               finish();
             }

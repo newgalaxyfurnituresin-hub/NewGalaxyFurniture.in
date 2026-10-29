@@ -12,6 +12,7 @@ interface PhotoResponse {
   images: ProductImageValue[];
   rejected: PhotoRejection[];
   uploadId?: string;
+  progress?: string;
 }
 export interface PendingPhoto {
   imageId: string;
@@ -36,26 +37,48 @@ async function waitForPhoto(
   imageId: string,
   progress: (message: string) => void,
 ): Promise<ApiResult<PhotoResponse> | null> {
+  let completing = false;
+  let transientFailures = 0;
   for (let attempt = 0; attempt < 45; attempt++) {
-    const result = await adminFetch<PendingPhotos>(
-      `/api/admin/products/${productId}/photo-uploads`,
-    );
-    if (!result.ok) return result;
-    const job = result.value.uploads.find((upload) => upload.imageId === imageId);
-    if (job && ['ready', 'queued', 'processing'].includes(job.state) && result.value.computerOnline)
-      return await completePhotoUpload(productId, imageId);
-    if (job?.state === 'failed')
-      return {
-        ok: false,
-        error: {
-          status: 422,
-          code: 'VALIDATION_FAILED',
-          message: 'This photo could not be decoded safely. Re-export it and upload it again.',
-        },
-      };
-    if (!result.value.computerOnline) return null;
-    progress('Photo received privately. Preparing it securely online. Keep this page open.');
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (!completing) {
+      const result = await adminFetch<PendingPhotos>(
+        `/api/admin/products/${productId}/photo-uploads`,
+      );
+      if (!result.ok) return result;
+      const job = result.value.uploads.find((upload) => upload.imageId === imageId);
+      if (job?.state === 'failed')
+        return {
+          ok: false,
+          error: {
+            status: 422,
+            code: 'VALIDATION_FAILED',
+            message:
+              'This photo could not finish preparation. Check saved photos before retrying this file, or re-export it as JPEG.',
+          },
+        };
+      if (!result.value.computerOnline) return null;
+      completing = !!job && ['ready', 'queued', 'processing'].includes(job.state);
+    }
+    if (completing) {
+      const step = await completePhotoUpload(productId, imageId);
+      if (!step.ok) {
+        if ((step.error.status === 0 || step.error.status >= 500) && ++transientFailures < 3) {
+          progress(
+            'Connection interrupted. Resuming the same private photo checkpoint; no duplicate upload is being created.',
+          );
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          continue;
+        }
+        return step;
+      }
+      transientFailures = 0;
+      if (!step.value.uploadId) return step;
+      progress(
+        step.value.progress ?? 'Photo received privately. Preparing the next size securely online.',
+      );
+    }
+    // At most one checkpoint per second, below the shared admin request ceiling.
+    await new Promise((resolve) => setTimeout(resolve, 1100));
   }
   return null;
 }
@@ -109,7 +132,11 @@ export async function uploadPhotos(input: {
     );
     previousFinished = Date.now();
     if (result.ok && result.value.uploadId) {
-      const prepared = await waitForPhoto(input.productId, result.value.uploadId, input.onProgress);
+      const prepared = await waitForPhoto(input.productId, result.value.uploadId, (message) =>
+        input.onProgress(
+          `Photo ${index + 1} of ${input.files.length}: ${message} ${added} added so far.`,
+        ),
+      );
       if (prepared === null) {
         pending++;
         continue;

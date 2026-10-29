@@ -1,8 +1,9 @@
 import type { APIContext } from 'astro';
 import { lockNamespace, openAdminContext } from '@/lib/admin/context';
 import { getImages, getR2 } from '@/lib/env';
-import { prepareHostedPhoto } from '@/lib/images/hosted';
+import { advanceHostedPhoto } from '@/lib/images/hosted';
 import {
+  AppError,
   ERROR_CODES,
   errorResponse,
   jsonResponse,
@@ -28,24 +29,75 @@ export async function POST(context: APIContext): Promise<Response> {
   const imageId = context.params.imageId ?? '';
   try {
     return await withProductLock(lockNamespace(context), productId, async () => {
-      const resolved = await resolveProduct({ drafts, client }, productId);
-      if (!resolved) return errorResponse(ERROR_CODES.NOT_FOUND);
       let job = await readUploadJob(drafts, productId, imageId);
       if (!job) return errorResponse(ERROR_CODES.NOT_FOUND);
+      if (job.state === 'failed')
+        return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
+          message:
+            'Photo preparation stopped after repeated failures. Check saved photos before retrying this file. The source remains private.',
+        });
       if (job.state === 'queued' || job.state === 'processing') {
-        const source = await getR2(context).get(job.sourceKey);
         const service = getImages(context);
-        if (!source || !service) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
-        job = await prepareHostedPhoto(
-          service,
-          getR2(context),
-          job,
-          new Uint8Array(await source.arrayBuffer()),
-        );
+        if (!service) return errorResponse(ERROR_CODES.CONFIGURATION_INCOMPLETE);
+        if ((job.failures ?? 0) >= 3) {
+          await drafts.put(
+            uploadJobKey(productId, imageId),
+            JSON.stringify({ ...job, state: 'failed', updatedAt: Date.now() }),
+            { expirationTtl: UPLOAD_JOB_TTL },
+          );
+          return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
+            message:
+              'Photo preparation stopped after repeated interruptions. Check saved photos before retrying this file. The source remains private.',
+          });
+        }
+        const failures = Math.min(3, (job.failures ?? 0) + 1);
+        job = { ...job, failures, updatedAt: Date.now() };
+        // Persist the attempt before processing: resource-limit termination cannot be caught.
         await drafts.put(uploadJobKey(productId, imageId), JSON.stringify(job), {
           expirationTtl: UPLOAD_JOB_TTL,
         });
+        try {
+          job = { ...(await advanceHostedPhoto(service, getR2(context), job)), failures: 0 };
+        } catch (error) {
+          await drafts.put(
+            uploadJobKey(productId, imageId),
+            JSON.stringify({
+              ...job,
+              failures,
+              updatedAt: Date.now(),
+              state:
+                failures >= 3 ||
+                (error instanceof AppError && error.code === ERROR_CODES.VALIDATION_FAILED)
+                  ? 'failed'
+                  : job.state,
+            }),
+            { expirationTtl: UPLOAD_JOB_TTL },
+          );
+          throw error;
+        }
+        await drafts.put(uploadJobKey(productId, imageId), JSON.stringify(job), {
+          expirationTtl: UPLOAD_JOB_TTL,
+        });
+        return jsonResponse(
+          {
+            uploadId: imageId,
+            images: [],
+            rejected: [],
+            progress:
+              job.state === 'ready'
+                ? 'Photo sizes are ready. Verifying and attaching the photo next.'
+                : 'Preparing photo sizes: ' +
+                  (job.result?.derivativeWidths?.length ?? 0) +
+                  ' completed. Keep this page open.',
+          },
+          { status: 202 },
+        );
       }
+
+      // Partial work only touches private job objects. Read the latest product once, at promotion,
+      // so each thumbnail does not trigger a repository read. A deleted product cannot be recreated.
+      const resolved = await resolveProduct({ drafts, client }, productId);
+      if (!resolved) return errorResponse(ERROR_CODES.NOT_FOUND);
       const product = resolved.product;
       const existing = product.images.find((image) => image.id === imageId);
       if (existing) {
@@ -60,7 +112,8 @@ export async function POST(context: APIContext): Promise<Response> {
       const image = job.result;
       if (job.state !== 'ready' || !image || !job.sha256)
         return errorResponse(ERROR_CODES.VALIDATION_FAILED, {
-          message: 'This photo is still being prepared. Keep the company photo tool running.',
+          message:
+            'This photo is still being prepared. Keep this page open or reopen the draft to continue.',
         });
       if (
         product.images.length >= 20 ||

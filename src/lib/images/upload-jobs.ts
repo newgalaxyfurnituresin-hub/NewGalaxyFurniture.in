@@ -14,6 +14,7 @@ export const UploadJob = z.object({
   colorName: z.string().max(60),
   state: z.enum(['queued', 'processing', 'ready', 'failed', 'applied']),
   updatedAt: z.number(),
+  failures: z.number().int().min(0).max(3).optional(),
   result: ProductImage.optional(),
   sha256: z
     .string()

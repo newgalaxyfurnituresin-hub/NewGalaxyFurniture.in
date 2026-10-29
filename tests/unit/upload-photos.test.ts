@@ -175,3 +175,59 @@ describe('multiple admin photo uploads', () => {
     expect(request).toHaveBeenCalledTimes(1);
   });
 });
+
+it('serializes ten 5 MB photos through checkpoint requests and safely resumes one interrupted checkpoint', async () => {
+  let current = '';
+  let remaining = 0;
+  let staged = 0;
+  let statusReads = 0;
+  let interrupted = false;
+  const completed: string[] = [];
+  const request = vi.fn<typeof fetch>().mockImplementation(async (url, options) => {
+    const path = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url;
+    if (options?.method === 'POST' && path.endsWith('/photo-uploads')) {
+      expect(remaining).toBe(0);
+      expect((options.body as FormData).getAll('file')).toHaveLength(1);
+      current = 'img_batch' + String(staged++).padStart(5, '0');
+      remaining = 8;
+      return Response.json({ uploadId: current, images: [], rejected: [] }, { status: 202 });
+    }
+    if (!options?.method || options.method === 'GET') {
+      statusReads++;
+      return Response.json({
+        computerOnline: true,
+        uploads: [{ imageId: current, state: 'queued' }],
+      });
+    }
+    expect(path.endsWith('/' + current)).toBe(true);
+    if (staged === 2 && remaining === 5 && !interrupted) {
+      interrupted = true;
+      return new Response('temporary', { status: 503 });
+    }
+    if (--remaining > 0)
+      return Response.json(
+        { uploadId: current, images: [], rejected: [], progress: 'Preparing the next size' },
+        { status: 202 },
+      );
+    completed.push(current);
+    return Response.json({ images: [{ ...demoSofa.images[0], id: current }], rejected: [] });
+  });
+  vi.stubGlobal('fetch', request);
+  const options = input(
+    Array.from({ length: 10 }, (_, i) => photo('large-' + i + '.png', 5 * 1024 * 1024)),
+  );
+  const work = uploadPhotos(options);
+  await vi.runAllTimersAsync();
+  const result = await work;
+  expect(result).toEqual({ added: 10, pending: 0, rejected: [], stopped: false });
+  expect(staged).toBe(10);
+  expect(statusReads).toBe(10);
+  expect(new Set(completed).size).toBe(10);
+  expect(options.onAccepted).toHaveBeenCalledTimes(10);
+  expect(interrupted).toBe(true);
+  expect(
+    options.onProgress.mock.calls.some(([message]) =>
+      String(message).includes('Resuming the same private photo checkpoint'),
+    ),
+  ).toBe(true);
+});

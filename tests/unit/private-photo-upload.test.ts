@@ -73,12 +73,31 @@ async function staged() {
   return { job, bytes };
 }
 async function ready() {
-  return (await staged()).job;
+  const { job } = await staged();
+  for (let step = 0; step < 15; step++) {
+    const current = (await readUploadJob(store, product.id, job.imageId))!;
+    if (current.state === 'ready') return current;
+    expect(
+      (
+        await finish(
+          ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId),
+        )
+      ).status,
+    ).toBe(202);
+    expect(state.save).not.toHaveBeenCalled();
+  }
+  throw Error('Photo did not reach its ready checkpoint');
 }
 describe('private free-plan image processing', () => {
   it('keeps unvalidated bytes private and out of the product', async () => {
     const before = product.images.length;
+    const service = hostedImageFixture();
+    const info = vi.spyOn(service, 'info');
+    const input = vi.spyOn(service, 'input');
+    state.images.mockReturnValue(service);
     const { job } = await staged();
+    expect(info).not.toHaveBeenCalled();
+    expect(input).not.toHaveBeenCalled();
     expect(await bucket.get(job.sourceKey)).not.toBeNull();
     expect(job.sourceKey).toMatch(/^pending-uploads\//);
     expect(parseImageRequest(job.sourceKey)).toBeNull();
@@ -108,19 +127,18 @@ describe('private free-plan image processing', () => {
     expect(state.save).toHaveBeenCalledOnce();
     expect(await store.get(enhancementKey(product.id, job.imageId), 'json')).toBeNull();
   });
-  it('resumes an earlier private queued upload through the hosted processor', async () => {
+  it('resumes an earlier private queued upload through checkpoints without attaching early', async () => {
     const { job } = await staged();
-    await store.put(
-      uploadJobKey(product.id, job.imageId),
-      JSON.stringify({ ...job, state: 'queued', result: undefined }),
-    );
-    expect(
-      (
-        await finish(
-          ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId),
-        )
-      ).status,
-    ).toBe(200);
+    let response: Response | undefined;
+    for (let step = 0; step < 15; step++) {
+      response = await finish(
+        ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId),
+      );
+      if (response.status === 200) break;
+      expect(response.status).toBe(202);
+      expect(state.save).not.toHaveBeenCalled();
+    }
+    expect(response?.status).toBe(200);
     expect(state.save).toHaveBeenCalledOnce();
   });
   it('rejects corrupt pixels without exposing an image record', async () => {
@@ -163,4 +181,55 @@ describe('private free-plan image processing', () => {
     ).toBe(403);
     expect(state.save).not.toHaveBeenCalled();
   });
+});
+
+it('bounds repeated provider failures and never attaches unfinished photo data', async () => {
+  const { job } = await staged();
+  const request = () =>
+    ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId);
+  expect((await finish(request())).status).toBe(202);
+  const service = hostedImageFixture();
+  const input = service.input.bind(service);
+  service.input = (stream) => {
+    const handle = input(stream);
+    handle.output = async () => ({ response: () => new Response('unavailable', { status: 503 }) });
+    return handle;
+  };
+  state.images.mockReturnValue(service);
+  for (let attempt = 0; attempt < 3; attempt++)
+    expect((await finish(request())).status).toBeGreaterThanOrEqual(500);
+  const stopped = (await readUploadJob(store, product.id, job.imageId))!;
+  expect(stopped.state).toBe('failed');
+  expect(stopped.failures).toBe(3);
+  expect((await finish(request())).status).toBe(422);
+  expect(state.save).not.toHaveBeenCalled();
+  expect(await bucket.get(job.sourceKey)).not.toBeNull();
+});
+it('does not recreate a deleted product when a prepared photo is ready', async () => {
+  const job = await ready();
+  state.resolve.mockResolvedValue(null);
+  expect(
+    (
+      await finish(
+        ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId),
+      )
+    ).status,
+  ).toBe(404);
+  expect(state.save).not.toHaveBeenCalled();
+});
+
+it('stops repeatedly interrupted checkpoints without processing or attaching again', async () => {
+  const { job } = await staged();
+  await store.put(uploadJobKey(product.id, job.imageId), JSON.stringify({ ...job, failures: 3 }));
+  const service = hostedImageFixture();
+  const input = vi.spyOn(service, 'input');
+  state.images.mockReturnValue(service);
+  const response = await finish(
+    ctx(new Request('https://newgalaxyfurniture.in', { method: 'POST' }), job.imageId),
+  );
+  expect(response.status).toBe(422);
+  expect(input).not.toHaveBeenCalled();
+  expect(state.save).not.toHaveBeenCalled();
+  expect((await readUploadJob(store, product.id, job.imageId))?.state).toBe('failed');
+  expect(await bucket.get(job.sourceKey)).not.toBeNull();
 });
