@@ -20,20 +20,21 @@ export interface HostedImageService {
     }): Promise<{ response(): Response }>;
   };
 }
-const stream = (bytes: Uint8Array): ReadableStream<Uint8Array> =>
-  new Blob([new Uint8Array(bytes)]).stream();
+// A Blob is immutable and can provide independent streams without copying the photo for each size.
+const photoBlob = (bytes: Uint8Array): Blob => new Blob([bytes as Uint8Array<ArrayBuffer>]);
 export async function hostedOriginal(
   service: HostedImageService,
   bytes: Uint8Array,
   minWidth = 256,
 ): Promise<{ bytes: Uint8Array; width: number; height: number }> {
-  const info = await service.info(stream(bytes));
+  const source = photoBlob(bytes);
+  const info = await service.info(source.stream());
   if (info.width < minWidth || info.height < 64 || info.width * info.height > 40_000_000)
     throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
       message: 'This photo has unsupported dimensions. Use a photo under 40 megapixels.',
     });
   const converted = await service
-    .input(stream(bytes))
+    .input(source.stream())
     .transform({ metadata: 'none' })
     .output({ format: 'image/jpeg', quality: 92, anim: false });
   const response = converted.response();
@@ -46,7 +47,7 @@ export async function hostedOriginal(
     throw new AppError(ERROR_CODES.VALIDATION_FAILED, {
       message: 'The prepared photo exceeds 12 MB. Export a smaller image.',
     });
-  const result = await service.info(stream(sanitized));
+  const result = await service.info(photoBlob(sanitized).stream());
   return { bytes: sanitized, width: result.width, height: result.height };
 }
 export async function prepareHostedPhoto(
@@ -56,6 +57,7 @@ export async function prepareHostedPhoto(
   bytes: Uint8Array,
 ): Promise<UploadJobValue> {
   const original = await hostedOriginal(service, bytes);
+  const sanitizedPhoto = photoBlob(original.bytes);
   const prefix = `products/${job.productId}/${job.imageId}`;
   const key = `${prefix}/original.jpg`;
   const put = async (key: string, bytes: Uint8Array, contentType: string): Promise<void> => {
@@ -68,7 +70,7 @@ export async function prepareHostedPhoto(
   if (!widths.length) widths.push(original.width);
   for (const width of widths) {
     const result = await service
-      .input(stream(original.bytes))
+      .input(sanitizedPhoto.stream())
       .transform({ width, fit: 'scale-down', metadata: 'none' })
       .output({ format: 'image/webp', quality: 82, anim: false });
     await put(
@@ -78,12 +80,12 @@ export async function prepareHostedPhoto(
     );
   }
   const lqip = await service
-    .input(stream(original.bytes))
+    .input(sanitizedPhoto.stream())
     .transform({ width: 24, height: 24, fit: 'scale-down', metadata: 'none' })
     .output({ format: 'image/webp', quality: 65, anim: false });
   const tiny = new Uint8Array(await lqip.response().arrayBuffer());
   const hash = new Uint8Array(
-    await crypto.subtle.digest('SHA-256', new Uint8Array(original.bytes)),
+    await crypto.subtle.digest('SHA-256', original.bytes as Uint8Array<ArrayBuffer>),
   );
   return {
     ...job,

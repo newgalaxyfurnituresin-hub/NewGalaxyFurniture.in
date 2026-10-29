@@ -33,6 +33,13 @@ import type { ObjectBucket, ObjectListResult, ObjectPutOptions, StoredObjectBody
 
 function toArrayBuffer(value: Uint8Array | ArrayBuffer): ArrayBuffer {
   if (value instanceof Uint8Array) {
+    // R2 accepts the existing complete ArrayBuffer. Copy only subviews or shared buffers.
+    if (
+      value.buffer instanceof ArrayBuffer &&
+      value.byteOffset === 0 &&
+      value.byteLength === value.buffer.byteLength
+    )
+      return value.buffer;
     return value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength) as ArrayBuffer;
   }
   return value;
