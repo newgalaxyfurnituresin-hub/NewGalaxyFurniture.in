@@ -137,6 +137,29 @@
       "mime": "image/jpeg",
       "order": 4,
       "width": 1774
+    },
+    {
+      "alt": "Regalia Luxe 3+2 Seater Sofa — photograph 6",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
+      "derivativesReady": true,
+      "filename": "file_00000000b4e48211b3b7f4ac506167b4.png",
+      "height": 1024,
+      "id": "img_amegtwz6in",
+      "key": "products/p_wm3ne2vly5/img_amegtwz6in/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRsYAAABXRUJQVlA4ILoAAABwBACdASoYABAAPqVCnEkmI6KhMAgAwBSJYwCdMoGv/sUAG5N+0eXA0unsAAD+lCQ9H1dflFjhiUPVMe9VCwn6i91ZtPGoTlE0gD35f5pcqhfiAnf/qdfOXauvoNYQveo7n94UVNuflkm72qEPY82GYdxPj0OlxvL4SK7S7vXedyng6PtIPYgNC0f6jB2kAwZraTvWue34PpMfaohsNt/al/mWhT89djbLv0u7YjQSCk1jaIINBXEAAAA=",
+      "mime": "image/jpeg",
+      "order": 5,
+      "width": 1536
     }
   ],
   "keywords": [],
@@ -163,6 +186,6 @@
     "Customizable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:34:44.234Z",
+  "updatedAt": "2026-10-30T12:34:55.431Z",
   "variants": []
 }
