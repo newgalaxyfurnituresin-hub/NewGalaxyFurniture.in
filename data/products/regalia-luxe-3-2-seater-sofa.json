@@ -20,7 +20,31 @@
   "discount": 15,
   "featured": false,
   "id": "p_wm3ne2vly5",
-  "images": [],
+  "images": [
+    {
+      "alt": "Regalia Luxe 3+2 Seater Sofa — photograph 1",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
+      "derivativesReady": true,
+      "filename": "file_00000000c1188211872d9e60b1f00027.png",
+      "height": 1024,
+      "id": "img_w4v2gyirpt",
+      "key": "products/p_wm3ne2vly5/img_w4v2gyirpt/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRvIAAABXRUJQVlA4IOYAAAAQBQCdASoYABAAPqVCm0imI6KhMAgAwBSJaACdMoMYD8ANlchn7BZa72VFgMRFEZDgAP7wFBfKZm4HLSvmrWG2fd5KsjZsr6FNJF/3VK/UUwDIuxO6qlFiP9VXCEtcJiVW1hwvKzbbLHGh6UoNQt/J0qeop6lpthr+z+jKq2vlx6N3x+rtvVZVSl7kCI2uH58veZ8XWRe5xcraR8rCdFF4U05LePIhvkOemHiXNmSrF6NUdfJLYdVKbslmhv/q85SkO8/7ELZCjF4biV6Chsi/Ch9WlDJVmcKicNvqqNuoOzsIaQAAAA==",
+      "mime": "image/jpeg",
+      "order": 0,
+      "width": 1536
+    }
+  ],
   "keywords": [],
   "madeToOrder": true,
   "material": "Neem Wood Frame, Duroflex 40-Density Foam, Premium Suede Fabric",
@@ -29,6 +53,7 @@
   "originalPrice": 55000,
   "price": 46499,
   "priceOnEnquiry": false,
+  "primaryImage": "img_w4v2gyirpt",
   "published": false,
   "relatedProductIds": [],
   "shortDescription": "Upgrade your home with the Regalia Luxe 3+2 Sofa by New Galaxy Furniture. Featuring a Neem wood frame, Duroflex 40-density foam, premium washable suede, elegant quilted backrests, and customisable colours & sizes. Order now!",
@@ -44,6 +69,6 @@
     "Customizable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:32:36.747Z",
+  "updatedAt": "2026-10-30T12:33:59.057Z",
   "variants": []
 }
