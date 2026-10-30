@@ -132,6 +132,30 @@
       "mime": "image/jpeg",
       "order": 4,
       "width": 1312
+    },
+    {
+      "alt": "Aurelia Comfort 3+1+1 Seater Sofa — photograph 6",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280,
+        1600
+      ],
+      "derivativesReady": true,
+      "filename": "file_000000000b248211a484655e523cc54c.png",
+      "height": 887,
+      "id": "img_jsf31x7rcj",
+      "key": "products/p_k3yapcc7x3/img_jsf31x7rcj/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRnoAAABXRUJQVlA4IG4AAADwAwCdASoYAAwAPqVInkimJKMhMAgAwBSJZwCdH8ADAp83jdk6/9CoAP76EfxFM6u0Jlg6NuUG+yF48ChjOSB6HENjKTG4e3WbWxr9rmVnVa3MyPbv1jYUZPqm/QRdHqCMor4flEKRN4YDgNIAAA==",
+      "mime": "image/jpeg",
+      "order": 5,
+      "width": 1774
     }
   ],
   "keywords": [],
@@ -158,6 +182,6 @@
     "Customizable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:59:21.368Z",
+  "updatedAt": "2026-10-30T12:59:34.076Z",
   "variants": []
 }
