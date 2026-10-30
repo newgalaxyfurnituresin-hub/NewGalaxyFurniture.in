@@ -16,7 +16,31 @@
   "discount": 12,
   "featured": false,
   "id": "p_k3yapcc7x3",
-  "images": [],
+  "images": [
+    {
+      "alt": "Aurelia Comfort 3+1+1 Seater Sofa — photograph 1",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
+      "derivativesReady": true,
+      "filename": "file_000000006a5482119ea172ea81aae314.png",
+      "height": 1024,
+      "id": "img_mtqbnj87s9",
+      "key": "products/p_k3yapcc7x3/img_mtqbnj87s9/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRs4AAABXRUJQVlA4IMIAAAAwBACdASoYABAAPqVCm0imI6KhMAgAwBSJYwCdB3gAhm/Bzvfqk2G8/rAA/u5R8CiJjue1kkcux1LPsvP7q/b10R+2vIOmk/DzyPqM7vLCKOToR6wsyD9f66UM8DYLCdErXAS+BfyA4CmP4e9QI6E5PvfKm3rReBE3Ydmv/wPrWz+IKkNvpTalAouJdfzgw8/Vt/32uSb/E9n856jU/fzXuSOtZ6TzbR9+LkybZ70/q+mr7gEaafSDsVKpJRvaoDhQAA==",
+      "mime": "image/jpeg",
+      "order": 0,
+      "width": 1536
+    }
+  ],
   "keywords": [],
   "madeToOrder": true,
   "material": "Neem Wood Frame, Duroflex 40-Density Foam, Premium Suede Fabric",
@@ -25,6 +49,7 @@
   "originalPrice": 51499,
   "price": 45499,
   "priceOnEnquiry": false,
+  "primaryImage": "img_mtqbnj87s9",
   "published": false,
   "relatedProductIds": [],
   "shortDescription": "Experience luxury with the Aurelia Comfort 3+1+1 Sofa by New Galaxy Furniture. Featuring a durable Neem wood frame, Duroflex 40-density foam, premium washable suede fabric, plush cushioning, and customisable colours & sizes. Order now!",
@@ -40,6 +65,6 @@
     "Customizable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:55:27.946Z",
+  "updatedAt": "2026-10-30T12:57:40.500Z",
   "variants": []
 }
