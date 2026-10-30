@@ -240,13 +240,13 @@
   "price": 46499,
   "priceOnEnquiry": false,
   "primaryImage": "img_w4v2gyirpt",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "shortDescription": "Upgrade your home with the Regalia Luxe 3+2 Sofa by New Galaxy Furniture. Featuring a Neem wood frame, Duroflex 40-density foam, premium washable suede, elegant quilted backrests, and customisable colours & sizes. Order now!",
   "size": "3+2 Seater Sofa Set",
   "sku": "NGF-SOF-RN5OOS",
   "slug": "regalia-luxe-3-2-seater-sofa",
-  "status": "DRAFT",
+  "status": "PUBLISHED",
   "stockStatus": "MADE_TO_ORDER",
   "tags": [
     "3+2 Seater Sofa",
@@ -255,6 +255,6 @@
     "Customizable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:41:23.456Z",
+  "updatedAt": "2026-10-30T12:41:49.432Z",
   "variants": []
 }
