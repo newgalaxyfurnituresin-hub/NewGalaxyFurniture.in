@@ -243,13 +243,13 @@
   "price": 32499,
   "priceOnEnquiry": false,
   "primaryImage": "img_49ireqwgkw",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "shortDescription": "Luxury 3-Seater Sofa with solid Neem wood frame, Duroflex 40-density cushions, 5-year cushion warranty & water-resistant, washable suede upholstery. Available in multiple colours and customisable sizes. Enquire Now!",
   "size": "3 Seater",
   "sku": "NGF-SOF-M7UTQX",
   "slug": "azure-royale-3-seater",
-  "status": "DRAFT",
+  "status": "PUBLISHED",
   "stockStatus": "MADE_TO_ORDER",
   "tags": [
     "Luxury Sofa",
@@ -258,6 +258,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:14:26.927Z",
+  "updatedAt": "2026-10-30T12:14:31.774Z",
   "variants": []
 }
