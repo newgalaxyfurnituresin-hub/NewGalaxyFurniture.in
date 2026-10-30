@@ -1,20 +1,11 @@
 {
   "aiAssisted": false,
   "aiFields": [],
-  "availableColors": [
-    "aa"
-  ],
+  "availableColors": [],
   "bestSeller": false,
   "category": "sofas",
   "color": "Turquoise Blue",
-  "colorOptions": [
-    {
-      "id": "col_dc7520e9c23b",
-      "imageIds": [],
-      "name": "aa",
-      "stockStatus": "LIMITED_STOCK"
-    }
-  ],
+  "colorOptions": [],
   "createdAt": "2026-10-25T09:16:46.385Z",
   "currency": "INR",
   "customization": "Available in multiple colours, fabrics, and customisable sizes to suit your space and preferences. Contact us for personalised sofa designs and configurations.",
@@ -267,6 +258,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:12:21.979Z",
+  "updatedAt": "2026-10-30T12:14:26.927Z",
   "variants": []
 }
