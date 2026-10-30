@@ -218,6 +218,29 @@
       "mime": "image/jpeg",
       "order": 7,
       "width": 1536
+    },
+    {
+      "alt": "Azure Royale 3-Seater — photograph 9",
+      "altSource": "admin",
+      "derivativeFormats": [
+        "webp"
+      ],
+      "derivativeWidths": [
+        320,
+        480,
+        640,
+        960,
+        1280
+      ],
+      "derivativesReady": true,
+      "filename": "file_000000005abc8211afcc3ebd2712e305.png",
+      "height": 1024,
+      "id": "img_dgn76zyr0d",
+      "key": "products/p_ey8ddqoy3w/img_dgn76zyr0d/original.jpg",
+      "lqip": "data:image/webp;base64,UklGRtIAAABXRUJQVlA4IMYAAAAwBQCdASoYABAAPqVCm0imI6KhMAgAwBSJbACdMoRwNsA/ACsAAOWBlZPbggUugThxAAD+3dhTx0EJj8i7KN5o2VTfX4TmbqTZIFJoJteMcS+ciXhNEjLqrgmETIJhIrTHjJtV9L4OfV+cjd7mymT8M0iDMHAvvRHMJ64WUO/H/CW4Zod0prrL6A5/E9DYtum3HdFvvkMtmG77gQyMpim0uFg4WSPI8HS4lqyz+0TGttl2fBXteXSxvQsQMYzD/nwJIFI8AAA=",
+      "mime": "image/jpeg",
+      "order": 8,
+      "width": 1536
     }
   ],
   "keywords": [],
@@ -244,6 +267,6 @@
     "Customisable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T12:12:10.170Z",
+  "updatedAt": "2026-10-30T12:12:21.979Z",
   "variants": []
 }
