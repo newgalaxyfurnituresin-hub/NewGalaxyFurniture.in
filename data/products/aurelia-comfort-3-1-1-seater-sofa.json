@@ -259,13 +259,13 @@
   "price": 45499,
   "priceOnEnquiry": false,
   "primaryImage": "img_mtqbnj87s9",
-  "published": false,
+  "published": true,
   "relatedProductIds": [],
   "shortDescription": "Experience luxury with the Aurelia Comfort 3+1+1 Sofa by New Galaxy Furniture. Featuring a durable Neem wood frame, Duroflex 40-density foam, premium washable suede fabric, plush cushioning, and customisable colours & sizes. Order now!",
   "size": "3+1+1 Seater Sofa Set",
   "sku": "NGF-SOF-ESCCT4",
   "slug": "aurelia-comfort-3-1-1-seater-sofa",
-  "status": "DRAFT",
+  "status": "PUBLISHED",
   "stockStatus": "MADE_TO_ORDER",
   "tags": [
     "3+1+1 Seater Sofa",
@@ -274,6 +274,6 @@
     "Customizable Sofa"
   ],
   "trending": false,
-  "updatedAt": "2026-10-30T13:02:33.493Z",
+  "updatedAt": "2026-10-30T13:02:54.187Z",
   "variants": []
 }
