@@ -1638,18 +1638,12 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
     box-shadow var(--dur-fast) var(--ease-standard);
 }
 
-/*
- * The card's media ratio is a custom property with the catalogue's 4/5 as its default, because
- * Requirement 7.2 makes the *item aspect ratio* one of the three attributes the four homepage
- * product sections must differ on. A section sets `--ngf-card-ratio` once on its own container and
- * the value cascades to every card inside it — so the ratio the section declares in
- * `homepage-sections.ts` and the ratio the browser paints are the same number, with no second
- * stylesheet to keep in step.
- */
+/* Product photos set their own frame proportions: full image, no artificial letterbox bands. */
 .ngf-card-media {
   position: relative;
   overflow: hidden;
-  aspect-ratio: var(--ngf-card-ratio, 4 / 3);
+  aspect-ratio: var(--ngf-card-photo-ratio, var(--ngf-card-ratio, 4 / 3));
+  flex-shrink: 0;
   background-color: var(--color-cream);
 }
 
@@ -1657,12 +1651,7 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
   height: 100%;
 }
 
-/*
- * The listing photograph is shown whole, never cropped: `contain` fits the entire image inside the
- * card's fixed 4/3 box, so a landscape sofa shot and a future portrait shot both appear in full and
- * every card stays the same size. Any letterbox margin sits on the card's warm cream ground, which
- * reads as an intentional frame rather than dead space.
- */
+/* The frame matches the source ratio, so contain preserves every edge without empty bands. */
 .ngf-card-media > .ngf-image img {
   object-fit: contain;
 }

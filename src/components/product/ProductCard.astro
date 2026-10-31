@@ -63,7 +63,15 @@ const { product, categoryName, eager = false, priority = false } = Astro.props;
 const settings = getSiteSettings();
 const primary = primaryImageOf(product);
 const ordered = [...product.images].sort((a, b) => a.order - b.order);
-const second = ordered.find((image) => image.id !== primary?.id);
+// Swap only photographs with matching proportions, so hover cannot add bands or crop furniture.
+const second =
+  primary === null
+    ? undefined
+    : ordered.find(
+        (image) =>
+          image.id !== primary.id &&
+          Math.abs(image.width / image.height / (primary.width / primary.height) - 1) <= 0.005,
+      );
 
 /*
  * Committed static overrides for this product's images (under `public/products/{slug}/`). Until the
@@ -128,7 +136,12 @@ const hoverSrc =
   data-slug={product.slug}
   style={hoverSrc === null ? undefined : `--ngf-card-hover-src: url(${hoverSrc});`}
 >
-  <div class="ngf-card-media">
+  <div
+    class="ngf-card-media"
+    style={primary === null
+      ? undefined
+      : `--ngf-card-photo-ratio: ${primary.width} / ${primary.height};`}
+  >
     {
       primary === null ? (
         <p class="ngf-card-placeholder">Photograph coming soon — {name}</p>
