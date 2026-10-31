@@ -27,14 +27,14 @@ describe('category-first homepage hero', () => {
     expect(new Set(selected.map((p) => p.category)).size).toBe(8);
     expect(selected.every((p) => Number(p.slug.replace('product-', '')) >= 20)).toBe(true);
   });
-  it('uses a spare from other categories when one category has no usable photograph', () => {
+  it('leaves missing categories empty instead of repeating another category', () => {
     const representatives = Array.from({ length: 7 }, (_, n) => product(n + 20, `category-${n}`));
     const spare = product(1, 'category-0');
     const empty = { ...product(99, 'shoe-stands'), images: [] };
     const selected = selectHeroProducts([spare, empty, ...representatives]);
-    expect(selected).toHaveLength(8);
+    expect(selected).toHaveLength(7);
     expect(new Set(selected.slice(0, 7).map((p) => p.category)).size).toBe(7);
-    expect(selected[7]?.id).toBe(spare.id);
+    expect(selected.some((p) => p.id === spare.id)).toBe(false);
     expect(selected.some((p) => p.category === 'shoe-stands')).toBe(false);
   });
   it('replaces the older representative when a new product is published', () => {
@@ -97,4 +97,32 @@ describe('category-first homepage hero', () => {
         .map((p) => p.id),
     );
   });
+});
+
+it('shows only the newest sofa even when five sofas have multiple colour photos', () => {
+  const sofas = Array.from({ length: 5 }, (_, n) => product(n));
+  for (const sofa of sofas)
+    sofa.images.push({ ...sofa.images[0]!, id: sofa.images[0]!.id + 'alt', order: 1 });
+  const slides = heroSlidesFrom(sofas);
+  expect(selectHeroProducts(sofas).map((p) => p.id)).toEqual([sofas[4]!.id]);
+  expect(slides).toHaveLength(1);
+  expect(slides[0]?.src).toContain(sofas[4]!.images[0]!.id);
+});
+it('excludes lifecycle and colour-level out-of-stock products and unpublished mirrors', () => {
+  const available = product(1);
+  const out = {
+    ...product(2),
+    status: 'OUT_OF_STOCK' as const,
+    stockStatus: 'OUT_OF_STOCK' as const,
+  };
+  const colourOut = {
+    ...product(3),
+    colorOptions: [
+      { id: 'col_test0001', name: 'Grey', stockStatus: 'OUT_OF_STOCK' as const, imageIds: [] },
+    ],
+  };
+  const inconsistent = { ...product(4), published: false };
+  expect(selectHeroProducts([out, colourOut, inconsistent, available]).map((p) => p.id)).toEqual([
+    available.id,
+  ]);
 });

@@ -1701,6 +1701,8 @@ body[data-mobilenav-open='true'] .ngf-actionbar {
 }
 
 .ngf-card-hover {
+  /* A contained second photograph replaces the first; letterbox margins must be opaque. */
+  background-color: var(--color-cream);
   position: absolute;
   inset: 0;
   opacity: 0;

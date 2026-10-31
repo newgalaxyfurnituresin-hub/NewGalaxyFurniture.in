@@ -28,7 +28,7 @@ import type { ImagePreloadHint } from '@/lib/images/preload';
 import { staticProductImages } from '@/lib/products/static-images';
 import type { HeroImage } from '@/lib/site/hero-image';
 import { primaryImageOf, type Product } from '@/schemas/product';
-import { isCatalogueProduct } from '@/lib/content/catalogue-filter';
+import { colorStockSummary } from '@/lib/products/colors';
 
 export interface HeroShowcase {
   /** A `HeroImage` the existing hero markup can render unchanged. */
@@ -104,7 +104,7 @@ export function heroShowcaseFrom(products: readonly Product[]): HeroShowcase | n
  * One image *per product*, its primary photograph, so the carousel shows variety rather than four
  * near-identical angles of the same sofa. Products with no ready photograph are skipped (never a
  * placeholder), and a `src` is never repeated, so a product that reuses another's asset cannot
- * produce a duplicate slide. Representatives and spare slots are ordered newest-added first.
+ * produce a duplicate slide. Representatives are ordered newest-added first; missing categories never create spare slides.
  *
  * This fabricates nothing: every slide is a real product photograph the site already ships, resolved
  * through the same `srcset`/`sizes`/`fallbackSrc` builders as the cards. There is no extra fixed
@@ -130,12 +130,18 @@ export function heroSlidesFrom(products: readonly Product[]): HeroSlide[] {
   });
 }
 
-/** Newest public product per category first, then newest remaining products; eight maximum. */
+/** One newest published, available product per category; eight maximum, never backfilled. */
 export function selectHeroProducts(products: readonly Product[]): Product[] {
   const eligible = products
     .filter((product) => {
       const image = primaryImageOf(product);
-      return isCatalogueProduct(product) && image !== null && image.derivativesReady !== false;
+      return (
+        product.status === 'PUBLISHED' &&
+        product.published &&
+        colorStockSummary(product) !== 'OUT_OF_STOCK' &&
+        image !== null &&
+        image.derivativesReady !== false
+      );
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.slug.localeCompare(b.slug));
   const selected: Product[] = [];
@@ -152,12 +158,9 @@ export function selectHeroProducts(products: readonly Product[]): Product[] {
   };
   for (const product of eligible) {
     if (categories.has(product.category)) continue;
-    if (add(product)) categories.add(product.category);
-    if (selected.length === 8) return selected;
-  }
-  for (const product of eligible) {
+    categories.add(product.category);
     add(product);
-    if (selected.length === 8) break;
+    if (selected.length === 8) return selected;
   }
   return selected;
 }
